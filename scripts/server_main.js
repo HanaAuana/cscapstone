@@ -1,8 +1,13 @@
 /**
  * Created by Nathan P on 1/25/14.
+ *
+ * This starts the server.
+ * In the command line from /scripts, run:
+ *    node server_main.js
  */
 
-// "Import" the server and router modules
+// This will be the only dependency we specify using node module syntax. From
+// this point on we use requirejs syntax.
 var requirejs = require('requirejs');
 
 requirejs.config({
@@ -13,6 +18,7 @@ requirejs.config({
     baseUrl: "C:/Users/Nathan P/capstone"
 });
 
+// Start the server, using the server and router modules as dependencies
 requirejs(['scripts/server',
            'scripts/routers/router'],
             function(server, router) {
