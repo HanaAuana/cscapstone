@@ -5,54 +5,58 @@
 var tag = "server";
 
 define(['http',
-        'url',
-        'fs',
-        'scripts/utils/capcon'],
-        function(http, url, fs, capcon) {
+    'url',
+    'fs',
+    'express',
+    'scripts/utils/capcon'],
+    function (http, url, fs, express, capcon) {
 
-            // Starts the server with a router instance
-            function start(route) {
+        // Starts the server with a router instance
+        function start(route) {
+            var app = express();
 
-                fs.readFile("../index.html", 'utf-8', function(error, html) {
+            app.use(express.logger());
+            app.use(express.cookieParser());
+            app.use(express.session({secret: '1234567890QWERTY'}));
 
-                    if(error)
+            // app.VERB methods are strung together as middleware.
+            // Check this out for a good explanation of the framework:
+            // http://evanhahn.com/understanding-express-js/
+            app.get('/', function (req, res) {
+                // Serve the homepage asynchronously
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                fs.readFile("../index.html",
+                    'utf-8',
+                    function (error, html) {
+                        if (error)
                         // uh oh, where's the index file?
+                            throw error;
+                        res.end(html);
+                    });
+            });
+
+            app.get('/scripts/*', function (req, res) {
+                // Serve up a script
+                res.writeHead(200, {'Content-Type': 'text/javascript'});
+
+                // Parse out the pathname
+                var pathname = url.parse(req.url).pathname;
+                capcon.log(tag, "serving .." + pathname);
+
+                fs.readFile('..' + pathname, function(error, js) {
+                    if(error)
                         throw error;
-
-                    // Build the server. This is an http module function. Here
-                    // the http response logic is specified as an (anonymous)
-                    // function that we pass in to the method
-                    http.createServer(function (req, res)
-                    {
-                        var pathname = url.parse(req.url).pathname;
-
-                        // This needs to be cleaned up. For now, if the router
-                        // returns an object that in turn becomes the text of
-                        // the http response. Otherwise we server the index page
-                        var routeResult = route(pathname);
-                        if(routeResult !== undefined) {
-                            res.writeHead(200, {
-                                'Content-Type': 'text/javascript'
-                            });
-                            capcon.log(tag, "Writing js");
-                            res.write(routeResult);
-                        } else {
-                            res.writeHead(200, {'Content-Type': 'text/html'});
-                            // Serve up the static home page for now
-                            res.write(html);
-                        }
-                        res.end();
-
-                        // Send back an HTTP ack
-                        capcon.log(tag, 'Received a request for ' + pathname);
-                    }).listen(1337, '127.0.0.1');
+                    res.end(js);
                 });
-                capcon.log(tag, 'Server running at http://127.0.0.1:1337/');
-            }
+            });
 
-            // This is the requirejs "export". Anything returned via define()
-            // constitutes what other scripts can do with this module.
-            return {
-                start: start // the start function
-            };
-        });
+            app.listen(1337, '127.0.0.1');
+        };
+
+
+        // This is the requirejs "export". Anything returned via define()
+        // constitutes what other scripts can do with this module.
+        return {
+            start: start // the start function
+        };
+    });
