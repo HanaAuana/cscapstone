@@ -25,7 +25,7 @@ define(['http',
             app.get('/', function (req, res) {
                 // Serve the homepage asynchronously
                 res.writeHead(200, {'Content-Type': 'text/html'});
-                fs.readFile("../index.html",
+                fs.readFile("index.html",
                     'utf-8',
                     function (error, html) {
                         if (error)
@@ -43,7 +43,7 @@ define(['http',
                 var pathname = url.parse(req.url).pathname;
                 capcon.log(tag, "serving .." + pathname);
 
-                fs.readFile('..' + pathname, function(error, js) {
+                fs.readFile('./' + pathname, function(error, js) {
                     if(error)
                         throw error;
                     res.end(js);
