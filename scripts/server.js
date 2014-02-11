@@ -13,6 +13,8 @@ define(['http',
 
         // Starts the server with a router instance
         function start(route) {
+            capcon.log(tag, "server has started");
+
             var app = express();
 
             app.use(express.logger());

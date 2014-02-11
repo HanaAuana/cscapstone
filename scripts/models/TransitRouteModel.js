@@ -7,13 +7,13 @@ var tag = "TransitRouteModel";
 define(['backbone',
     'underscore',
     'scripts/utils/capcon'],
-    function(backbone, underscore, logger){
+    function(Backbone, Underscore, Logger){
 
         var TransitRouteModel = Backbone.Model.extend({
 
             defaults: {
-                geoJson: null,
-                mode: null
+                'geoJson': null,
+                'mode': null
             },
 
             initialize: function() {
