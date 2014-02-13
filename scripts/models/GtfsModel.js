@@ -8,8 +8,8 @@
 
 define(['backbone',
     'underscore',
-    'scripts/lib/csv2Array'
-], function(Backbone, Underscore, csv2Array) {
+    'scripts/utils/CsvHelperModel'
+], function(Backbone, Underscore, CsvHelper) {
 
     var GtfsModel = Backbone.Model.extend({
 
@@ -31,7 +31,8 @@ define(['backbone',
 
         // helper function for converting a csv into a 2d array
         csvToArray: function(csvString) {
-            return csvString.csv2Array();
+            var csvHelper = new CsvHelper();
+            return csvHelper.csvToArray(csvString);
         },
 
         arrayToCsv: function(array) {

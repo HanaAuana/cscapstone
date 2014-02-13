@@ -13,8 +13,8 @@ define(['backbone',
             Underscore,
             TransitRoute,
             Sim2Gtfs,
-            TransitRouteCollection){
-
+            TransitRouteCollection)
+{
     var SimulationModel = Backbone.Model.extend({
 
         defaults: {
@@ -30,8 +30,6 @@ define(['backbone',
 
             this.set({'transitRoutes': transitRoutes});
             this.set({'sim2Gtfs': sim2Gtfs});
-
-            console.log(tag + sim2Gtfs.csvToArray("hi, hello, watsup"));
         }
 
     })
