@@ -2,8 +2,6 @@
  * Created by Nathan P on 1/30/14.
  */
 
-var tag = 'main';
-
 requirejs.config({
 
     baseUrl: "../",
@@ -30,10 +28,12 @@ requirejs([
     'backbone',
     'underscore',
     'scripts/models/GlobalVarsModel',
-    'scripts/utils/capcon'
-], function(Backbone, Underscore, GlobalVars, logger) {
-    logger.log(tag, "Here we begin front end app logic");
+    'scripts/models/SImulationModel'
+], function(Backbone, Underscore, GlobalVars, SimModel) {
+    console.log("main : here we begin front end app logic");
 
     var globalVars = new GlobalVars();
-    logger.log(tag, 'App name: ' + globalVars.get('appName'))
+    console.log("main : App name: "  + globalVars.get('appName'));
+
+    var simModel = new SimModel();
 });

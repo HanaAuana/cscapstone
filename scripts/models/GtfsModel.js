@@ -6,54 +6,48 @@
  * https://developers.google.com/transit/gtfs/reference
  */
 
-var tag = "GtfsModel";
-
 define(['backbone',
     'underscore',
-    'scripts/utils/capcon'],
-    function(Backbone, Underscore, Logger){
+    'scripts/lib/csv2Array'
+], function(Backbone, Underscore, csv2Array) {
 
-        var GtfsModel = Backbone.Model.extend({
+    var GtfsModel = Backbone.Model.extend({
 
-            defaults: {
-                // The required GTFS text (csv) files
-                'agencyTxt': null,
-                'stopsTxt': null,
-                'routesTxt': null,
-                'tripsTxt': null,
-                'stopTimesTxt': null,
-                'calendarTxt': null
-            },
+        defaults: {
+            // The required GTFS text (csv) files
+            'agencyTxt': '',
+            'stopsTxt': '',
+            'routesTxt': '',
+            'tripsTxt': '',
+            'stopTimesTxt': '',
+            'calendarTxt': '',
+            'commaDelim': ',',
+            'lineBreak': '\r\n'
+        },
 
-            initialize: function() {
-                logger.log(tag, "initializing");
-            },
+        initialize: function() {
+            console.log("GtfsModel : initializing");
+        },
 
-            setAgencyFile: function(file) {
-                this.set({ agencyTxt: file });
-            },
+        // helper function for converting a csv into a 2d array
+        csvToArray: function(csvString) {
+            return csvString.csv2Array();
+        },
 
-            setStopsFile: function(file) {
-                this.set({stopsTxt: file});
-            },
+        arrayToCsv: function(array) {
+            var commaDelim = this.get('commaDelim');
+            var lineBreak = this.get('lineBreak');
 
-            setRoutesFiile: function(file) {
-                this.set({routesTxt: file});
-            },
-
-            setTripsFile: function(file) {
-                this.set({tripsTxt: file});
-            },
-
-            setStopTimesTxt: function(file) {
-                this.set({stopTimesTxt: file});
-            },
-
-            setCalendarTxt: function(file) {
-                this.set({calendarTxt: file});
+            var csv = '';
+            for(var line in array) {
+                for(var token in line) {
+                    csv += (token + commaDelim);
+                }
+                csv += lineBreak;
             }
-        });
-
-
-        return GtfsModel;
+            return csv;
+        }
     });
+
+    return GtfsModel;
+});

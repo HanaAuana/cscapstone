@@ -4,27 +4,36 @@
  * This is the beast, keeps track of an entire simulation instance
  */
 
-var tag = "SimulationModel";
-
 define(['backbone',
     'underscore',
-    'scripts/utils/capcon',
     'scripts/models/TransitRouteModel',
-    'scripts/models/Sim2GtfsModel'
-], function(Backbone, Underscore, Logger, TransitRoute, Sim2Gtfs){
+    'scripts/models/Sim2GtfsModel',
+    'scripts/collections/TransitRouteCollection'
+], function(Backbone,
+            Underscore,
+            TransitRoute,
+            Sim2Gtfs,
+            TransitRouteCollection){
 
     var SimulationModel = Backbone.Model.extend({
 
         defaults: {
-            'sessionId': null
+            'sessionId': null,
+            'transitRoutes': null
         },
 
         initialize: function() {
-            logger.log(tag, "initializing");
+            console.log("SimulationModel : initializing");
 
-            var sim2Gtfs = new Sim2Gtfs();
+            var transitRoutes = new TransitRouteCollection();
+            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
+
+            this.set({'transitRoutes': transitRoutes});
             this.set({'sim2Gtfs': sim2Gtfs});
+
+            console.log(tag + sim2Gtfs.csvToArray("hi, hello, watsup"));
         }
+
     })
 
     return SimulationModel;

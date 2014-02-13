@@ -2,18 +2,15 @@
  * Created by Nathan P on 1/24/14.
  */
 
-var tag = "server";
-
 define(['http',
     'url',
     'fs',
     'express',
-    'scripts/utils/capcon'],
-    function (http, url, fs, express, capcon) {
+], function (http, url, fs, express) {
 
         // Starts the server with a router instance
         function start(route) {
-            capcon.log(tag, "server has started");
+            console.log("server : server has started");
 
             var app = express();
 
@@ -43,7 +40,7 @@ define(['http',
 
                 // Parse out the pathname
                 var pathname = url.parse(req.url).pathname;
-                capcon.log(tag, "serving .." + pathname);
+                console.log("tag : serving " + pathname);
 
                 fs.readFile('./' + pathname, function(error, js) {
                     if(error)
