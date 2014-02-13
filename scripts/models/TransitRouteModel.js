@@ -12,6 +12,7 @@ define(['backbone',
         var TransitRouteModel = Backbone.Model.extend({
 
             defaults: {
+                'id': null,
                 'geoJson': null,
                 'mode': null
             },
