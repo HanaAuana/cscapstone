@@ -8,12 +8,14 @@ define(['backbone',
     'underscore',
     'scripts/models/TransitRouteModel',
     'scripts/models/Sim2GtfsModel',
-    'scripts/collections/TransitRouteCollection'
+    'scripts/collections/TransitRouteCollection',
+    'scripts/models/TransitModeModel'
 ], function(Backbone,
             Underscore,
             TransitRoute,
             Sim2Gtfs,
-            TransitRouteCollection)
+            TransitRouteCollection,
+            TransitMode)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -30,6 +32,12 @@ define(['backbone',
 
             this.set({'transitRoutes': transitRoutes});
             this.set({'sim2Gtfs': sim2Gtfs});
+
+            // TESTING SHIT TODO: get rid of
+            var transitRoute = new TransitRoute();
+            var transitMode = new TransitMode({'type': 1});
+            transitRoute.set({'mode': transitMode});
+            transitRoutes.add(transitRoute);
         }
 
     })

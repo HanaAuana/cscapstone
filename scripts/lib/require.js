@@ -4,7 +4,6 @@
  see: http://github.com/jrburke/requirejs for details
  */
 var requirejs, require, define;
-console.log("require being served");
 (function (ca) {
     function G(b) {
         return"[object Function]" === N.call(b)
