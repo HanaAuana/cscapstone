@@ -15,7 +15,11 @@ requirejs.config({
     //function to requirejs so that node modules
     //are loaded relative to the top-level JS file.
     nodeRequire: require,
-    baseUrl: "C:/Users/Nathan P/capstone"
+    baseUrl: "./",
+	
+	paths: {
+		"leaflet": "/leaflet/leaflet"
+	}
 });
 
 // Start the server, using the server and router modules as dependencies

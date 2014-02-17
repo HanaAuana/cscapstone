@@ -49,6 +49,19 @@ define(['http',
                     res.end(js);
                 });
             });
+			
+			app.get('/map', function (req, res) {
+                // Serve the Leaflet map asynchronously
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                fs.readFile("./map/index.html",
+                    'utf-8',
+                    function (error, html) {
+                        if (error)
+                        // uh oh, where's the index file?
+                            throw error;
+                        res.end(html);
+                    });
+            });
 
             app.listen(1337, '127.0.0.1');
         };

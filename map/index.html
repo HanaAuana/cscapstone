@@ -1,21 +1,20 @@
 <!DOCTYPE html>
-<head>
-<link rel="stylesheet" href="leaflet/leaflet.css" />
-<link rel="stylesheet" href="style.css" />
-<!--[if lte IE 8]>
-    <link rel="stylesheet" href="leaflet/leaflet.js" />
-<![endif]-->
+	<head>
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
+		<style>
+			#map {
+				width:900px;
+				height:500px;
+			}
+		</style>
 
-<script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
-<script src="map.js"></script>
-</head>
- 
-<body>
-	<div id="map"></div>
-<script>
-window.onload = function () {
- 	initmap();
-};
-</script>
-</body>
+		<script data-main="scripts/map" src="scripts/lib/require.js"></script>
+	</head>
+	 
+	<body>
+		<h1>This is the map</h1>
+		<div id="map"></div>
+		<h1>This is the end</h1>
+
+	</body>
 </html>
