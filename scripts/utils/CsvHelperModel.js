@@ -77,9 +77,11 @@ define(['backbone',
 
         arrayToCsv: function(array) {
             var csv = '';
-            for(var line in array) {
-                for(var token in line) {
-                    csv += (token + ',');
+            for(var i = 0; i < array.length; i++) {
+                var line = array[i];
+                for(var j = 0; j < line.length; j++) {
+                    if(j != 0) csv += ',';
+                    csv += (line[j]);
                 }
                 csv += '\r\n';
             }

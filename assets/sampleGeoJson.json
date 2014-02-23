@@ -4,8 +4,7 @@
     {
       "type": "Feature",
       "properties": {
-        "headway": 10,
-        "type": "route"
+        "geoType": "route"
       },
       "geometry": {
         "type": "LineString",
@@ -29,7 +28,7 @@
       "type": "Feature",
       "properties": {
         "drivingTimes": "5, 3, 7",
-        "type": "stops"
+        "geoType": "stops"
       },
       "geometry": {
         "type": "LineString",

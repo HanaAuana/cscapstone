@@ -25,20 +25,29 @@ define(['backbone',
 
         // Gets the stops geometry object from the GeoJson
         getStopsGeo: function() {
-            var features = this.get('geoJson');
-            for(var feature in features) {
-                if(features.properties.type === 'stops') {
-                    return feature.geometry.coordinates;
+            var features = this.get('geoJson').features;
+            for(var i = 0; i < features.length; i++) {
+                if(features[i].properties.geoType === 'stops') {
+                    return features[i].geometry.coordinates;
                 }
             }
         },
 
         // Gets the route geometry object from the GeoJson
         getRouteGeo: function() {
-            var features = this.get('geoJson');
-            for(var feature in features) {
-                if(features.properties.type === 'route') {
-                    return feature.geometry.coordinates;
+            var features = this.get('geoJson').features;
+            for(var i = 0; i < features.length; i++) {
+                if(features[i].properties.geoType === 'route') {
+                    return features[i].geometry.coordinates;
+                }
+            }
+        },
+
+        getStopsDriveTimes: function() {
+            var features = this.get('geoJson').features;
+            for(var i = 0; i < features.length; i++) {
+                if(features[i].properties.geoType === 'stops') {
+                    return features[i].properties.drivingTimes;
                 }
             }
         }

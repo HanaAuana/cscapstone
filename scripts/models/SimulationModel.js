@@ -6,12 +6,14 @@
 
 define(['backbone',
     'underscore',
+    'jquery',
     'scripts/models/TransitRouteModel',
     'scripts/models/Sim2GtfsModel',
     'scripts/collections/TransitRouteCollection',
     'scripts/models/TransitModeModel'
 ], function(Backbone,
             Underscore,
+            $,
             TransitRoute,
             Sim2Gtfs,
             TransitRouteCollection,
@@ -36,11 +38,18 @@ define(['backbone',
             // TESTING SHIT TODO: get rid of
             var transitRoute = new TransitRoute();
             var transitMode = new TransitMode({'type': 1});
-            transitRoute.set({'mode': transitMode});
-            transitRoutes.add(transitRoute);
+
+            $.get('/assets/sampleGeoJson.json', function(data) {
+                console.log('SimulationModel : sampleGeoJson received');
+                transitRoute.set({'mode': transitMode,
+                                    'geoJson': data});
+                transitRoutes.add(transitRoute);
+                transitRoutes.remove(transitRoute);
+            });
+
         }
 
-    })
+    });
 
     return SimulationModel;
 });

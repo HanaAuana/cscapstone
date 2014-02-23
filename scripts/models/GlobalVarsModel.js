@@ -17,7 +17,7 @@ define([
         defaults: {
             'appName': 'TransitBuilder',
             'gtfsAgencyName': 'TransitBuilder',
-            'url': 'htt://www.example.com'
+            'url': '127.0.0.1:1337'
         }
     });
 

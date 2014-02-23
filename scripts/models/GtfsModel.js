@@ -19,10 +19,7 @@ define(['backbone',
             'routesTxt': '',
             'tripsTxt': '',
             'stopTimesTxt': '',
-            'calendarTxt': '',
-            // some constants
-            'commaDelim': ',',
-            'lineBreak': '\r\n',
+            'calendarTxt': ''
         },
 
         initialize: function() {
