@@ -202,6 +202,7 @@ define(['backbone',
 
         // Add all the stop times. This one's a doozy
         addStopTimesEntry: function(transitRoute) {
+
             var drivingTimes = transitRoute.getStopsDriveTimes();
             var stopCounter = 0;
             for(var i = 0; i < drivingTimes.length; i ++) {
