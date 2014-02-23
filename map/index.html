@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html>
 	<head>
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
 		<style>
@@ -8,7 +9,7 @@
 			}
 		</style>
 
-		<script data-main="scripts/map" src="scripts/lib/require.js"></script>
+		<script language="javascript" require(['map'], function(map){ map,initMap();})></script>
 	</head>
 	 
 	<body>

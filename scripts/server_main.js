@@ -15,10 +15,25 @@ requirejs.config({
     //function to requirejs so that node modules
     //are loaded relative to the top-level JS file.
     nodeRequire: require,
-    baseUrl: "./",
-	
 	paths: {
-		"leaflet": "/leaflet/leaflet"
+		"jquery" : "scripts/lib/jquery",
+		"leaflet": "scripts/leaflet/leaflet",
+		"underscore": "scripts/lib/underscore",
+		"backbone": "scripts/lib/backbone"
+	},
+	shim: {
+		"jquery": {
+			exports: '$'
+		},
+		"leaflet": {
+			exports: "L"
+		},
+		"underscore": {
+			exports: "_"
+		},
+		"backbone":{
+			exports: "Backbone"
+		}
 	}
 });
 
