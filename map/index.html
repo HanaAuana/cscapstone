@@ -1,21 +1,22 @@
 <!DOCTYPE html>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 <html>
-	<head>
-		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
-		<style>
-			#map {
-				width:900px;
-				height:500px;
-			}
-		</style>
-
-		<script language="javascript" require(['map'], function(map){ map,initMap();})></script>
-	</head>
-	 
-	<body>
-		<h1>This is the map</h1>
-		<div id="map"></div>
-		<h1>This is the end</h1>
-
-	</body>
+<head>
+    <title>Capstone</title>
+    <!-- data-main attribute tells require.js to load
+         scripts/map.js after require.js loads. -->
+    <script data-main="scripts/map" src="scripts/lib/require.js"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
+	<style>
+		#map {
+			width:900px;
+			height:500px;
+		}
+	</style>
+</head>
+<body>
+<h1>This is the map</h1>
+	<div id="map"></div>
+<h1>This is the end</h1>
+</body>
 </html>

@@ -28,7 +28,7 @@ requirejs([
     'backbone',
     'underscore',
     'scripts/models/GlobalVarsModel',
-    'scripts/models/SImulationModel'
+    'scripts/models/SimulationModel'
 ], function(Backbone, Underscore, GlobalVars, SimModel) {
     console.log("main : here we begin front end app logic");
 
