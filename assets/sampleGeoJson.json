@@ -27,7 +27,8 @@
     {
       "type": "Feature",
       "properties": {
-        "drivingTimes": "5, 3, 7",
+        "inboundDriveTimes": [5, 3, 7],
+        "outboundDriveTimes": [7, 3, 5],
         "geoType": "stops"
       },
       "geometry": {
