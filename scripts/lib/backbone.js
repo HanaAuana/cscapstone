@@ -848,4 +848,3 @@
         }
     }
 }).call(this);
-//# sourceMappingURL=backbone-min.map
