@@ -34,16 +34,18 @@ requirejs(['leaflet',
 	var MapView = Backbone.View.extend({
 		id: "mapView",
 		template: _.template( $('#map-template').html() ),
+		map: null,
 		render: function(){
 			this.$el.html(this.template);
 			return this;
-		}	
+		},
+		initMap: function(){
+			$("#appView").append(mapView.render().el); //Make sure our View el is attached to the document
+			this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
+    		L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
+		}
 	});
 	
 	var mapView = new MapView();
-	$("#appView").append(mapView.render().el);
-    	//console.log("initMap called, el is "+ mapView.el.innerHTML);
-    var map = L.map(mapView.el).setView([47.2622639, -122.5100545], 10);
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
-	//mapView.render();
+    mapView.initMap();
 });
