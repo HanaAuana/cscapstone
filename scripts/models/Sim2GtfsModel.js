@@ -237,16 +237,16 @@ define(['backbone',
                     }
                     // The inbound trip
                     var inboundTrip = inboundTripId + delim
-                                    + inboundTime + delim
+                                    + this.minsToHhMmSs(inboundTime) + delim
                                     // increment time counter with dwell time
-                                    + (inboundTime += dwellTime) + delim
+                                    + this.minsToHhMmSs(inboundTime += dwellTime) + delim
                                     + this.calcStopId(routeId, j) + delim
                                     + j + lineBr;
                     // The outbound trip
                     var outboundTrip = outboundTripId + delim
-                                    + outboundTime + delim
+                                    + this.minsToHhMmSs(outboundTime) + delim
                                     // increment time counter with dwell time
-                                    + (outboundTime += dwellTime) + delim
+                                    + this.minsToHhMmSs(outboundTime += dwellTime) + delim
                                     + this.calcStopId(routeId, numStops - j - 1) + delim
                                     + j + lineBr;
                     stopTimeEntries += (inboundTrip + outboundTrip);
@@ -254,6 +254,7 @@ define(['backbone',
             }
             var stopTimes = this.get('stopTimesTxt');
             this.set({'stopTimesTxt': stopTimes + stopTimeEntries});
+            console.log(this.get('stopTimesTxt'));
 
         },
 
@@ -382,6 +383,16 @@ define(['backbone',
 
         calcStopId: function(routeId, seqNum) {
             return (routeId * 200) + seqNum;
+        },
+
+        // Converts minutes to the format MM:HH:SS
+        minsToHhMmSs: function(mins) {
+            var floor = Math.floor(mins);
+            var seconds = (mins - floor) * 60;
+            var minutes = floor % 60;
+            var hours = Math.floor(floor / 60);
+
+            return hours + ":" + minutes + ":" + seconds;
         }
 
     });
