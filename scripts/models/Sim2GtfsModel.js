@@ -30,7 +30,6 @@ define(['backbone',
 
             // Register listeners on the transit routes, so that we update
             // the GTFS model when routes are updated/removed/added
-            console.log("Sim2GtfsModel : registering listeners");
             var transitRoutes = this.get("transitRoutes");
             transitRoutes.on("change", this.onRouteChanged, this);
             transitRoutes.on("remove", this.onRouteRemoved, this);
@@ -111,7 +110,7 @@ define(['backbone',
                             + 'wednesday' + delim + 'thursday' + delim
                             + 'friday' + delim + 'saturday' + delim
                             + 'sunday' + delim + 'start_date' + delim
-                            + 'end_date' + delim + lineBr;
+                            + 'end_date' + lineBr;
             this.set({'calendarTxt': calendarHeaders});
         },
 
@@ -149,7 +148,6 @@ define(['backbone',
                 + transitRoute.get('mode').get('type') + lineBr;
             var routesTxt = this.get('routesTxt');
             this.set({'routesTxt': routesTxt + routeLine});
-            console.log('routes.txt\n' + this.get('routesTxt'));
         },
 
         // Add new route to trips.txt. We need a different entry for each
@@ -198,15 +196,66 @@ define(['backbone',
                 this.set({'stopsTxt': stopsTxt + stopEntry});
                 stopCounter++;
             }
+            console.log(this.get('stopsTxt'));
         },
 
         // Add all the stop times. This one's a doozy
         addStopTimesEntry: function(transitRoute) {
-            var drivingTimes = transitRoute.getStopsDriveTimes();
-            var stopCounter = 0;
-            for(var i = 0; i < drivingTimes.length; i ++) {
 
+            // Get a bunch of shit
+            var delim = this.get('commaDelim');
+            var lineBr = this.get('lineBreak');
+            var routeId = transitRoute.get('id');
+            var headway = transitRoute.get('headway');
+            var startMins = transitRoute.get('startServiceMins');
+            var endMins = transitRoute.get('endServiceMins');
+            var dwellTime = transitRoute.get('mode').get('dwellTime');
+            var inboundDriveTimes = transitRoute.getDriveTimes('inbound');
+            var outboundDriveTimes = transitRoute.getDriveTimes('outbound');
+
+            // First we loop through all the trips (inbound and outbound) for
+            // this particular route
+            var stopTimeEntries = '';
+            for(var i = startMins; i < endMins; i += headway) {
+                var inboundSeqNum = 2*((i - startMins)/headway);
+                var outboundSeqNum = inboundSeqNum + 1;
+                var inboundTripId = this.calcTripId(routeId, inboundSeqNum);
+                var outboundTripId = this.calcTripId(routeId, outboundSeqNum);
+
+                // Now we loop through all the stops, which are visited by the
+                // route on each trip
+                var numStops = inboundDriveTimes.length + 1;
+                var inboundTime = i;
+                var outboundTime = i;
+                for(var j = 0; j < numStops; j++) {
+                    // The first stops don't have driving time, they're served
+                    // on the headway. But otherwise, increment time counters by
+                    // drive time
+                    if(j !== 0) {
+                        inboundTime += inboundDriveTimes[j-1];
+                        outboundTime += outboundDriveTimes[j-1];
+                    }
+                    // The inbound trip
+                    var inboundTrip = inboundTripId + delim
+                                    + this.minsToHhMmSs(inboundTime) + delim
+                                    // increment time counter with dwell time
+                                    + this.minsToHhMmSs(inboundTime += dwellTime) + delim
+                                    + this.calcStopId(routeId, j) + delim
+                                    + j + lineBr;
+                    // The outbound trip
+                    var outboundTrip = outboundTripId + delim
+                                    + this.minsToHhMmSs(outboundTime) + delim
+                                    // increment time counter with dwell time
+                                    + this.minsToHhMmSs(outboundTime += dwellTime) + delim
+                                    + this.calcStopId(routeId, numStops - j - 1) + delim
+                                    + j + lineBr;
+                    stopTimeEntries += (inboundTrip + outboundTrip);
+                }
             }
+            var stopTimes = this.get('stopTimesTxt');
+            this.set({'stopTimesTxt': stopTimes + stopTimeEntries});
+            console.log(this.get('stopTimesTxt'));
+
         },
 
         // Remove a route from routes.txt
@@ -269,19 +318,18 @@ define(['backbone',
         removeStopTimesEntry: function(tripIds) {
             var csvHelper = this.get('csvHelper');
             var stopTimesArray = csvHelper.csvToArray(this.get('stopTimesTxt'));
-            var totalStopTimes = stopTimesArray.length;
             var stopIds = []; // all removed stop ids
             var numRemovedIds = 0;
 
             // Set all stop times with a specified trip id to null
-            for(var stopTime in stopTimesArray) {
+            for(var i = 0; i < stopTimesArray.length; i++) {
                 // look at each trip id
-                for(var tripId in tripIds) {
-                    if(tripId === stopTime[0]) {
+                for(var j = 0; j < tripIds.length; j++) {
+                    if(tripIds[j] == stopTimesArray[i][0]) {
                         // keep track of removed stop ids
-                        stopIds[numRemovedIds] = stopTime[3];
+                        stopIds[numRemovedIds] = stopTimesArray[i][3];
                         numRemovedIds++;
-                        stopTime = null;
+                        stopTimesArray[i] = null;
                         break;
                     }
                 }
@@ -289,13 +337,14 @@ define(['backbone',
             // Now rebuild the stop times file without the removed entries
             var newStopTimes = [];
             var offset = 0;
-            for(var i = 0; i < totalStopTimes; i++) {
+            for(var i = 0; i < stopTimesArray.length; i++) {
                 if(stopTimesArray[i] === null) {
                     offset++;
                 } else {
                     newStopTimes[i - offset] = stopTimesArray[i];
                 }
             }
+            this.set({'stopTimesTxt': csvHelper.arrayToCsv(newStopTimes)});
             return stopIds;
         },
 
@@ -323,7 +372,6 @@ define(['backbone',
                     newStops[i - offset] = stopsArray[i];
                 }
             }
-            console.log(this.get('stopsTxt'));
             this.set({'stopsTxt': csvHelper.arrayToCsv(newStops)});
         },
 
@@ -335,6 +383,16 @@ define(['backbone',
 
         calcStopId: function(routeId, seqNum) {
             return (routeId * 200) + seqNum;
+        },
+
+        // Converts minutes to the format MM:HH:SS
+        minsToHhMmSs: function(mins) {
+            var floor = Math.floor(mins);
+            var seconds = (mins - floor) * 60;
+            var minutes = floor % 60;
+            var hours = Math.floor(floor / 60);
+
+            return hours + ":" + minutes + ":" + seconds;
         }
 
     });

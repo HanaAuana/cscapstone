@@ -10,14 +10,14 @@ define(['backbone',
     'scripts/models/TransitRouteModel',
     'scripts/models/Sim2GtfsModel',
     'scripts/collections/TransitRouteCollection',
-    'scripts/models/TransitModeModel'
+    'scripts/models/BusModeModel'
 ], function(Backbone,
             Underscore,
             $,
             TransitRoute,
             Sim2Gtfs,
             TransitRouteCollection,
-            TransitMode)
+            BusMode)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -37,7 +37,7 @@ define(['backbone',
 
             // TESTING SHIT TODO: get rid of
             var transitRoute = new TransitRoute();
-            var transitMode = new TransitMode({'type': 1});
+            var transitMode = new BusMode();
 
             $.get('/assets/sampleGeoJson.json', function(data) {
                 console.log('SimulationModel : sampleGeoJson received');
