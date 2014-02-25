@@ -1,0 +1,57 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "geoType": "route"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            43.59375,
+            61.77312286453146
+          ],
+          [
+            61.17187499999999,
+            44.33956524809713
+          ],
+          [
+            84.375,
+            62.103882522897855
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "inboundDriveTimes": [5, 3, 7],
+        "outboundDriveTimes": [7, 3, 5],
+        "geoType": "stops"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            44.384765625,
+            61.18562468142283
+          ],
+          [
+            58.095703125,
+            47.87214396888731
+          ],
+          [
+            68.994140625,
+            51.06901665960392
+          ],
+          [
+            81.650390625,
+            60.413852350464914
+          ]
+        ]
+      }
+    }
+  ]
+}

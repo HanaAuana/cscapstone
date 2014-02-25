@@ -2,14 +2,12 @@
  * Created by Nathan P on 1/25/14.
  */
 
-var tag = "router";
-
-define(['fs',
-        'scripts/utils/capcon'],
-       function(fs, capcon) {
+define([
+    'fs'
+], function(fs) {
 
     function route(pathname) {
-        capcon.log(tag, "Routing pathname " + pathname);
+        console.log("router : Routing pathname " + pathname);
 
         // If pathname specifies a file, serve up that file synchronously
         if(pathname.split(".").length > 1) {

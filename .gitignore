@@ -1,6 +1,2 @@
-# IntelliJ files #
-*.iml
-*.idea
-
 # NodeJs Modules #
 node_modules

@@ -15,12 +15,32 @@ requirejs.config({
     //function to requirejs so that node modules
     //are loaded relative to the top-level JS file.
     nodeRequire: require,
-    baseUrl: "C:/Users/Nathan P/capstone"
+    baseUrl: "../capstone/",
+
+    paths: {
+        underscore: 'scripts/lib/underscore',
+        backbone: 'scripts/lib/backbone',
+        jquery: 'scripts/lib/jquery',
+	leaflet: 'scripts/leaflet/leaflet'
+    },
+
+    shim: {
+        'backbone': {
+            deps: ['underscore', 'jquery'],
+            exports: 'Backbone'
+        },
+        'underscore': {
+            exports: '_'
+        },
+	'leaflet':{
+	    exports: 'L'
+	}
+    }
 });
 
 // Start the server, using the server and router modules as dependencies
-requirejs(['scripts/server',
-           'scripts/routers/router'],
+requirejs(['scripts/server.js',
+           'scripts/routers/router.js'],
             function(server, router) {
     server.start(router.route);
 })
