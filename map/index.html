@@ -25,8 +25,19 @@
   var featureGroup = L.featureGroup().addTo(map);
 
   var drawControl = new L.Control.Draw({
+	draw:{
+		polyline:{
+			shapeOptions: {
+                color: '#00BFFF',
+                weight: 20
+            }
+		},
+		polygon:false,
+		rectangle:false,
+		circle:false
+	},
     edit: {
-      featureGroup: featureGroup
+		featureGroup: featureGroup
     }
   }).addTo(map);
 
