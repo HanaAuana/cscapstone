@@ -6,7 +6,8 @@ requirejs.config({
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
         jquery: 'scripts/lib/jquery',
-	leaflet: 'scripts/leaflet/leaflet'
+		leaflet: 'scripts/leaflet/leaflet',
+		leaflet-draw: 'scripts/leaflet/leaflet-draw'
     },
 
     shim: {
@@ -17,9 +18,12 @@ requirejs.config({
         'underscore': {
             exports: '_'
         },
-	'leaflet':{
-	    exports: 'L'
-	}
+		'leaflet':{
+			exports: 'L'
+		},
+		'leaflet.draw':{
+			deps:['leaflet']
+		}
     }
 });
 
@@ -42,7 +46,18 @@ requirejs(['leaflet',
 		initMap: function(){
 			$("#appView").append(mapView.render().el); //Make sure our View el is attached to the document
 			this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
+			
     		L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
+			var drawnItems = new L.FeatureGroup();
+			this.map.addLayer(drawnItems);
+			
+			var drawControl = new L.Control.Draw({
+				edit:{
+					featureGroup: drawnItems
+				}
+			}).addTo(this.map);
+			
+			map.addControl(drawControl);
 		}
 	});
 	

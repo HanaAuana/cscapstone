@@ -1,27 +1,40 @@
 <!DOCTYPE html>
-<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 <html>
 <head>
-    <title>Capstone</title>
-    <!-- data-main attribute tells require.js to load
-         scripts/map.js after require.js loads. -->
-    <script data-main="scripts/map" src="scripts/lib/require.js"></script>
-    	<script type = "text/template" id = "map-template"> 
-			<div id = "mapView"></div> 
-	    </script>
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
-	<style>
-		#mapView {
-			width:900px;
-			height:500px;
-		}
-	</style>
+<meta charset=utf-8 />
+
+
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+
+<style>
+  #map { position:absolute; top:0; bottom:0; width:75%; }
+</style>
 </head>
 <body>
-	<h1>This is the map</h1>
-	<div id= "appView">
 
-	</div>
-	<h1> End of map</h1>
+
+<link rel='stylesheet' href='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.css' />
+<script src='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.js'></script>
+
+<div id='map'></div>
+
+<script>
+  var map = L.map('map').setView([47.2622639, -122.5100545], 10);
+  L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
+  var featureGroup = L.featureGroup().addTo(map);
+
+  var drawControl = new L.Control.Draw({
+    edit: {
+      featureGroup: featureGroup
+    }
+  }).addTo(map);
+
+  map.on('draw:created', function(e) {
+      featureGroup.addLayer(e.layer);
+  });
+</script>
+
+
 </body>
 </html>
