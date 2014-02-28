@@ -4,7 +4,7 @@
 
 define(['backbone',
     'underscore',
-    'scripts/models/TransitModeModel'
+    'models/TransitModeModel'
 ], function(Backbone, Underscore, TransitMode){
 
     var BusModeModel = TransitMode.extend({

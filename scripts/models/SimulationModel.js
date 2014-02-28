@@ -7,23 +7,27 @@
 define(['backbone',
     'underscore',
     'jquery',
-    'scripts/models/TransitRouteModel',
-    'scripts/models/Sim2GtfsModel',
-    'scripts/collections/TransitRouteCollection',
-    'scripts/models/BusModeModel'
+    'models/TransitRouteModel',
+    'models/Sim2GtfsModel',
+    'collections/TransitRouteCollection',
+    'models/BusModeModel',
+    'models/CityModel'
 ], function(Backbone,
-            Underscore,
+            _,
             $,
             TransitRoute,
             Sim2Gtfs,
             TransitRouteCollection,
-            BusMode)
+            BusMode,
+            CityModel)
 {
     var SimulationModel = Backbone.Model.extend({
 
         defaults: {
             'sessionId': null,
-            'transitRoutes': null
+            'transitRoutes': null,
+            'sim2Gtfs': null,
+            'city': null
         },
 
         initialize: function() {
@@ -31,22 +35,19 @@ define(['backbone',
 
             var transitRoutes = new TransitRouteCollection();
             var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
+            var city = new CityModel();
 
             this.set({'transitRoutes': transitRoutes});
             this.set({'sim2Gtfs': sim2Gtfs});
+            this.set({'city': city});
 
-            // TESTING SHIT TODO: get rid of
-            var transitRoute = new TransitRoute();
-            var transitMode = new BusMode();
+            this.on("change:city", this.setTimezone, this);
+            this.get('city').on("change:timezone", this.setTimezone, this);
+        },
 
-            $.get('/assets/sampleGeoJson.json', function(data) {
-                console.log('SimulationModel : sampleGeoJson received');
-                transitRoute.set({'mode': transitMode,
-                                    'geoJson': data});
-                transitRoutes.add(transitRoute);
-                transitRoutes.remove(transitRoute);
-            });
-
+        setTimezone: function() {
+            var timezone = this.get('city').get('timezone');
+            this.get('sime2Gtfs').set({'timezone': timezone});
         }
 
     });

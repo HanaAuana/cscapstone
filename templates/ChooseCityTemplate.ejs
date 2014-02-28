@@ -1,0 +1,8 @@
+<p>Choose a City</p>
+<form action="" id="city_selecter">
+    <% for(var i =0; i < cities.length; i++) { %>
+    <% var city = cities[i]; %>
+    <input type="radio" name=city value=<%= city[1] %> > <%= city[0] %> <br>
+    <% } %>
+</form>
+<button type="button" id="select_btn">Select</button>

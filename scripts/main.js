@@ -7,9 +7,10 @@ requirejs.config({
     baseUrl: "../",
 
     paths: {
-        underscore: 'scripts/lib/underscore',
-        backbone: 'scripts/lib/backbone',
-        jquery: 'scripts/lib/jquery'
+        underscore: 'lib/underscore',
+        backbone: 'lib/backbone',
+        jquery: 'lib/jquery',
+        text: 'lib/text'
     },
 
     shim: {
@@ -17,8 +18,9 @@ requirejs.config({
             deps: ['underscore', 'jquery'],
             exports: 'Backbone'
         },
+
         'underscore': {
-            exports: ''
+            exports: '_'
         }
     }
 });
@@ -27,13 +29,20 @@ requirejs.config({
 requirejs([
     'backbone',
     'underscore',
-    'scripts/models/GlobalVarsModel',
-    'scripts/models/SimulationModel'
-], function(Backbone, Underscore, GlobalVars, SimModel) {
-    console.log("main : here we begin front end app logic");
-
+    'jquery',
+    'models/GlobalVarsModel',
+    'models/SimulationModel',
+    'views/ChooseCityView'
+], function(Backbone, _, $, GlobalVars, SimModel, ChooseCityView) {
+    console.log("here we begin front end app logic");
     var globalVars = new GlobalVars();
-    console.log("main : App name: "  + globalVars.get('appName'));
+    console.log("app name: "  + globalVars.get('appName'));
+
+    // TODO check for persisted sessions, for now we build a new session
+    // add in the map view
+
+    // add in the the city selector
+    var chooseCity = new ChooseCityView();
 
     var simModel = new SimModel();
 });
