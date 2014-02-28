@@ -14,8 +14,6 @@ define(['backbone',
     var ChooseCityView = Backbone.View.extend({
 
         cities: null,
-        // Set the DOM element tag
-        el:  $('#ctrl_panel'),
 
         initialize: function() {
 
@@ -24,6 +22,8 @@ define(['backbone',
             this.cities = [['Tacoma', 'tacomaCode'],
                 ['San Francisco', "sfCode"]];
 
+            // Append the el (defaults to an empty div) to the document
+            $('#title').append(this.el);
             this.render();
         },
 
