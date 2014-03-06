@@ -11,7 +11,9 @@ define(['backbone',
     'models/Sim2GtfsModel',
     'collections/TransitRouteCollection',
     'models/BusModeModel',
-    'models/CityModel'
+    'models/CityModel',
+    'models/TripModel',
+    'collections/TripCollection'
 ], function(Backbone,
             _,
             $,
@@ -19,7 +21,9 @@ define(['backbone',
             Sim2Gtfs,
             TransitRouteCollection,
             BusMode,
-            CityModel)
+            CityModel,
+            TripModel,
+            TripCollection)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -27,7 +31,8 @@ define(['backbone',
             'sessionId': null,
             'transitRoutes': null,
             'sim2Gtfs': null,
-            'city': null
+            'city': null,
+            'trips': null
         },
 
         initialize: function() {
@@ -43,11 +48,31 @@ define(['backbone',
 
             this.on("change:city", this.setTimezone, this);
             this.get('city').on("change:timezone", this.setTimezone, this);
+
+            this.generateTrips();
         },
 
         setTimezone: function() {
             var timezone = this.get('city').get('timezone');
             this.get('sime2Gtfs').set({'timezone': timezone});
+        },
+
+        generateTrips: function() {
+
+            var tripCollection = new TripCollection();
+
+            for(var i = 0; i < 15000; i++) {
+                var newTrip = new TripModel({'tripId': i});
+
+                // All census tract assignment logic
+
+                newTrip.set({'tract1': null});
+                newTrip.set({'tract2': null});
+
+                tripCollection.add(newTrip);
+            }
+
+            this.set({'trips': tripCollection});
         }
 
     });
