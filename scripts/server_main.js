@@ -15,7 +15,7 @@ requirejs.config({
     //function to requirejs so that node modules
     //are loaded relative to the top-level JS file.
     nodeRequire: require,
-    baseUrl: "../capstone/",
+    baseUrl: "../cscapstone/",
 
     paths: {
         underscore: 'scripts/lib/underscore',
