@@ -2,8 +2,8 @@
  * Created by Nathan P on 3/5/14.
  */
 
-define([Backbone,
-    Underscore
+define(['backbone',
+    'underscore'
 ], function(Backbone, _) {
 
     var TripModel = Backbone.Model.extend({

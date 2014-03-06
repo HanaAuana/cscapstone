@@ -8,19 +8,24 @@ define(['backbone',
     'underscore',
     'jquery',
     // load in the template as raw text
-    'text!ChooseCityTemplate.ejs'
-], function(backbone, _, $, chooseCityTemplate) {
+    'text!ChooseCityTemplate.ejs',
+    // load the google maps api
+    'gmaps'
+], function(backbone, _, $, chooseCityTemplate, gmaps) {
 
     var ChooseCityView = Backbone.View.extend({
 
         cities: null,
+        geocoder: null,
 
         initialize: function() {
 
-            // TODO: get the list of cities from our db
-            // for now, we have dummy list
-            this.cities = [['Tacoma', 'tacomaCode'],
-                ['San Francisco', "sfCode"]];
+//            // TODO: get the list of cities from our db
+//            // for now, we have dummy list
+//            this.cities = [['Tacoma', 'tacomaCode'],
+//                ['San Francisco', "sfCode"]];
+
+            this.geocoder = new gmaps.Geocoder();
 
             // Append the el (defaults to an empty div) to the document
             $('#title').append(this.el);
@@ -35,7 +40,7 @@ define(['backbone',
         render: function() {
 
             // Compile the template, and pass in the city list;
-            var template = _.template(chooseCityTemplate, {cities : this.cities});
+            var template = _.template(chooseCityTemplate, {});
             // Load the compiled HTML into the Backbone "el"
             this.$el.html( template );
         },
@@ -44,10 +49,21 @@ define(['backbone',
             console.log('button clicked');
 
             // Get current radio button value, and pass to the simulation model
-            var selected = $("input[type='radio'][name='city']:checked");
-            if (selected.length > 0) {
-                cityCode = selected.val();
-                console.log('handling city selection of: ' + cityCode);
+            var chosenCity = $('#enter_city').val();
+            if (chosenCity.length > 0) {
+                this.geocoder.geocode({
+                    'address': chosenCity
+                }, this.onGeocoded);
+            }
+        },
+
+        onGeocoded: function(results, status) {
+            if(status === gmaps.GeocoderStatus.OK) {
+                // TODO more error checking on the result
+                var loc = results[0].geometry.location;
+                console.log('geocode to ' + loc);
+            } else {
+                console.log('geocode fails');
             }
         }
     });
