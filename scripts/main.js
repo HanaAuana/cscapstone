@@ -39,19 +39,14 @@ requirejs([
     'backbone',
     'underscore',
     'jquery',
-    'models/GlobalVarsModel',
+    'utils/globalvars',
     'models/SimulationModel',
     'views/ChooseCityView'
-], function(Backbone, _, $, GlobalVars, SimModel, ChooseCityView) {
+], function(Backbone, _, $, globalvars, SimModel, ChooseCityView) {
     console.log("here we begin front end app logic");
-    var globalVars = new GlobalVars();
-    console.log("app name: "  + globalVars.get('appName'));
+    console.log("app name: "  + globalvars.appName);
 
     // TODO check for persisted sessions, for now we build a new session
     // add in the map view
-
-    // add in the the city selector
-    var chooseCity = new ChooseCityView();
-
     var simModel = new SimModel();
 });

@@ -13,7 +13,8 @@ define(['backbone',
     'models/BusModeModel',
     'models/CityModel',
     'models/TripModel',
-    'collections/TripCollection'
+    'collections/TripCollection',
+    'views/ChooseCityView'
 ], function(Backbone,
             _,
             $,
@@ -23,20 +24,25 @@ define(['backbone',
             BusMode,
             CityModel,
             TripModel,
-            TripCollection)
+            TripCollection,
+            ChooseCityView)
 {
     var SimulationModel = Backbone.Model.extend({
 
         defaults: {
-            'sessionId': null,
+            'sessionID': null,
             'transitRoutes': null,
             'sim2Gtfs': null,
             'city': null,
-            'trips': null
+            'trips': null,
+            'location': null
         },
 
         initialize: function() {
             console.log("SimulationModel : initializing");
+
+            this.urlRoot = '/sim_session';
+            this.id = this.cid;
 
             var transitRoutes = new TransitRouteCollection();
             var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
@@ -46,10 +52,36 @@ define(['backbone',
             this.set({'sim2Gtfs': sim2Gtfs});
             this.set({'city': city});
 
-            this.on("change:city", this.setTimezone, this);
-            this.get('city').on("change:timezone", this.setTimezone, this);
+//            this.on("change:city", this.setTimezone, this);
+//            this.get('city').on("change:timezone", this.setTimezone, this);
+
+            // add in the the city selector
+            var chooseCity = new ChooseCityView({model: this});
+
 
             this.generateTrips();
+        },
+
+        // Called from the ChooseCityView, once the user has entered a location
+        // and it has been geocoded. Now we need to convert the long/lat
+        // coordinates to a city and state code
+        setLocation: function(longLat) {
+
+            this.set({'location': longLat});
+
+            var context = this;
+
+            // Now that we've set the location, the server can do the rest.
+            // But tell the server what needs changing. In particular, set the
+            // city!
+            var response = this.save(['city', 'sessionID'], {
+                success: function() {
+                    console.log('mode; persisted, id and city info updated');
+                },
+                error: function (model, response, options) {
+                    console.log('persist fails');
+                }});
+            console.log(response);
         },
 
         setTimezone: function() {
@@ -61,16 +93,16 @@ define(['backbone',
 
             var tripCollection = new TripCollection();
 
-            for(var i = 0; i < 15000; i++) {
-                var newTrip = new TripModel({'tripId': i});
-
-                // All census tract assignment logic
-
-                newTrip.set({'tract1': null});
-                newTrip.set({'tract2': null});
-
-                tripCollection.add(newTrip);
-            }
+//            for(var i = 0; i < 15000; i++) {
+//                var newTrip = new TripModel({'tripId': i});
+//
+//                // All census tract assignment logic
+//
+//                newTrip.set({'tract1': null});
+//                newTrip.set({'tract2': null});
+//
+//                tripCollection.add(newTrip);
+//            }
 
             this.set({'trips': tripCollection});
         }

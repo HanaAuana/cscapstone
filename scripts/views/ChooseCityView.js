@@ -15,26 +15,21 @@ define(['backbone',
 
     var ChooseCityView = Backbone.View.extend({
 
-        cities: null,
         geocoder: null,
 
-        initialize: function() {
+        events: {
+            // click listener for city selection
+            "click #select_btn": "onCitySelected"
+        },
 
-//            // TODO: get the list of cities from our db
-//            // for now, we have dummy list
-//            this.cities = [['Tacoma', 'tacomaCode'],
-//                ['San Francisco', "sfCode"]];
+        initialize: function() {
 
             this.geocoder = new gmaps.Geocoder();
 
             // Append the el (defaults to an empty div) to the document
             $('#title').append(this.el);
-            this.render();
-        },
 
-        events: {
-            // click listener for city selection
-            "click #select_btn": "onCitySelected"
+            this.render();
         },
 
         render: function() {
@@ -48,22 +43,27 @@ define(['backbone',
         onCitySelected: function() {
             console.log('button clicked');
 
-            // Get current radio button value, and pass to the simulation model
+            // hold on to our context
+            var context = this;
+
+            // get the entered text
             var chosenCity = $('#enter_city').val();
             if (chosenCity.length > 0) {
-                this.geocoder.geocode({
-                    'address': chosenCity
-                }, this.onGeocoded);
-            }
-        },
+                // using google's geocode api
+                this.geocoder.geocode({'address': chosenCity},
+                    // callback fired on geocode completion
+                    function(results, status) {
+                        if(status === gmaps.GeocoderStatus.OK) {
+                            // TODO more error checking on the result
+                            var loc = results[0].geometry.location;
 
-        onGeocoded: function(results, status) {
-            if(status === gmaps.GeocoderStatus.OK) {
-                // TODO more error checking on the result
-                var loc = results[0].geometry.location;
-                console.log('geocode to ' + loc);
-            } else {
-                console.log('geocode fails');
+                            if(context.model !== undefined) {
+                                context.model.setLocation(loc);
+                            }
+                        } else {
+                            console.log('geocode fails');
+                        }
+                });
             }
         }
     });

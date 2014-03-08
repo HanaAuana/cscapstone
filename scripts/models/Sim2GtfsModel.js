@@ -5,9 +5,9 @@
 define(['backbone',
     'underscore',
     'models/GtfsModel',
-    'models/GlobalVarsModel',
+    'utils/globalvars',
     'utils/CsvHelperModel'
-], function(Backbone, Underscore, GtfsModel, GlobalVars, CsvHelper){
+], function(Backbone, Underscore, GtfsModel, globalVars, CsvHelper){
 
     var Sim2GtfsModel = GtfsModel.extend({
 
@@ -40,10 +40,9 @@ define(['backbone',
         buildAgencyEntries: function() {
             var delim = this.get('commaDelim');
             var lineBr = this.get('lineBreak');
-            var globalVars = new GlobalVars();
 
-            var agencyTxt = globalVars.get('gtfsAgencyName') + delim
-                        + globalVars.get('url') + delim
+            var agencyTxt = globalVars.gtfsAgencyName + delim
+                        + globalVars.url + delim
                         + this.get('timezone') + lineBr;
             // append the entries to the file, which should already have headers
             var agencyFile = this.get('agencyTxt');
