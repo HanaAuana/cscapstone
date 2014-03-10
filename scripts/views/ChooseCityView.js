@@ -16,6 +16,7 @@ define(['backbone',
     var ChooseCityView = Backbone.View.extend({
 
         geocoder: null,
+        model: null,
 
         events: {
             // click listener for city selection
@@ -28,8 +29,6 @@ define(['backbone',
 
             // Append the el (defaults to an empty div) to the document
             $('#title').append(this.el);
-
-            this.render();
         },
 
         render: function() {
@@ -41,10 +40,8 @@ define(['backbone',
         },
 
         onCitySelected: function() {
-            console.log('button clicked');
-
             // hold on to our context
-            var context = this;
+            var that = this;
 
             // get the entered text
             var chosenCity = $('#enter_city').val();
@@ -56,10 +53,12 @@ define(['backbone',
                         if(status === gmaps.GeocoderStatus.OK) {
                             // TODO more error checking on the result
                             var loc = results[0].geometry.location;
-
-                            if(context.model !== undefined) {
-                                context.model.setLocation(loc);
+                            console.log('setting loc');
+                            if(that.model !== undefined) {
+                                console.log('setting loc');
+                                that.model.setLocation(loc);
                             }
+
                         } else {
                             console.log('geocode fails');
                         }

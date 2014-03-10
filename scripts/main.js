@@ -11,7 +11,8 @@ requirejs.config({
         backbone: 'lib/backbone',
         jquery: 'lib/jquery',
         text: 'lib/text',
-        async: 'lib/async'
+        async: 'lib/async',
+        leaflet: 'leaflet/leaflet'
     },
 
     shim: {
@@ -22,6 +23,9 @@ requirejs.config({
 
         'underscore': {
             exports: '_'
+        },
+        'leaflet':{
+            exports: 'L'
         }
     }
 });

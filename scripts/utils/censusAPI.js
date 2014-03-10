@@ -5,7 +5,6 @@
 define(['http'
 ], function(http) {
 
-
     // The experimental census boundary location api, defined at:
     // http://census.ire.org/docs/boundary.html
     function getBoundaryLocation (longLat, callback, context) {
@@ -16,6 +15,7 @@ define(['http'
 
         // make the call, send result back to the caller if success, send
         // false if failure
+        console.log(url);
         var body = '';
         http.get(url, function(res) {
             // concatenate data chunks

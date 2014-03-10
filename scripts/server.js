@@ -73,20 +73,22 @@ define(['http',
                 var cityModel = req.body.city;
 
                 // get the city name, boundary and centroid
-                censusAPI.getBoundaryLocation(req.body.location, function(res) {
+                censusAPI.getBoundaryLocation(req.body.city.location, function(res) {
                     if(res !== false) {
                         var geoObj = res.objects[0];
-                        cityModel.cityName = geoObj.metadata.NAME10;
+                        cityModel.cityName = geoObj.name;
                         console.log('setting name: ' + cityModel.cityName);
                         // swap lat/lng for consistency
                         cityModel.centroid = [geoObj.centroid.coordinates[1],
                                                 geoObj.centroid.coordinates[0]];
+                        cityModel.stateID = geoObj.metadata.STATEFP10;
                         console.log('setting centroid: ' + cityModel.centroid.toString());
 
                         // get the timezone
-                        googleStaticAPI.getTimezone(req.body.location,
+                        googleStaticAPI.getTimezone(req.body.city.location,
                             function(res) {
                                 if(res !== false) {
+                                    // If successful, grab the timezone
                                     cityModel.timezone = res.timeZoneId;
                                     console.log('setting tz: ' + cityModel.timezone);
 

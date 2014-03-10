@@ -14,7 +14,8 @@ define(['backbone',
     'models/CityModel',
     'models/TripModel',
     'collections/TripCollection',
-    'views/ChooseCityView'
+    'views/ChooseCityView',
+    'views/MapView'
 ], function(Backbone,
             _,
             $,
@@ -25,7 +26,8 @@ define(['backbone',
             CityModel,
             TripModel,
             TripCollection,
-            ChooseCityView)
+            ChooseCityView,
+            MapView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -35,11 +37,10 @@ define(['backbone',
             'sim2Gtfs': null,
             'city': null,
             'trips': null,
-            'location': null
+            'mapView': null
         },
 
         initialize: function() {
-            console.log("SimulationModel : initializing");
 
             this.urlRoot = '/sim_session';
             this.id = this.cid;
@@ -48,15 +49,21 @@ define(['backbone',
             var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
             var city = new CityModel();
 
-            this.set({'transitRoutes': transitRoutes});
-            this.set({'sim2Gtfs': sim2Gtfs});
-            this.set({'city': city});
+            this.set({'transitRoutes': transitRoutes,
+                        'sim2Gtfs': sim2Gtfs,
+                        'city': city});
 
 //            this.on("change:city", this.setTimezone, this);
 //            this.get('city').on("change:timezone", this.setTimezone, this);
 
             // add in the the city selector
-            var chooseCity = new ChooseCityView({model: this});
+            var chooseCity = new ChooseCityView({'model': this});
+            chooseCity.render();
+
+            // and the map
+            var mapView = new MapView({'model': this});
+            mapView.initMap();
+//            this.set({'mapView': mapView});
 
 
             this.generateTrips();
@@ -67,16 +74,25 @@ define(['backbone',
         // coordinates to a city and state code
         setLocation: function(longLat) {
 
-            this.set({'location': longLat});
+            this.get('city').set({'location': longLat});
 
-            var context = this;
+//            this.set({'location': longLat});
+
+            var that = this;
 
             // Now that we've set the location, the server can do the rest.
             // But tell the server what needs changing. In particular, set the
             // city!
             var response = this.save(['city', 'sessionID'], {
                 success: function() {
-                    console.log('mode; persisted, id and city info updated');
+                    console.log('model persisted, id and city info updated');
+                    // Pan to the new location
+//                    var mapView = context.get('mapView');
+//                    if(mapView !== undefined && mapView !== null) {
+////                        var loc = this.get('city').get('centroid');
+//                        mapView.setLocation(context.get('city').get('centroid'));
+//                    }
+
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');
