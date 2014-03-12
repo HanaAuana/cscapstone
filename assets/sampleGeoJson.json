@@ -4,7 +4,8 @@
     {
       "type": "Feature",
       "properties": {
-        "geoType": "route"
+        "geoType": "route",
+        "routeId": "500"
       },
       "geometry": {
         "type": "LineString",
@@ -27,8 +28,10 @@
     {
       "type": "Feature",
       "properties": {
-        "drivingTimes": "5, 3, 7",
-        "geoType": "stops"
+        "inboundDriveTimes": [5, 3, 7],
+        "outboundDriveTimes": [7, 3, 5],
+        "geoType": "stops",
+        "routeId": "500"
       },
       "geometry": {
         "type": "LineString",
