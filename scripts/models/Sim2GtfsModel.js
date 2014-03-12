@@ -4,10 +4,10 @@
 
 define(['backbone',
     'underscore',
-    'scripts/models/GtfsModel',
-    'scripts/models/GlobalVarsModel',
-    'scripts/utils/CsvHelperModel'
-], function(Backbone, Underscore, GtfsModel, GlobalVars, CsvHelper){
+    'models/GtfsModel',
+    'utils/globalvars',
+    'utils/CsvHelperModel'
+], function(Backbone, Underscore, GtfsModel, globalVars, CsvHelper){
 
     var Sim2GtfsModel = GtfsModel.extend({
 
@@ -16,7 +16,8 @@ define(['backbone',
             'transitRoutes': null,
             // some constants
             'commaDelim': ',',
-            'lineBreak': '\r\n'
+            'lineBreak': '\r\n',
+            'timezone': 'America/Central'
         },
 
         initialize: function() {
@@ -39,12 +40,10 @@ define(['backbone',
         buildAgencyEntries: function() {
             var delim = this.get('commaDelim');
             var lineBr = this.get('lineBreak');
-            var globalVars = new GlobalVars();
 
-            // TODO: figure out the timezone
-            var agencyTxt = globalVars.get('gtfsAgencyName') + delim
-                        + globalVars.get('url') + delim
-                        + 'timezone' + lineBr;
+            var agencyTxt = globalVars.gtfsAgencyName + delim
+                        + globalVars.url + delim
+                        + this.get('timezone') + lineBr;
             // append the entries to the file, which should already have headers
             var agencyFile = this.get('agencyTxt');
             this.set({'agencyTxt': agencyFile + agencyTxt});

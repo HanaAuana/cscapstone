@@ -7,46 +7,120 @@
 define(['backbone',
     'underscore',
     'jquery',
-    'scripts/models/TransitRouteModel',
-    'scripts/models/Sim2GtfsModel',
-    'scripts/collections/TransitRouteCollection',
-    'scripts/models/BusModeModel'
+    'models/TransitRouteModel',
+    'models/Sim2GtfsModel',
+    'collections/TransitRouteCollection',
+    'models/BusModeModel',
+    'models/CityModel',
+    'models/TripModel',
+    'collections/TripCollection',
+    'views/ChooseCityView',
+    'views/MapView'
 ], function(Backbone,
-            Underscore,
+            _,
             $,
             TransitRoute,
             Sim2Gtfs,
             TransitRouteCollection,
-            BusMode)
+            BusMode,
+            CityModel,
+            TripModel,
+            TripCollection,
+            ChooseCityView,
+            MapView)
 {
     var SimulationModel = Backbone.Model.extend({
 
         defaults: {
-            'sessionId': null,
-            'transitRoutes': null
+            'sessionID': null,
+            'transitRoutes': null,
+            'sim2Gtfs': null,
+            'city': null,
+            'trips': null,
+            'mapView': null
         },
 
         initialize: function() {
-            console.log("SimulationModel : initializing");
+
+            this.urlRoot = '/sim_session';
+            this.id = this.cid;
 
             var transitRoutes = new TransitRouteCollection();
             var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
+            var city = new CityModel();
 
-            this.set({'transitRoutes': transitRoutes});
-            this.set({'sim2Gtfs': sim2Gtfs});
+            this.set({'transitRoutes': transitRoutes,
+                        'sim2Gtfs': sim2Gtfs,
+                        'city': city});
 
-            // TESTING SHIT TODO: get rid of
-            var transitRoute = new TransitRoute();
-            var transitMode = new BusMode();
+//            this.on("change:city", this.setTimezone, this);
+//            this.get('city').on("change:timezone", this.setTimezone, this);
 
-            $.get('/assets/sampleGeoJson.json', function(data) {
-                console.log('SimulationModel : sampleGeoJson received');
-                transitRoute.set({'mode': transitMode,
-                                    'geoJson': data});
-                transitRoutes.add(transitRoute);
-                transitRoutes.remove(transitRoute);
-            });
+            // add in the the city selector
+            var chooseCity = new ChooseCityView({'model': this});
+            chooseCity.render();
 
+            // and the map
+            var mapView = new MapView({'model': this});
+            mapView.initMap();
+//            this.set({'mapView': mapView});
+
+
+            this.generateTrips();
+        },
+
+        // Called from the ChooseCityView, once the user has entered a location
+        // and it has been geocoded. Now we need to convert the long/lat
+        // coordinates to a city and state code
+        setLocation: function(longLat) {
+
+            this.get('city').set({'location': longLat});
+
+//            this.set({'location': longLat});
+
+            var that = this;
+
+            // Now that we've set the location, the server can do the rest.
+            // But tell the server what needs changing. In particular, set the
+            // city!
+            var response = this.save(['city', 'sessionID'], {
+                success: function() {
+                    console.log('model persisted, id and city info updated');
+                    // Pan to the new location
+//                    var mapView = context.get('mapView');
+//                    if(mapView !== undefined && mapView !== null) {
+////                        var loc = this.get('city').get('centroid');
+//                        mapView.setLocation(context.get('city').get('centroid'));
+//                    }
+
+                },
+                error: function (model, response, options) {
+                    console.log('persist fails');
+                }});
+            console.log(response);
+        },
+
+        setTimezone: function() {
+            var timezone = this.get('city').get('timezone');
+            this.get('sime2Gtfs').set({'timezone': timezone});
+        },
+
+        generateTrips: function() {
+
+            var tripCollection = new TripCollection();
+
+//            for(var i = 0; i < 15000; i++) {
+//                var newTrip = new TripModel({'tripId': i});
+//
+//                // All census tract assignment logic
+//
+//                newTrip.set({'tract1': null});
+//                newTrip.set({'tract2': null});
+//
+//                tripCollection.add(newTrip);
+//            }
+
+            this.set({'trips': tripCollection});
         }
 
     });
