@@ -11,8 +11,11 @@ define(['backbone',
 
         defaults: {
             'cityName': 'AmericanCity',
-            // State ID, as specified by the census bureau
+            // geoIDs, as specified by the census bureau
             'stateID': null,
+            'countyID': null,
+            'countySubdivID': null,
+            'placeID': null,
             // Default to US Central time. Tz strings are specified here:
             // http://en.wikipedia.org/wiki/List_of_tz_zones
             'timezone': 'America/Chicago',

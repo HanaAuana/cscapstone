@@ -21,7 +21,7 @@ requirejs.config({
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
         jquery: 'scripts/lib/jquery',
-	leaflet: 'scripts/leaflet/leaflet'
+	    leaflet: 'scripts/leaflet/leaflet'
     },
 
     shim: {

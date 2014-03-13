@@ -23,7 +23,7 @@ define(['http',
         // assets
         app.use(express.static('scripts'));
         app.use(express.static('assets'));
-        app.use(express.static('templates'))
+        app.use(express.static('templates'));
 
         // app.VERB methods are strung together as middleware.
         // Check this out for a good explanation of the framework:

@@ -24,30 +24,37 @@ define(['scripts/utils/censusAPI',
         console.log('sent sim session response');
     }
 
-    function onBoundaryResponse(cityModel, request, appResponse, res, context) {
+    function onBoundaryResponse(cityModel, request, appResponse, geoObj, context) {
 
-        if(res === false) {
+        if(cityModel === false) {
             console.log("boundary fails");
             appResponse.writeHead(404);
             appResponse.send();
             return;
         }
 
-        var geoObj = res.objects[0];
-        cityModel.cityName = geoObj.name;
+        cityModel.cityName = geoObj.cityName;
         console.log('setting name: ' + cityModel.cityName);
-        // swap lat/lng for consistency
-        cityModel.centroid = [geoObj.centroid.coordinates[1],
-            geoObj.centroid.coordinates[0]];
-        cityModel.stateID = geoObj.metadata.STATEFP10;
+        cityModel.centroid = geoObj.centroid;
+        cityModel.stateID = geoObj.stateID;
+        cityModel.countyID = geoObj.countyID;
+        cityModel.countySubdivID = geoObj.countySubdivID;
+        cityModel.placeID = geoObj.placeID;
         console.log('setting centroid: ' + cityModel.centroid.toString());
 
         completedAPIs[0] = true;
-        checkCallsFinished(request, appResponse, cityModel)
+
+        // Now get the census tract population info
+        censusAPI.getCensusTractPopulations(cityModel.stateID,
+            cityModel.countyID, cityModel.countySubdivID, cityModel.placeID,
+            function(res) {
+                onCensusTractPopResponse(cityModel, request, appResponse,
+                    geoObj, context)
+            });
     }
 
     function onTzResponse(cityModel, request, appResponse, res, context) {
-        if(res === false) {
+        if(cityModel === false) {
             console.log("tz fails");
             appResponse.writeHead(404);
             appResponse.send();
@@ -62,11 +69,25 @@ define(['scripts/utils/censusAPI',
         checkCallsFinished(request, appResponse, cityModel);
     }
 
+    function onCensusTractPopResponse(cityModel, request, appResponse, res, context) {
+
+//        console.log("about to do state tracts call");
+
+//        censusAPI.getStateTracts(cityModel.stateID, function(res) {
+//            console.log('got state tract callback');
+//
+//            completedAPIs[3] = true;
+//            checkCallsFinished(request, appResponse, cityModel)
+//        }, context);
+
+        completedAPIs[2] = true;
+        checkCallsFinished(request, appResponse, cityModel)
+    }
+
     function simSessionRoute(req, response) {
 
-        completedAPIs = [false, false];
-
-//        response.writeHead(200, {'Content-Type': 'application/json'});
+        // keep track of how many calbacks have returned
+        completedAPIs = [false, false, false];
 
         var that = this;
         // A put means this is a new model. We nee to do all the initializing
