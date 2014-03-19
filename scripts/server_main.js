@@ -21,7 +21,7 @@ requirejs.config({
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
         jquery: 'scripts/lib/jquery',
-	    leaflet: 'scripts/leaflet/leaflet'
+        leaflet: 'scripts/leaflet/leaflet'
     },
 
     shim: {
@@ -32,15 +32,18 @@ requirejs.config({
         'underscore': {
             exports: '_'
         },
-	'leaflet':{
-	    exports: 'L'
-	}
+        'leaflet': {
+            exports: 'L'
+        }
     }
 });
 
 // Start the server, using the server and router modules as dependencies
-requirejs(['scripts/server.js',
-           'scripts/routers/router.js'],
-            function(server, router) {
-    server.start(router.route);
-})
+requirejs(['scripts/server',
+    'scripts/routers/router',
+    'scripts/utils/stategeograbber',
+    'scripts/utils/censusAPI'
+], function (server, router, stategeo, censusAPI) {
+      server.start(router.route);
+//    stategeo.checkGeographies();
+});

@@ -7,6 +7,10 @@
         "requirejs": "2.x",
         "express": "3.x",
         "jsftp": "1.x",
-        "forever": "0.x"
+        "forever": "0.x",
+        "bufferedstream": "*",
+        "seq": "*",
+        "morestreams": "*",
+        "memorystream": "*"
     }
 }

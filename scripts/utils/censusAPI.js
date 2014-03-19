@@ -2,27 +2,19 @@
  * Created by Nathan P on 3/6/14.
  *
  * Provides access to the census API
- *
- * The flow of API calls here might be confusing, some are dependent on others
- *      ---------------------
- *      getBoundaryLocation()
- *          Given a lat/lng coordinate, provides encompassing census geographies
- *          Allows for and explicitly calls:
- *          ---------------------------
- *          getCensusTractPopulations()
- *              Given state, county, county subdivision and place geoIDS,
- *              gets populations for all census tracts in the place.
- *              Allows for, but doesn't call:
-*       -------------------
-*       getStateTracts()
-*       Gets a shapefile of all census tracts for a specified state
-*       THIS IS EXPENSIVE! Cache these results as best as possible
  */
 
 define(['http',
     'scripts/utils/globalvars',
-    'jsftp'
-], function(http, globalvars, jsftp) {
+    'jsftp',
+    'fs'
+], function(http, globalvars, Jsftp, fs) {
+
+//    var ftp;
+    var host = 'ftp2.census.gov';
+    var path = '/geo/tiger/TIGER2013/TRACT/';
+    var filePre = 'tl_2013_';
+    var filePost = '_tract.zip';
 
     // defined at:
     // https://www.census.gov/developers/data/acs_5yr_2010_var.xml
@@ -78,32 +70,60 @@ define(['http',
         });
     };
 
-
+    /**
+     * Gets all census tracts for the specified state
+     * @param stateID FIPS code of state
+     * @param callback Called when tracts have been received
+     * @param context optional callback context
+     */
     function getStateTracts(stateID, callback, context) {
 
-        var path = 'geo/tiger/TIGER2013/TRACT/';
-        var filePre = 'tl2013_';
-        var filePost = '_tract.zip';
-
-        var ftp = new jsftp({
-            host: 'ftp2.census.gov'
+        var ftp = new Jsftp({
+            host: host
         });
+        makeCall();
+        ftp.keepAlive();
 
-        console.log("made ftp connection");
 
-        var file = ""; // Will store the contents of the file
-        ftp.get(path + filePre + stateID + filePost, function(err, socket) {
-            if (err) return;
+//        closeConnections(function() {
+//            // make the FTP connection
+//            ftp = new Jsftp({
+//                host: host
+//            });
+//            makeCall();
+//            ftp.keepAlive(15000);
+//        });
 
-            socket.on("data", function(d) {
-                file += d.toString();
+        function makeCall() {
+            // change to the appropriate directory. for some reason we can't do
+            // the GET from the root directory
+            ftp.raw.cwd(path, function(err) {
+
+                if(err) {
+                    console.log(err);
+                }
+
+                // all state FIPS codes are 2 digits, add a leading 0 if necessary
+                var filename = filePre;
+                if(stateID < 10)
+                    filename += '0' + stateID;
+                else
+                    filename += stateID;
+                filename += filePost;
+
+                console.log("making ftp get at: " + host + path + filename);
+                fs.mkdir('./tmp', 0700, function(err) {});
+                ftp.get(filename,'./tmp/' + stateID +'.zip', function(err) {
+                    console.log('get has returned');
+                    if (err) {
+                        console.log('There was an error retrieving state '
+                            + stateID + ' geo: ' + err);
+                        stateID = false;
+                    }
+                    callback.call(context||this, stateID);
+                });
             });
-            socket.on("close", function(hadErr) {
-                if (hadErr)
-                    console.error('There was an error retrieving the file.');
-            });
-            socket.resume();
-        });
+        }
     };
 
     // Parses the the boundary response, extracting the information that
@@ -137,7 +157,26 @@ define(['http',
         return parsedObj;
     };
 
+    function closeConnections(callback) {
+//        console.log("closing connections");
+//        if(ftp !== undefined) {
+//            ftp.destroy();
+//            finishUp();
+//        } else {
+//            finishUp();
+//        }
+//
+//        function finishUp() {
+//            ftp = undefined;
+//            if(callback)
+//                callback.call(this);
+//        }
+        if(callback)
+            callback.call(this);
+    }
+
     return {
+        closeConnections: closeConnections,
         getStateTracts: getStateTracts,
         getBoundaryLocation: getBoundaryLocation,
         getCensusTractPopulations: getCensusTractPopulations
