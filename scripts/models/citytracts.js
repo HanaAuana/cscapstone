@@ -67,15 +67,21 @@ define(['scripts/utils/censusAPI',
             // loop through all state tracts looking for a match
             for(var j = 0; j < stateGeos.length; j++) {
                 var stateTractID = parseInt(stateGeos[j].properties.TRACTCE);
-                if(cityTractID == stateTractID) {
-                    // If ID's match, get the state geoJson feature and add in
-                    // population densities
+                // Ensure that tract ID's and county ID's match
+                if(cityTractID === stateTractID &&
+                        parseInt(cityTractList[i][2]) ===
+                        parseInt(stateGeos[j].properties.COUNTYFP)) {
+
+                    // Now we can be certain of a match. Get the state geoJson
+                    // feature and add in population densities
                     var stateTract = stateGeos[j];
                     stateTract.properties.population = cityTractList[i][0];
                     // And add the object to the final city collection
                     cityGeos[counter++] = stateTract;
                     break;
                 }
+                if(j + 1 == stateGeos.length)
+                    console.log('no match for ' + cityTractID);
             }
         }
 
