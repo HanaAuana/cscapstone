@@ -42,7 +42,7 @@ define(['scripts/utils/censusAPI',
     }
 
     function checkDbState(stateID) {
-//        var file = fs.readFileSync('11.json', 'utf8');
+//        var file = fs.readFileSync('tmp/6.json', 'utf8');
 //        return file;
         // TODO
         return false;
@@ -81,7 +81,33 @@ define(['scripts/utils/censusAPI',
 
         console.log('Built city geos list of size ' + cityGeos.length 
             + ', should have been size ' + cityTractList.length);
-        return cityGeos;
+        return tractList2GeoJson(cityGeos);
+    }
+
+    /**
+     * Converts the list of city tracts to a GeoJson
+     * @param tractList List of city tracts
+     * @returns
+     */
+    function tractList2GeoJson(tractList) {
+        var geoJson = {
+            "type": "FeatureCollection",
+            "properties": {
+                "maxPopulation": 0,
+                "maxEmployment": 0
+            },
+            "features": []
+        }
+        for(var i = 0; i < tractList.length; i++){
+            var curTract = tractList[i];
+            // keep track of max population, for shading density on the
+            // front end
+            if(curTract.properties.population > geoJson.properties.maxPopulation)
+                geoJson.properties.maxPopulation = curTract.properties.population;
+
+            geoJson.features[i] = curTract;
+        }
+        return geoJson;
     }
 
     return {

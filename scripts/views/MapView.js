@@ -42,6 +42,28 @@ define(['leaflet',
                 this.centroid = newCentroid;
             }
 
+            this.enableTractPopLayer();
+        },
+
+        enableTractPopLayer: function() {
+            var censusTracts = this.model.get('city').censusTracts;
+            var maxDensity = censusTracts.properties.maxPopulation;
+            // Add shapes, and style according to the population density
+            L.geoJson(censusTracts, {
+                style: function(feature) {
+                    // Convert the population density in to a hex color value
+                    var pct = feature.properties.population / maxDensity;
+                    var blueShade = 255 - Math.floor(pct * 255);
+                    var hexColor = "#0000" + blueShade.toString(16);
+
+                    return {
+                        color: hexColor,
+                        fillColor: hexColor,
+                        fillOpacity: 0.8
+                    };
+                }
+            }).addTo(this.map);
+
         }
 	});
 	

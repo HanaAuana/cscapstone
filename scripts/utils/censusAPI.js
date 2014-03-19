@@ -129,14 +129,7 @@ define(['http',
     // Parses the the boundary response, extracting the information that
     // we'll need
     function parseBoundaryResponse(responseBody) {
-        var parsedObj = {
-            stateID: '',
-            countyID: '',
-            countySubdivID: '',
-            placeID: '',
-            cityName: '',
-            centroid: null
-        }
+        var parsedObj = {};
         var boundaryObj = JSON.parse(responseBody);
 
         for(var i = 0; i < boundaryObj.objects.length; i++) {
