@@ -5,8 +5,9 @@
 define(['http',
     'url',
     'fs',
-    'express'
-], function (http, url, fs, express) {
+    'express',
+    'scripts/routers/router'
+], function (http, url, fs, express, router) {
 
     // Starts the server with a router instance
     function start(route) {
@@ -17,6 +18,12 @@ define(['http',
         app.use(express.logger());
         app.use(express.cookieParser());
         app.use(express.session({secret: '1234567890QWERTY'}));
+        app.use(express.bodyParser({limit: '5mb'}));
+        // Express will serve up anything in the following folders as static
+        // assets
+        app.use(express.static('scripts'));
+        app.use(express.static('assets'));
+        app.use(express.static('templates'));
 
         // app.VERB methods are strung together as middleware.
         // Check this out for a good explanation of the framework:
@@ -34,7 +41,7 @@ define(['http',
                 });
         });
 
-	app.get('/map', function (req, res) {
+        app.get('/map', function (req, res) {
             // Serve the homepage asynchronously
             res.writeHead(200, {'Content-Type': 'text/html'});
             fs.readFile("./map/index.html",
@@ -47,35 +54,14 @@ define(['http',
                 });
         });
 
-        // TODO: make this regex
-        app.get('/assets/sampleGeoJson.json', function(req, res) {
+        // All our API calls end up here
+        app.get('/api/*', function(req, res) {
 
-            res.writeHead(200, {'Content-Type': 'application/json'});
-
-            // Parse out the pathname
-            var pathname = url.parse(req.url).pathname;
-            console.log("server : serving " + pathname);
-
-            fs.readFile('./' + pathname, function(error, json) {
-                if(error)
-                    throw error;
-                res.end(json);
-            });
         });
 
-        app.get('/scripts/*', function (req, res) {
-            // Serve up a script
-            res.writeHead(200, {'Content-Type': 'text/javascript'});
-
-            // Parse out the pathname
-            var pathname = url.parse(req.url).pathname;
-            console.log("server : serving " + pathname);
-
-            fs.readFile('./' + pathname, function(error, js) {
-                if(error)
-                    throw error;
-                res.end(js);
-            });
+        // All saves/fetches for the simulation model
+        app.all('/sim_session/*', function(req, response) {
+            router.simSession(req, response);
         });
 
         app.listen(1337, '127.0.0.1');

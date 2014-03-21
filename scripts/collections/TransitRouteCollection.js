@@ -4,7 +4,7 @@
 
 define(['backbone',
     'underscore',
-    'scripts/models/TransitRouteModel'
+    'models/TransitRouteModel'
 ], function(Backbone, Underscore, TransitRoute) {
 
     var TransitRouteCollection = Backbone.Collection.extend({

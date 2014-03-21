@@ -1,2 +1,9 @@
+# IntelliJ files #
+*.iml
+*.idea
+
 # NodeJs Modules #
 node_modules
+
+# Our temp data #
+tmp

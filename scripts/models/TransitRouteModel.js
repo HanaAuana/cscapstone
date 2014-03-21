@@ -16,7 +16,7 @@ define(['backbone',
             'headway': 15,
             'serviceId': 1, // Specifies operation hours in GTFS. Don't change
             'startServiceMins': 360, // 6am
-            'endServiceMins': 1260 // 9pm (21hrs)
+            'endServiceMins': 480 // 1260 mins = 9pm = 21hrs
         },
 
         initialize: function() {
@@ -43,11 +43,14 @@ define(['backbone',
             }
         },
 
-        getStopsDriveTimes: function() {
+        getDriveTimes: function(direction) {
             var features = this.get('geoJson').features;
             for(var i = 0; i < features.length; i++) {
                 if(features[i].properties.geoType === 'stops') {
-                    return features[i].properties.drivingTimes;
+                    if(direction === 'inbound')
+                        return features[i].properties.inboundDriveTimes;
+                    else if(direction === 'outbound')
+                        return features[i].properties.outboundDriveTimes;
                 }
             }
         }
