@@ -12,7 +12,8 @@ requirejs.config({
         jquery: 'lib/jquery',
         text: 'lib/text',
         async: 'lib/async',
-        leaflet: 'leaflet/leaflet'
+        leaflet: 'leaflet/leaflet',
+        leafletDraw: "leaflet/leaflet-draw"
     },
 
     shim: {
@@ -24,8 +25,12 @@ requirejs.config({
         'underscore': {
             exports: '_'
         },
-        'leaflet':{
+        'leaflet': {
             exports: 'L'
+        },
+        'leafletDraw':{
+        	deps: ['leaflet'],
+        	exports: 'leafletDraw'
         }
     }
 });

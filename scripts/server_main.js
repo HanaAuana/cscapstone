@@ -21,7 +21,8 @@ requirejs.config({
     	jquery: 'scripts/lib/jquery',
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
-        leaflet: "http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js",
+        leaflet: "scripts/leaflet/leaflet",
+        leafletDraw: "scripts/leaflet/leaflet-draw"
     },
 
     shim: {
@@ -32,9 +33,13 @@ requirejs.config({
             deps: ['underscore', 'jquery'],
             exports: 'Backbone'
         }, 
-        'https://api.tiles.mapbox.com/mapbox.js/v1.6.2/mapbox.js': {
+        'leaflet': {
             exports: 'L'
         },
+        'leafletDraw':{
+        	deps: ['leaflet'],
+        	exports: 'L'
+        }
     }
 });
 
