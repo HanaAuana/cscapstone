@@ -1,14 +1,14 @@
 
 // Start the map
-define(['leaflet',
-	   'jquery', 
-	   'underscore', 
+define(['jquery', 
+		'underscore', 
+		'leaflet',
+		'https://api.tiles.mapbox.com/mapbox.js/v1.6.2/mapbox.js',
 	   'backbone'
 ], function(L,$, _, Backbone) {
 
 	var MapView = Backbone.View.extend({
 		id: "mapView",
-		template: _.template( $('#map-template').html() ),
 		map: null,
         centroid: null,
 
@@ -20,7 +20,7 @@ define(['leaflet',
         },
 
 		render: function(){
-			this.$el.html(this.template);
+			this.$el.html('<div id = "mapView"></div>');
 			return this;
 		},
 

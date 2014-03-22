@@ -18,23 +18,23 @@ requirejs.config({
     baseUrl: "../capstone/",
 
     paths: {
+    	jquery: 'scripts/lib/jquery',
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
-        jquery: 'scripts/lib/jquery',
-        leaflet: 'scripts/leaflet/leaflet'
+        leaflet: "http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js",
     },
 
     shim: {
+    	'underscore': {
+            exports: '_'
+        },
         'backbone': {
             deps: ['underscore', 'jquery'],
             exports: 'Backbone'
-        },
-        'underscore': {
-            exports: '_'
-        },
-        'leaflet': {
+        }, 
+        'https://api.tiles.mapbox.com/mapbox.js/v1.6.2/mapbox.js': {
             exports: 'L'
-        }
+        },
     }
 });
 
