@@ -18,22 +18,27 @@ requirejs.config({
     baseUrl: "../capstone/",
 
     paths: {
+    	jquery: 'scripts/lib/jquery',
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
-        jquery: 'scripts/lib/jquery',
-        leaflet: 'scripts/leaflet/leaflet'
+        leaflet: "scripts/leaflet/leaflet",
+        leafletDraw: "scripts/leaflet/leaflet-draw"
     },
 
     shim: {
+    	'underscore': {
+            exports: '_'
+        },
         'backbone': {
             deps: ['underscore', 'jquery'],
             exports: 'Backbone'
-        },
-        'underscore': {
-            exports: '_'
-        },
+        }, 
         'leaflet': {
             exports: 'L'
+        },
+        'leafletDraw':{
+        	deps: ['leaflet'],
+        	exports: 'L'
         }
     }
 });

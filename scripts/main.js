@@ -13,7 +13,8 @@ requirejs.config({
         text: 'lib/text',
         async: 'lib/async',
         leaflet: 'leaflet/leaflet',
-        tinycolor: 'lib/tinycolor-min'
+        tinycolor: 'lib/tinycolor-min',
+        leafletDraw: "leaflet/leaflet-draw"
     },
 
     shim: {
@@ -25,8 +26,12 @@ requirejs.config({
         'underscore': {
             exports: '_'
         },
-        'leaflet':{
+        'leaflet': {
             exports: 'L'
+        },
+        'leafletDraw':{
+        	deps: ['leaflet'],
+        	exports: 'leafletDraw'
         }
     }
 });

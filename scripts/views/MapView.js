@@ -3,8 +3,9 @@ define(['leaflet',
     'jquery',
     'underscore',
     'backbone',
-    'tinycolor'
-], function (L, $, _, Backbone, tinycolor) {
+    'tinycolor',
+    'leafletDraw'
+], function (L, $, _, Backbone, tinycolor, leafletDraw) {
 
     var MapView = Backbone.View.extend({
         id: "mapView",
@@ -29,6 +30,18 @@ define(['leaflet',
             $("#title").append(this.render().el); //Make sure our View el is attached to the document
             this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
+
+            var featureGroup = L.featureGroup().addTo(this.map);
+
+            var drawControl = new L.Control.Draw({
+                edit : {
+                    featureGroup : featureGroup
+                }
+            }).addTo(this.map);
+
+            this.map.on('draw:created', function(e) {
+                featureGroup.addLayer(e.layer);
+            });
         },
 
         handleModelSync: function () {
@@ -39,11 +52,12 @@ define(['leaflet',
                 console.log('panning to ' + newCentroid);
                 this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
 
-                this.centroid = newCentroid;
-            }
 
-            this.enableTractPopLayer();
-        },
+				this.centroid = newCentroid;
+			}
+
+			this.enableTractPopLayer();
+		},
 
         enableTractPopLayer: function () {
             var that = this;
@@ -54,22 +68,20 @@ define(['leaflet',
                 style: function (feature) {
                     // Convert the population density in to a hex color value
                     var pct = feature.properties.populationDensity / maxDensity;
-                    var hexColor = that.calcBlueColor(pct);
+                    var hexColor = that.calcPopColor(pct);
 
                     return {
                         opacity: "0", // No need to emphasize the tract borders
                         fillColor: hexColor,
-                        fillOpacity: 0.7
+                        fillOpacity: 0.6
                     };
                 }
             }).addTo(this.map);
         },
 
-        calcBlueColor: function(pct) {
+        calcPopColor: function(pct) {
             var amount = Math.floor(pct * 100);
-
             var hex = tinycolor.darken("yellow", amount).toHexString();
-            console.log(amount + " " + hex);
             return hex;
         }
     });

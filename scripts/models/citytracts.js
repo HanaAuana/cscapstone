@@ -42,10 +42,10 @@ define(['scripts/utils/censusAPI',
     }
 
     function checkDbState(stateID) {
-        var file = fs.readFileSync('tmp/11.json', 'utf8');
-        return file;
+//        var file = fs.readFileSync('tmp/11.json', 'utf8');
+//        return file;
         // TODO
-//        return false;
+        return false;
     }
 
     /**
