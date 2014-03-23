@@ -42,10 +42,10 @@ define(['scripts/utils/censusAPI',
     }
 
     function checkDbState(stateID) {
-//        var file = fs.readFileSync('tmp/6.json', 'utf8');
-//        return file;
+        var file = fs.readFileSync('tmp/11.json', 'utf8');
+        return file;
         // TODO
-        return false;
+//        return false;
     }
 
     /**
@@ -73,9 +73,15 @@ define(['scripts/utils/censusAPI',
                         parseInt(stateGeos[j].properties.COUNTYFP)) {
 
                     // Now we can be certain of a match. Get the state geoJson
-                    // feature and add in population densities
+                    // feature and add in the tract's population AND the tract's
+                    // population density
                     var stateTract = stateGeos[j];
                     stateTract.properties.population = cityTractList[i][0];
+                    // Calculate population density. 'ALAND' is in square meters,
+                    // so convert to square miles
+                    stateTract.properties.populationDensity =
+                            stateTract.properties.population /
+                            (stateTract.properties.ALAND * 0.000000386102);
                     // And add the object to the final city collection
                     cityGeos[counter++] = stateTract;
                     break;
@@ -100,16 +106,19 @@ define(['scripts/utils/censusAPI',
             "type": "FeatureCollection",
             "properties": {
                 "maxPopulation": 0,
+                "maxPopDensity": 0,
                 "maxEmployment": 0
             },
             "features": []
         }
         for(var i = 0; i < tractList.length; i++){
             var curTract = tractList[i];
-            // keep track of max population, for shading density on the
-            // front end
+            // keep track of max population and max population density, for
+            // shading density on the front end
             if(curTract.properties.population > geoJson.properties.maxPopulation)
-                geoJson.properties.maxPopulation = curTract.properties.population;
+                geoJson.properties.maxPopulation = curTract.properties.population
+            if(curTract.properties.populationDensity > geoJson.properties.maxPopDensity)
+                geoJson.properties.maxPopDensity = curTract.properties.populationDensity;
 
             geoJson.features[i] = curTract;
         }

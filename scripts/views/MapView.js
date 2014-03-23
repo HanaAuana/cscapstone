@@ -1,41 +1,41 @@
-
 // Start the map
 define(['leaflet',
-	   'jquery', 
-	   'underscore', 
-	   'backbone'
-], function(L,$, _, Backbone) {
+    'jquery',
+    'underscore',
+    'backbone',
+    'tinycolor'
+], function (L, $, _, Backbone, tinycolor) {
 
-	var MapView = Backbone.View.extend({
-		id: "mapView",
-		template: _.template( $('#map-template').html() ),
-		map: null,
+    var MapView = Backbone.View.extend({
+        id: "mapView",
+        template: _.template($('#map-template').html()),
+        map: null,
         centroid: null,
 
-        initialize: function() {
+        initialize: function () {
             var model = this.model;
-            if(model !== undefined) {
+            if (model !== undefined) {
                 model.on('sync', this.handleModelSync, this);
             }
         },
 
-		render: function(){
-			this.$el.html(this.template);
-			return this;
-		},
+        render: function () {
+            this.$el.html(this.template);
+            return this;
+        },
 
-		initMap: function(){
+        initMap: function () {
             console.log('instantiating mapview');
-			$("#title").append(this.render().el); //Make sure our View el is attached to the document
-			this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
-    		L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
-		},
+            $("#title").append(this.render().el); //Make sure our View el is attached to the document
+            this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
+            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
+        },
 
-        handleModelSync: function() {
+        handleModelSync: function () {
             var city = this.model.get('city');
             var newCentroid = city.centroid;
             // Only pan if the centroid has changed
-            if(this.centroid == null || this.centroid != newCentroid) {
+            if (this.centroid == null || this.centroid != newCentroid) {
                 console.log('panning to ' + newCentroid);
                 this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
 
@@ -45,27 +45,34 @@ define(['leaflet',
             this.enableTractPopLayer();
         },
 
-        enableTractPopLayer: function() {
+        enableTractPopLayer: function () {
+            var that = this;
             var censusTracts = this.model.get('city').censusTracts;
-            var maxDensity = censusTracts.properties.maxPopulation;
+            var maxDensity = censusTracts.properties.maxPopDensity;
             // Add shapes, and style according to the population density
             L.geoJson(censusTracts, {
-                style: function(feature) {
+                style: function (feature) {
                     // Convert the population density in to a hex color value
-                    var pct = feature.properties.population / maxDensity;
-                    var blueShade = 255 - Math.floor(pct * 255);
-                    var hexColor = "#0000" + blueShade.toString(16);
+                    var pct = feature.properties.populationDensity / maxDensity;
+                    var hexColor = that.calcBlueColor(pct);
 
                     return {
-                        color: hexColor,
+                        opacity: "0", // No need to emphasize the tract borders
                         fillColor: hexColor,
-                        fillOpacity: 0.8
+                        fillOpacity: 0.7
                     };
                 }
             }).addTo(this.map);
+        },
 
+        calcBlueColor: function(pct) {
+            var amount = Math.floor(pct * 100);
+
+            var hex = tinycolor.darken("yellow", amount).toHexString();
+            console.log(amount + " " + hex);
+            return hex;
         }
-	});
-	
+    });
+
     return MapView;
 });

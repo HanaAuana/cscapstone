@@ -12,7 +12,8 @@ requirejs.config({
         jquery: 'lib/jquery',
         text: 'lib/text',
         async: 'lib/async',
-        leaflet: 'leaflet/leaflet'
+        leaflet: 'leaflet/leaflet',
+        tinycolor: 'lib/tinycolor-min'
     },
 
     shim: {
