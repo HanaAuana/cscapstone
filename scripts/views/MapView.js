@@ -4,12 +4,13 @@ define(['leaflet',
     'underscore',
     'backbone',
     'tinycolor',
-    'leafletDraw'
-], function (L, $, _, Backbone, tinycolor, leafletDraw) {
+    'leafletDraw',
+    'text!MapViewTemplate.ejs'
+], function (L, $, _, Backbone, tinycolor, leafletDraw, MapViewTemplate) {
 
     var MapView = Backbone.View.extend({
         id: "mapView",
-        template: _.template($('#map-template').html()),
+        template: _.template(MapViewTemplate, {}),
         map: null,
         centroid: null,
 
