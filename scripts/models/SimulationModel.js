@@ -40,8 +40,7 @@ define(['backbone',
             'transitRoutes': null,
             'sim2Gtfs': null,
             'city': null,
-            'trips': null,
-            'mapView': null
+            'trips': null
         },
 
         initialize: function() {
@@ -57,8 +56,16 @@ define(['backbone',
                         'sim2Gtfs': sim2Gtfs,
                         'city': city});
 
+            this.set({"layers" : {
+                    popLevels: {name: "Population Levels",
+                                toggled: false},
+                    empLevels: {name: "Employment Levels",
+                                toggled: false},
+                    transitNet: {name: "Transit Network",
+                                toggled: false}}
+            });
+
 //            this.on("change:city", this.setTimezone, this);
-//            this.get('city').on("change:timezone", this.setTimezone, this);
 
             // add in the header
             new HeaderView().render();
@@ -85,8 +92,6 @@ define(['backbone',
         setLocation: function(longLat) {
 
             this.get('city').set({'location': longLat});
-
-//            this.set({'location': longLat});
 
             var that = this;
 

@@ -13,12 +13,14 @@ define(['leaflet',
         template: _.template(MapViewTemplate, {}),
         map: null,
         centroid: null,
+        visibleLayers: {},
+
 
         initialize: function () {
-            var model = this.model;
-            if (model !== undefined) {
-                model.on('sync', this.handleModelSync, this);
-            }
+             // Register listeners
+            this.model.on('sync', this.handleModelSync, this);
+            this.model.on('change:layers', this.toggleLayers, this);
+
         },
 
         render: function () {
@@ -56,34 +58,58 @@ define(['leaflet',
 
 				this.centroid = newCentroid;
 			}
-
-			this.enableTractPopLayer();
 		},
 
-        enableTractPopLayer: function () {
-            var that = this;
-            var censusTracts = this.model.get('city').censusTracts;
-            var maxDensity = censusTracts.properties.maxPopDensity;
-            // Add shapes, and style according to the population density
-            L.geoJson(censusTracts, {
-                style: function (feature) {
-                    // Convert the population density in to a hex color value
-                    var pct = feature.properties.populationDensity / maxDensity;
-                    var hexColor = that.calcPopColor(pct);
+        toggleTractPopLayer: function (toggle) {
+            console.log("toggling pop levels");
+            if(toggle) {
+                var that = this;
+                var censusTracts = this.model.get('city').censusTracts;
+                var maxDensity = censusTracts.properties.maxPopDensity;
+                // Add shapes, and style according to the population density
+                var geoJson = L.geoJson(censusTracts, {
+                    style: function (feature) {
+                        // Convert the population density in to a hex color value
+                        var pct = feature.properties.populationDensity / maxDensity;
+                        var hexColor = that.calcPopColor(pct);
 
-                    return {
-                        opacity: "0", // No need to emphasize the tract borders
-                        fillColor: hexColor,
-                        fillOpacity: 0.6
-                    };
+                        return {
+                            opacity: "0", // No need to emphasize the tract borders
+                            fillColor: hexColor,
+                            fillOpacity: 0.6
+                        };
+                    }
+                });
+                this.visibleLayers.popLevels = geoJson;
+                geoJson.addTo(this.map);
+            } else {
+                if(this.visibleLayers.popLevels !== undefined) {
+                    this.map.removeLayer(this.visibleLayers.popLevels);
+                    this.visibleLayers.popLevels = undefined;
                 }
-            }).addTo(this.map);
+            }
+
         },
 
         calcPopColor: function(pct) {
             var amount = Math.floor(pct * 100);
             var hex = tinycolor.darken("yellow", amount).toHexString();
             return hex;
+        },
+
+        // Invoked anytime the user changes which layers are viewable
+        toggleLayers: function(changedLayers) {
+
+            for(var key in changedLayers) {
+                if(!changedLayers.hasOwnProperty(key))
+                    continue;
+
+                var layer = changedLayers[key];
+                if(layer.name === "Population Levels") {
+                    this.toggleTractPopLayer(layer.toggled);
+                }
+                // TODO other layers
+            }
         }
     });
 

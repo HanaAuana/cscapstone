@@ -14,12 +14,9 @@ define(['backbone',
 
         initialize: function() {
             $('#title').append(this.el);
-            console.log("init");
         },
 
         render: function() {
-
-            console.log('render');
 
             // Compile the template, and pass in the city list;
             var template = _.template(headerViewTemplate, {});

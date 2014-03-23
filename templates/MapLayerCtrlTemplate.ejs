@@ -1,8 +1,12 @@
 <p>Select Layers</p>
-<form action="" id="mapLayerCtrl">
-    <% for(var i =0; i < layers.length; i++) { %>
-    <% var layer = layers[i]; %>
-    <input type="radio" name=city value=<%= layer %> > <%= layer %> <br>
+<form action="" id="map-layer-ctrl">
+    <% for (var layer in layers) { %>
+    <%  if(!layers.hasOwnProperty(layer)) { %>
+    <%      continue; } %>
+    <input type="checkbox" name=<%= layer %> value=<%= layer %>
+            <%= layers[layer].toggled ? 'checked' : ''  %>>
+    <%= layers[layer].name %>
+    <br>
     <% } %>
 </form>
 <style>
