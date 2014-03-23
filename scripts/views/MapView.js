@@ -9,7 +9,7 @@ define(['leaflet',
 ], function (L, $, _, Backbone, tinycolor, leafletDraw, MapViewTemplate) {
 
     var MapView = Backbone.View.extend({
-        id: "mapView",
+        id: "map-container",
         template: _.template(MapViewTemplate, {}),
         map: null,
         centroid: null,
@@ -23,12 +23,12 @@ define(['leaflet',
 
         render: function () {
             this.$el.html(this.template);
-            return this;
+            $("#map-container").append(this.el); //Make sure our View el is attached to the document
         },
 
         initMap: function () {
             console.log('instantiating mapview');
-            $("#title").append(this.render().el); //Make sure our View el is attached to the document
+            this.render();
             this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
 

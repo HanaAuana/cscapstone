@@ -15,7 +15,9 @@ define(['backbone',
     'models/TripModel',
     'collections/TripCollection',
     'views/ChooseCityView',
-    'views/MapView'
+    'views/MapView',
+    'views/MapLayerCtrlView',
+    'views/HeaderView'
 ], function(Backbone,
             _,
             $,
@@ -27,7 +29,9 @@ define(['backbone',
             TripModel,
             TripCollection,
             ChooseCityView,
-            MapView)
+            MapView,
+            MapLayerCtrlView,
+            HeaderView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -56,14 +60,20 @@ define(['backbone',
 //            this.on("change:city", this.setTimezone, this);
 //            this.get('city').on("change:timezone", this.setTimezone, this);
 
-            // add in the the city selector
+            // add in the header
+            new HeaderView().render();
+
+            // and the city selector
             var chooseCity = new ChooseCityView({'model': this});
             chooseCity.render();
 
             // and the map
             var mapView = new MapView({'model': this});
             mapView.initMap();
-//            this.set({'mapView': mapView});
+
+            // and the map layer selector
+            var mapLayerSelecter = new MapLayerCtrlView({'model': this});
+            mapLayerSelecter.render();
 
 
             this.generateTrips();

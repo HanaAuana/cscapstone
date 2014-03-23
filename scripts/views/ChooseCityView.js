@@ -28,7 +28,7 @@ define(['backbone',
             this.geocoder = new gmaps.Geocoder();
 
             // Append the el (defaults to an empty div) to the document
-            $('#title').append(this.el);
+            $('#ctrl-container').append(this.el);
         },
 
         render: function() {
