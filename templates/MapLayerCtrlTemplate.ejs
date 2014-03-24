@@ -1,9 +1,9 @@
-<p>Select Layers</p>
+<h3>Select Layers</h3>
 <form action="" id="map-layer-ctrl">
     <% for (var layer in layers) { %>
     <%  if(!layers.hasOwnProperty(layer)) { %>
     <%      continue; } %>
-    <input type="checkbox" name=<%= layer %> value=<%= layer %>
+    <input type="checkbox" class="checkbox" name=<%= layer %> value=<%= layer %>
             <%= layers[layer].toggled ? 'checked' : ''  %>>
     <%= layers[layer].name %>
     <br>

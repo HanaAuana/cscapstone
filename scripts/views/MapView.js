@@ -99,7 +99,6 @@ define(['leaflet',
 
         // Invoked anytime the user changes which layers are viewable
         toggleLayers: function(changedLayers) {
-
             for(var key in changedLayers) {
                 if(!changedLayers.hasOwnProperty(key))
                     continue;
