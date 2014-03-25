@@ -17,7 +17,8 @@ define(['backbone',
     'views/ChooseCityView',
     'views/MapView',
     'views/MapLayerCtrlView',
-    'views/HeaderView'
+    'views/HeaderView',
+    'views/CtrlSelectorView'
 ], function(Backbone,
             _,
             $,
@@ -31,7 +32,8 @@ define(['backbone',
             ChooseCityView,
             MapView,
             MapLayerCtrlView,
-            HeaderView)
+            HeaderView,
+            CtrlSelectorView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -74,14 +76,16 @@ define(['backbone',
             var chooseCity = new ChooseCityView({'model': this});
             chooseCity.render();
 
+            // and the control selector
+            new CtrlSelectorView().render();
+
             // and the map
             var mapView = new MapView({'model': this});
             mapView.initMap();
 
             // and the map layer selector
-            var mapLayerSelecter = new MapLayerCtrlView({'model': this});
-            mapLayerSelecter.render();
-
+            var mapLayerSelector = new MapLayerCtrlView({'model': this});
+            mapLayerSelector.render();
 
             this.generateTrips();
         },

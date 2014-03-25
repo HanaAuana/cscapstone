@@ -11,21 +11,43 @@ define(['backbone',
 
     var MapLayerCtrlView = Backbone.View.extend({
 
+        rendered: false,
+
         events: {
-            "click #map-layer-ctrl" : "onLayerToggled"
+            "click #map-layer-ctrl": "onLayerToggled"
         },
 
-        render: function() {
-
+        initialize: function() {
             var layers = this.model.get('layers');
-
-            // Compile the template, and pass in the layer list;
+            // Compile the template, and pass in the layer list
             var template = _.template(mapLayerCtrlTemplate,
                     {layers: layers});
             // Load the compiled HTML into the Backbone "el"
             this.$el.html( template );
-            $('#ctrl-container').append(this.$el);
 
+            var that = this;
+            // Listen for events fired when the in focus tab changes. These
+            // events are fired by the CtrlSelectorView
+            Backbone.pubSub.on('ctrl-tab-change', function(id) {
+                if(id === 'nav-tab-layers')
+                    that.render();
+                else
+                    that.remove();
+            });
+        },
+
+        render: function() {
+            if(!this.rendered) {
+                $('#ctrl-container').append(this.$el);
+                this.rendered = true
+            }
+        },
+
+        remove: function() {
+            if(this.rendered) {
+                this.$el.remove();
+                this.rendered = false;
+            }
         },
 
         onLayerToggled: function() {
@@ -51,7 +73,6 @@ define(['backbone',
             // doesn't actually change. Explicitly invoke the event then
             this.model.trigger('change:layers', changedLayers);
         }
-
     });
 
     return MapLayerCtrlView;
