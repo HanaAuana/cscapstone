@@ -10,6 +10,8 @@
         "forever": "0.x",
         "seq": "*",
         "morestreams": "*",
-        "memorystream": "*"
+        "memorystream": "*",
+        "byline": "*"
+
     }
 }

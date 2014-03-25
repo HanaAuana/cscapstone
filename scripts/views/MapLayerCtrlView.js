@@ -59,7 +59,6 @@ define(['backbone',
             for(var key in layers) {
                 if(layers.hasOwnProperty(key)) {
                     var toggled = $('[name=' + key + ']:checked').length > 0;
-//                    console.log('toggling ' + key + " to " + toggled);
                     if(layers[key].toggled !== toggled) {
                         changedLayers[key] = layers[key];
                     }
