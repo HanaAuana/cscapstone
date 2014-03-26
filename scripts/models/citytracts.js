@@ -40,10 +40,16 @@ define(['scripts/utils/censusAPI',
         callback.call(context||this, result);
     }
 
-    function writeCityToDb(stateID, countyID, placeID, cityGeoJson) {z
+    function writeCityToDb(stateID, countyID, placeID, cityGeoJson) {
         // TODO write to db
-        fs.writeFile("./tmp/" + stateID + "_emp_pop.json",
-            JSON.stringify(cityGeoJson));
+        var geoID = stateID + countyID + placeID;
+        try {
+            fs.writeFile("./tmp/" + geoID + "_emp_pop.json",
+                JSON.stringify(cityGeoJson));
+        } catch (err) {
+            console.error("Unable to write city geoID + " + geoID + " to db: "
+                            + err);
+        }
     }
 
     function checkDbCity(stateID, countyID, placeID) {
@@ -52,16 +58,21 @@ define(['scripts/utils/censusAPI',
     }
 
     function checkDbState(stateID) {
-        // TODO check the database instead of file system
-        var files = fs.readdirSync('./tmp');
-        for(var i = 0; i < files.length; i++) {
-            if(RegExp("^State" + stateID).test(files[i])) {
-                var filepath = path.join('./tmp', files[i]);
-                console.log("Reading state geoJson at: " + filepath);
-                var file = fs.readFileSync(filepath, 'utf8');
-                return file;
+        try {
+            var files = fs.readdirSync('./tmpr');
+            for(var i = 0; i < files.length; i++) {
+                if(RegExp("^State" + stateID).test(files[i])) {
+                    var filepath = path.join('./tmp', files[i]);
+                    console.log("Reading state geoJson at: " + filepath);
+                    var file = fs.readFileSync(filepath, 'utf8');
+                    return file;
+                }
             }
+        } catch (err) {
+            console.error("Unable to read state " + stateID + " geoJson: "
+                            + err);
         }
+
 
         return false;
     }
