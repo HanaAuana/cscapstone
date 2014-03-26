@@ -15,7 +15,6 @@ define(['leaflet',
         centroid: null,
         visibleLayers: {},
 
-
         initialize: function () {
              // Register listeners
             this.model.on('sync', this.handleModelSync, this);
@@ -65,13 +64,13 @@ define(['leaflet',
             if(toggle) {
                 var that = this;
                 var censusTracts = this.model.get('city').censusTracts;
-                var maxDensity = censusTracts.properties.maxPopDensity;
                 // Add shapes, and style according to the population density
                 var geoJson = L.geoJson(censusTracts, {
                     style: function (feature) {
-                        // Convert the population density in to a hex color value
-                        var pct = feature.properties.populationDensity / maxDensity;
-                        var hexColor = that.calcPopColor(pct);
+                        // Convert the bin to a hex color value
+                        var hexColor =
+                            that.calcPopColor(feature.properties.popBin,
+                                               censusTracts.properties.numBins);
 
                         return {
                             opacity: "0", // No need to emphasize the tract borders
@@ -88,12 +87,48 @@ define(['leaflet',
                     this.visibleLayers.popLevels = undefined;
                 }
             }
+        },
+
+        toggleTractEmpLayer: function (toggle) {
+            console.log("toggling employment levels");
+            if(toggle) {
+                var that = this;
+                var censusTracts = this.model.get('city').censusTracts;
+                // Add shapes, and style according to the population density
+                var geoJson = L.geoJson(censusTracts, {
+                    style: function (feature) {
+                        // Convert the employment bin in to a hex color value
+                        var hexColor =
+                            that.calcEmpColor(feature.properties.empBin,
+                                            censusTracts.properties.numBins);
+
+                        return {
+                            opacity: "0", // No need to emphasize the tract borders
+                            fillColor: hexColor,
+                            fillOpacity: 0.6
+                        };
+                    }
+                });
+                this.visibleLayers.empLevels = geoJson;
+                geoJson.addTo(this.map);
+            } else {
+                if(this.visibleLayers.empLevels !== undefined) {
+                    this.map.removeLayer(this.visibleLayers.empLevels);
+                    this.visibleLayers.empLevels = undefined;
+                }
+            }
 
         },
 
-        calcPopColor: function(pct) {
-            var amount = Math.floor(pct * 100);
+        calcPopColor: function(bin, numBins) {
+            var amount = Math.floor(bin * 100 / numBins);
             var hex = tinycolor.darken("yellow", amount).toHexString();
+            return hex;
+        },
+
+        calcEmpColor: function(bin, numBins) {
+            var amount = Math.floor(bin * 100 / numBins);
+            var hex = tinycolor.darken("red", amount).toHexString();
             return hex;
         },
 
@@ -106,6 +141,8 @@ define(['leaflet',
                 var layer = changedLayers[key];
                 if(layer.name === "Population Levels") {
                     this.toggleTractPopLayer(layer.toggled);
+                } else if(layer.name === "Employment Levels") {
+                    this.toggleTractEmpLayer(layer.toggled);
                 }
                 // TODO other layers
             }

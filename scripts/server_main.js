@@ -46,6 +46,8 @@ requirejs.config({
 // Start the server, using the server and router modules as dependencies
 requirejs(['scripts/server',
     'scripts/routers/router',
-], function (server, router) {
+    'scripts/utils/tractEmploymentParser'
+], function (server, router, tractEmp) {
       server.start(router.route)
+//        tractEmp.parse('./tmp');
 });

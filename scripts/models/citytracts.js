@@ -30,6 +30,10 @@ define(['scripts/utils/censusAPI',
                 // state db check was a hit, pull out city tract geos from the
                 // state geoJson
                 result = extractCityGeos(JSON.parse(result), cityJson);
+                binDensities(result);
+                // TODO get rid of this save
+                fs.writeFile("./tmp/" + stateID + "_emp_pop.json",
+                                                        JSON.stringify(result));
             }
         }
 
@@ -42,10 +46,10 @@ define(['scripts/utils/censusAPI',
     }
 
     function checkDbState(stateID) {
-//        var file = fs.readFileSync('tmp/11.json', 'utf8');
-//        return file;
+        var file = fs.readFileSync('tmp/11_emp.json', 'utf8');
+        return file;
         // TODO
-        return false;
+//        return false;
     }
 
     /**
@@ -79,7 +83,7 @@ define(['scripts/utils/censusAPI',
                     stateTract.properties.population = cityTractList[i][0];
                     // Calculate population density. 'ALAND' is in square meters,
                     // so convert to square miles
-                    stateTract.properties.populationDensity =
+                    stateTract.properties.popDensity =
                             stateTract.properties.population /
                             (stateTract.properties.ALAND * 0.000000386102);
                     // And add the object to the final city collection
@@ -105,24 +109,60 @@ define(['scripts/utils/censusAPI',
         var geoJson = {
             "type": "FeatureCollection",
             "properties": {
-                "maxPopulation": 0,
                 "maxPopDensity": 0,
-                "maxEmployment": 0
+                "maxEmpDensity": 0
             },
             "features": []
         }
         for(var i = 0; i < tractList.length; i++){
             var curTract = tractList[i];
-            // keep track of max population and max population density, for
-            // shading density on the front end
-            if(curTract.properties.population > geoJson.properties.maxPopulation)
-                geoJson.properties.maxPopulation = curTract.properties.population
-            if(curTract.properties.populationDensity > geoJson.properties.maxPopDensity)
-                geoJson.properties.maxPopDensity = curTract.properties.populationDensity;
+            var curTractProps = curTract.properties;
+            // keep track of max densities, for shading density on the front end
+            if(curTractProps.popDensity > geoJson.properties.maxPopDensity)
+                geoJson.properties.maxPopDensity = curTractProps.popDensity;
+            if(curTractProps.empDensity > geoJson.properties.maxEmpDensity)
+                geoJson.properties.maxEmpDensity = curTractProps.empDensity;
 
             geoJson.features[i] = curTract;
         }
         return geoJson;
+    }
+
+    /**
+     * Bins the the population and employment densities, for better data
+     * visualization
+     * @param cityGeoJson GeoJson of all city census tracts
+     */
+    function binDensities(cityGeoJson) {
+        var numBins = 8;
+        // We'll do a proportional binning with the specified number of binss.
+        // Each tract is separately binned with respect to population and
+        // employment density
+
+        cityGeoJson.properties.numBins = numBins;
+        var features = cityGeoJson.features;
+        var numFeatures = features.length;
+
+        // We'll start by binning population, so sort by population
+        features.sort(function(a, b) {
+            return a.properties.popDensity - b.properties.popDensity;
+        });
+        // Now loop through the features list, and assign each feature a bin
+        // based on which quintile
+        var binSize = numFeatures / numBins;
+        for(var i = 0; i < numFeatures; i++) {
+            var bin = Math.floor(i / binSize);
+            features[i].properties.popBin = bin;
+        }
+
+        // Then sort by employment, and assign bins accordingly
+        features.sort(function(a, b) {
+            return a.properties.empDensity - b.properties.empDensity;
+        });
+        for(var i = 0; i < numFeatures; i++) {
+            var bin = Math.floor(i / binSize);
+            features[i].properties.empBin = bin;
+        }
     }
 
     return {

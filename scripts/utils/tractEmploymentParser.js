@@ -15,7 +15,7 @@ define(['fs',
     // Regex for extracting the GEOID from the ctpp label
     var geoIDRegEx = RegExp("[0-9]{11}$");
 
-    function parseDirectory(directory, callback) {
+    function parseDirectory(directory) {
         // Get all files in the directory
         fs.readdir(directory, function(err, files) {
             if(err)
@@ -42,13 +42,14 @@ define(['fs',
             if(result !== false) {
                 tractEmps[idx++] = result;
                 // Set the stateId if we haven't already
-                if(stateID < 1)
+                if(stateID < 0)
                     stateID = parseInt(result.tract.substring(0,2));
             }
 
         });
         stream.on('end', function() {
-            addToDb(stateID, tractEmps);
+            if(stateID >= 0)
+                addToDb(stateID, tractEmps);
         })
     }
 
@@ -56,10 +57,10 @@ define(['fs',
     // otherwise returns false
     // Sample lines:
     //
-    //      GEOID         | LINENO |   EST  |    SE
+    //      GEOID         | LINENO |  EST   |    SE
     // -------------------+--------+--------+------------
-    // C3100US11001000400 |    1   | 5785   | 362.3654923  <-GOOD (TRACT GEOID)
-    // C2200US11          |    1   | 754615 | 3571.667153  < BAD (STATE GEOID)
+    // C3100US11001000400 |   1    | 5785   | 362.3654923  <- GOOD (TRACT GEOID)
+    // C2200US11          |   1    | 754615 | 3571.667153  <- BAD (STATE GEOID)
     function parseLine(line) {
 
         var result = false;
@@ -80,8 +81,35 @@ define(['fs',
     }
 
     function addToDb(stateID, tractEmployment) {
-        console.log(tractEmployment);
-        console.log(stateID);
+        console.log("Adding employment data for state " + stateID);
+
+        fs.readFile('./tmp/11.json', 'utf8', function (err, file) {
+            if (err)
+                throw err;
+
+            file = JSON.parse(file);
+
+            var features = file.features;
+            // Loop through all state geographies
+            for(var i = 0; i < features.length; i++) {
+                var properties = features[i].properties;
+
+                // Loop through all state employment data to find a match
+                for(var j = 0; j < tractEmployment.length; j++) {
+                    // If they match, add the employment data
+                    if(properties.GEOID === tractEmployment[j].tract) {
+                        properties.employment = tractEmployment[j].employment;
+                        properties.empDensity = properties.employment /
+                            (properties.ALAND * 0.000000386102);
+
+                        break;
+                    }
+                }
+            }
+            fs.writeFile('tmp/' + stateID + '_emp.json', JSON.stringify(file));
+        });
+
+
     }
 
     return {
