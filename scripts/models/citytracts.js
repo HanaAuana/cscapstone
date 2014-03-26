@@ -3,8 +3,9 @@
  */
 
 define(['scripts/utils/censusAPI',
-    'fs'
-], function(censusAPI, fs) {
+    'fs',
+    'path'
+], function(censusAPI, fs, path) {
 
     // Pass in a GeoJson containing a list of all census tracts in the
     // city. GeoJson must be of the form that's returned via the census boundary
@@ -32,24 +33,37 @@ define(['scripts/utils/censusAPI',
                 result = extractCityGeos(JSON.parse(result), cityJson);
                 binDensities(result);
                 // TODO get rid of this save
-                fs.writeFile("./tmp/" + stateID + "_emp_pop.json",
-                                                        JSON.stringify(result));
+                writeCityToDb(stateID, countyID, placeID, result);
             }
         }
 
         callback.call(context||this, result);
     }
 
+    function writeCityToDb(stateID, countyID, placeID, cityGeoJson) {z
+        // TODO write to db
+        fs.writeFile("./tmp/" + stateID + "_emp_pop.json",
+            JSON.stringify(cityGeoJson));
+    }
+
     function checkDbCity(stateID, countyID, placeID) {
-        // TODO
+        // TODO query the db
         return false;
     }
 
     function checkDbState(stateID) {
-        var file = fs.readFileSync('tmp/11_emp.json', 'utf8');
-        return file;
-        // TODO
-//        return false;
+        // TODO check the database instead of file system
+        var files = fs.readdirSync('./tmp');
+        for(var i = 0; i < files.length; i++) {
+            if(RegExp("^State" + stateID).test(files[i])) {
+                var filepath = path.join('./tmp', files[i]);
+                console.log("Reading state geoJson at: " + filepath);
+                var file = fs.readFileSync(filepath, 'utf8');
+                return file;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -90,13 +104,11 @@ define(['scripts/utils/censusAPI',
                     cityGeos[counter++] = stateTract;
                     break;
                 }
-                if(j + 1 == stateGeos.length)
-                    console.log('no match for ' + cityTractID);
             }
         }
 
-        console.log('Built city geos list of size ' + cityGeos.length 
-            + ', should have been size ' + cityTractList.length);
+        console.log("extracted tracts: " + cityGeos.length + ", city tracts: " + cityTractList.length)
+
         return tractList2GeoJson(cityGeos);
     }
 
