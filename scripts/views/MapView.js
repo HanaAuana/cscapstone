@@ -36,9 +36,20 @@ define(['leaflet','jquery', 'underscore', 'backbone', 'leafletDraw'], function(L
 
 			this.map.on('draw:created', function(e) {
 				featureGroup.addLayer(e.layer);
+				featureGroup.eachLayer(function(layer){
+					console.log( layer.toGeoJSON() );
+				});
+			});
+
+			this.map.on('draw:edited', function(e) {
+				featureGroup.eachLayer(function(layer){
+					console.log( layer.toGeoJSON() );
+				});
 			});
 
 		},
+
+		
 
 		handleModelSync : function() {
 			var city = this.model.get('city');
