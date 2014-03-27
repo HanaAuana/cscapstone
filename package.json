@@ -11,6 +11,8 @@
         "bufferedstream": "*",
         "seq": "*",
         "morestreams": "*",
-        "memorystream": "*"
+        "memorystream": "*",
+        "mysql": "*",
+        "weighted": "*"
     }
 }
