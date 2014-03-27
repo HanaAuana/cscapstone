@@ -4,15 +4,15 @@
 
 define(['scripts/utils/censusAPI',
     'fs',
-    'path'
-], function(censusAPI, fs, path) {
+    'path',
+    'geojson-utils'
+], function(censusAPI, fs, path, geojsonUtils) {
 
-    // Pass in a GeoJson containing a list of all census tracts in the
-    // city. GeoJson must be of the form that's returned via the census boundary
-    // API
-    function getCityTractsGeo(stateID, countyID, placeID,
-                           cityJson, callback, context) {
-
+    // Pass in a list of coordinate representing the city boundary, and
+    // the state and county FIPS codes
+    function getCityTractsGeo(stateID, countyID, placeID, cityBoundary,
+                                        callback, context)
+    {
         // TODO:
         // We need geographies for all census tracts in a city. Three levels of
         // caching, misses hit the next level:
@@ -30,7 +30,9 @@ define(['scripts/utils/censusAPI',
             } else {
                 // state db check was a hit, pull out city tract geos from the
                 // state geoJson
-                result = extractCityGeos(JSON.parse(result), cityJson);
+                result = extractCityGeos(countyID,
+                                        JSON.parse(result),
+                                        cityBoundary);
                 binDensities(result);
                 // TODO get rid of this save
                 writeCityToDb(stateID, countyID, placeID, result);
@@ -59,7 +61,7 @@ define(['scripts/utils/censusAPI',
 
     function checkDbState(stateID) {
         try {
-            var files = fs.readdirSync('./tmpr');
+            var files = fs.readdirSync('./tmp');
             for(var i = 0; i < files.length; i++) {
                 if(RegExp("^State" + stateID).test(files[i])) {
                     var filepath = path.join('./tmp', files[i]);
@@ -78,49 +80,76 @@ define(['scripts/utils/censusAPI',
     }
 
     /**
-     * Extracts all the geoJson components from the state geoJson which are
-     * also in the cityTractList
-     * @param stateGeoJson
-     * @param cityTractList
+     * Extracts all the geoJson components from the state geoJson which lie
+     * within the city boundary.
+     * @param countyID county FIPS code, to quickly discard irrelevant tracts
+     * @param stateGeoJson GeoJSON containing all tracts in the state
+     * @param cityBoundary List of coordinates representing the city's boundary
      */
-    function extractCityGeos(stateGeoJson, cityTractList) {
+    function extractCityGeos(countyID, stateGeoJson, cityBoundary) {
 
         var cityGeos = [];
-        var counter = 0;
 
-        var stateGeos = stateGeoJson.features;
+        // Determining polygon intersection is expensive. Narrow the search
+        // field by getting rid of all tracts that aren't in the county
+        var countyTracts = extractCountyTracts(countyID, stateGeoJson.features);
 
-        // loop through all city tracts
-        for(var i = 0; i < cityTractList.length; i++) {
-            var cityTractID = parseInt(cityTractList[i][5]);
-            // loop through all state tracts looking for a match
-            for(var j = 0; j < stateGeos.length; j++) {
-                var stateTractID = parseInt(stateGeos[j].properties.TRACTCE);
-                // Ensure that tract ID's and county ID's match
-                if(cityTractID === stateTractID &&
-                        parseInt(cityTractList[i][2]) ===
-                        parseInt(stateGeos[j].properties.COUNTYFP)) {
+        for(var i = 0; i < countyTracts.length; i++) {
+            var countyTract = countyTracts[i];
 
-                    // Now we can be certain of a match. Get the state geoJson
-                    // feature and add in the tract's population AND the tract's
-                    // population density
-                    var stateTract = stateGeos[j];
-                    stateTract.properties.population = cityTractList[i][0];
-                    // Calculate population density. 'ALAND' is in square meters,
-                    // so convert to square miles
-                    stateTract.properties.popDensity =
-                            stateTract.properties.population /
-                            (stateTract.properties.ALAND * 0.000000386102);
-                    // And add the object to the final city collection
-                    cityGeos[counter++] = stateTract;
-                    break;
-                }
+            // If the tract intersects the city boundary, add it to the list of
+            // city tracts
+            if(checkPolygonIntersection(countyTract, cityBoundary)) {
+                cityGeos.push(countyTract);
             }
         }
 
-        console.log("extracted tracts: " + cityGeos.length + ", city tracts: " + cityTractList.length)
-
+        console.log("Extracted " + cityGeos.length + " city tracts from "
+                    + countyTracts.length + " county " + countyID + " tracts ");
         return tractList2GeoJson(cityGeos);
+    }
+
+    /**
+     * Extracts all tracts for the specified county from a list of tracts
+     * @param countyID Specified county
+     * @param stateGeos List of tracts
+     */
+    function extractCountyTracts(countyID, stateGeos) {
+        var countyTracts = [];
+
+        for(var i = 0; i < stateGeos.length; i++) {
+            var curTract = stateGeos[i];
+            if(curTract.properties.COUNTYFP === countyID.toString()) {
+                countyTracts.push(curTract);
+            }
+        }
+
+        console.log("Extracted " + countyTracts.length + " tracts for county " + countyID);
+        return countyTracts;
+    }
+
+    /**
+     * Returns true if the polygons intersect, or if tractPolygon is fully
+     * contained by cityPolygon
+     * @param tractPolygon The tract polygon
+     * @param cityPolygon The city polygon
+     */
+    function checkPolygonIntersection(tractGeoJson, cityPolygon) {
+
+        var tractPolygon = tractGeoJson.geometry.coordinates[0];
+
+        // Loop through every vertex of the tract, checking for point
+        // containment.
+        for(var i = 0; i < tractPolygon.length; i++) {
+            // Build a point GeoJson feature
+            var curPoint = {
+                type: "Point",
+                coordinates: tractPolygon[i]
+            }
+            if(geojsonUtils.pointInPolygon(curPoint, cityPolygon))
+                return true;
+        }
+        return false;
     }
 
     /**

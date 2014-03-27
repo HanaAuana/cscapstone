@@ -58,19 +58,29 @@ define(['scripts/utils/censusAPI',
         cityModel.centroid = geoObj.centroid;
         cityModel.stateID = geoObj.stateID;
         cityModel.countyID = geoObj.countyID;
-        cityModel.countySubdivID = geoObj.countySubdivID;
         cityModel.placeID = geoObj.placeID;
+        cityModel.cityBoundary = geoObj.cityBoundary;
         console.log('setting geo data: \r\n ' + JSON.stringify(geoObj));
 
         completedSteps.boundaries = true;
 
-        // Now get the census tract population info
-        censusAPI.getCensusTractPopulations(cityModel.stateID,
-            cityModel.countyID, cityModel.countySubdivID, cityModel.placeID,
-            function(res) {
-                onCensusTractPopResponse(cityModel, request, appResponse,
-                    res, context)
-            });
+
+        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.countyID,
+            cityModel.placeID, cityModel.cityBoundary, function(geoJson) {
+                // TODO handle city geo json
+                cityModel.censusTracts = geoJson;
+                completedSteps.cityTracts = true;
+                checkCallsFinished(request, appResponse, cityModel)
+            }, this);
+
+
+//        // Now get the census tract population info
+//        censusAPI.getCensusTractPopulations(cityModel.stateID,
+//            cityModel.countyID, cityModel.countySubdivID, cityModel.placeID,
+//                function(res) {
+//                    onCensusTractPopResponse(cityModel, request, appResponse,
+//                        res, context)
+//            });
     }
 
     function onTzResponse(cityModel, request, appResponse, res, context) {
