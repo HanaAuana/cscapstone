@@ -3,15 +3,15 @@
  */
 
 define(['scripts/utils/censusAPI',
+    'scripts/utils/globalvars',
     'fs',
     'path',
     'geojson-utils'
-], function(censusAPI, fs, path, geojsonUtils) {
+], function(censusAPI, globalvars, fs, path, geojsonUtils) {
 
     // Pass in a list of coordinate representing the city boundary, and
-    // the state and county FIPS codes
-    function getCityTractsGeo(stateID, countyID, placeID, cityBoundary,
-                                        callback, context)
+    // the state and place FIPS codes
+    function getCityTractsGeo(stateID, placeID, callback, context)
     {
         // TODO:
         // We need geographies for all census tracts in a city. Three levels of
@@ -22,7 +22,7 @@ define(['scripts/utils/censusAPI',
         //      - if so, union them with the tracts returned from the population query
         //   3. Go to census API to get state tracts
 
-        var result = checkDbCity(stateID, countyID, placeID);
+        var result = checkDbCity(stateID, placeID);
         if(result === false) {
             result = checkDbState(stateID)
             if(result === false) {
@@ -30,21 +30,19 @@ define(['scripts/utils/censusAPI',
             } else {
                 // state db check was a hit, pull out city tract geos from the
                 // state geoJson
-                result = extractCityGeos(countyID,
-                                        JSON.parse(result),
-                                        cityBoundary);
+                result = extractCityGeos(stateID, placeID, JSON.parse(result));
                 binDensities(result);
                 // TODO get rid of this save
-                writeCityToDb(stateID, countyID, placeID, result);
+                writeCityToDb(stateID, placeID, result);
             }
         }
 
         callback.call(context||this, result);
     }
 
-    function writeCityToDb(stateID, countyID, placeID, cityGeoJson) {
+    function writeCityToDb(stateID, placeID, cityGeoJson) {
         // TODO write to db
-        var geoID = stateID + countyID + placeID;
+        var geoID = stateID + placeID;
         try {
             fs.writeFile("./tmp/" + geoID + "_emp_pop.json",
                 JSON.stringify(cityGeoJson));
@@ -54,17 +52,17 @@ define(['scripts/utils/censusAPI',
         }
     }
 
-    function checkDbCity(stateID, countyID, placeID) {
+    function checkDbCity(stateID, placeID) {
         // TODO query the db
         return false;
     }
 
     function checkDbState(stateID) {
         try {
-            var files = fs.readdirSync('./tmp');
+            var files = fs.readdirSync(globalvars.stateTractsDir);
             for(var i = 0; i < files.length; i++) {
                 if(RegExp("^State" + stateID).test(files[i])) {
-                    var filepath = path.join('./tmp', files[i]);
+                    var filepath = path.join(globalvars.stateTractsDir, files[i]);
                     console.log("Reading state geoJson at: " + filepath);
                     var file = fs.readFileSync(filepath, 'utf8');
                     return file;
@@ -81,51 +79,50 @@ define(['scripts/utils/censusAPI',
 
     /**
      * Extracts all the geoJson components from the state geoJson which lie
-     * within the city boundary.
-     * @param countyID county FIPS code, to quickly discard irrelevant tracts
+     * within the specified place
+     * @param placeID place FIPS code
      * @param stateGeoJson GeoJSON containing all tracts in the state
      * @param cityBoundary List of coordinates representing the city's boundary
      */
-    function extractCityGeos(countyID, stateGeoJson, cityBoundary) {
+    function extractCityGeos(stateID, placeID, stateGeoJson) {
 
         var cityGeos = [];
 
-        // Determining polygon intersection is expensive. Narrow the search
-        // field by getting rid of all tracts that aren't in the county
-        var countyTracts = extractCountyTracts(countyID, stateGeoJson.features);
+        var stateTracts = stateGeoJson.features;
+        var cityBoundary = {};
+        var files = fs.readdirSync(globalvars.placeBoundaryDir);
+        for(var i = 0; i < files.length; i++) {
+            if(files[i] === "Place" + stateID + ".json") {
+                var file = fs.readFileSync(path.join(globalvars.placeBoundaryDir, files[i]));
+                var places = JSON.parse(file).features;
+                for(var j = 0; j < places.length; j++) {
+                    if(places[j].properties.PLACEFP === placeID) {
+                        console.log("Found the matching place for "
+                                                    + stateID + placeID);
+                        cityBoundary = places[j];
+                        break;
+                    }
+                }
+                break;
+            }
+        }
 
-        for(var i = 0; i < countyTracts.length; i++) {
-            var countyTract = countyTracts[i];
+        for(var i = 0; i < stateTracts.length; i++) {
+            var stateTract = stateTracts[i];
+
+            if(i % 300 === 0)
+                console.log('on tract ' + i);
 
             // If the tract intersects the city boundary, add it to the list of
             // city tracts
-            if(checkPolygonIntersection(countyTract, cityBoundary)) {
-                cityGeos.push(countyTract);
+            if(checkPolygonIntersection(stateTract.geometry, cityBoundary.geometry)) {
+                cityGeos.push(stateTract);
             }
         }
 
         console.log("Extracted " + cityGeos.length + " city tracts from "
-                    + countyTracts.length + " county " + countyID + " tracts ");
+                    + stateTracts.length + " state " + stateID + " tracts ");
         return tractList2GeoJson(cityGeos);
-    }
-
-    /**
-     * Extracts all tracts for the specified county from a list of tracts
-     * @param countyID Specified county
-     * @param stateGeos List of tracts
-     */
-    function extractCountyTracts(countyID, stateGeos) {
-        var countyTracts = [];
-
-        for(var i = 0; i < stateGeos.length; i++) {
-            var curTract = stateGeos[i];
-            if(curTract.properties.COUNTYFP === countyID.toString()) {
-                countyTracts.push(curTract);
-            }
-        }
-
-        console.log("Extracted " + countyTracts.length + " tracts for county " + countyID);
-        return countyTracts;
     }
 
     /**
@@ -134,9 +131,9 @@ define(['scripts/utils/censusAPI',
      * @param tractPolygon The tract polygon
      * @param cityPolygon The city polygon
      */
-    function checkPolygonIntersection(tractGeoJson, cityPolygon) {
+    function checkPolygonIntersection(tractGeometry, cityGeometry) {
 
-        var tractPolygon = tractGeoJson.geometry.coordinates[0];
+        var tractPolygon = tractGeometry.coordinates[0];
 
         // Loop through every vertex of the tract, checking for point
         // containment.
@@ -146,7 +143,7 @@ define(['scripts/utils/censusAPI',
                 type: "Point",
                 coordinates: tractPolygon[i]
             }
-            if(geojsonUtils.pointInPolygon(curPoint, cityPolygon))
+            if(geojsonUtils.pointInPolygon(curPoint, cityGeometry))
                 return true;
         }
         return false;

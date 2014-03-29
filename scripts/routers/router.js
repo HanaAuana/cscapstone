@@ -57,16 +57,14 @@ define(['scripts/utils/censusAPI',
         cityModel.cityName = geoObj.cityName;
         cityModel.centroid = geoObj.centroid;
         cityModel.stateID = geoObj.stateID;
-        cityModel.countyID = geoObj.countyID;
         cityModel.placeID = geoObj.placeID;
-        cityModel.cityBoundary = geoObj.cityBoundary;
         console.log('setting geo data: \r\n ' + JSON.stringify(geoObj));
 
         completedSteps.boundaries = true;
 
 
-        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.countyID,
-            cityModel.placeID, cityModel.cityBoundary, function(geoJson) {
+        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.placeID,
+            function(geoJson) {
                 // TODO handle city geo json
                 cityModel.censusTracts = geoJson;
                 completedSteps.cityTracts = true;
@@ -108,8 +106,8 @@ define(['scripts/utils/censusAPI',
             return;
         }
 
-        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.countyID,
-            cityModel.placeID, cityPops, function(geoJson) {
+        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.placeID,
+            cityPops, function(geoJson) {
                 // TODO handle city geo json
                 cityModel.censusTracts = geoJson;
                 completedSteps.cityTracts = true;

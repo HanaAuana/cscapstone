@@ -139,11 +139,9 @@ define(['http',
                 parsedObj.placeID = curGeoObj.metadata.PLACEFP10;
                 parsedObj.centroid = [curGeoObj.centroid.coordinates[1],
                     curGeoObj.centroid.coordinates[0]];
-                parsedObj.cityBoundary = curGeoObj.simple_shape;
             // Process the county subdivision object
             } else if(curGeoObj.kind == "County Subdivision") {
                 parsedObj.stateID = curGeoObj.metadata.STATEFP10;
-                parsedObj.countyID = curGeoObj.metadata.COUNTYFP10;
             }
         }
         return parsedObj;
