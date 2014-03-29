@@ -21,6 +21,7 @@ define(['scripts/utils/censusAPI',
         //   2. Check if state tracts are cached locally
         //      - if so, union them with the tracts returned from the population query
         //   3. Go to census API to get state tracts
+        var cityBoundary = getCityBoundary(stateID, placeID);
 
         var result = checkDbCity(stateID, placeID);
         if(result === false) {
@@ -28,16 +29,22 @@ define(['scripts/utils/censusAPI',
             if(result === false) {
                 // TODO go to interwebz
             } else {
-                // state db check was a hit, pull out city tract geos from the
-                // state geoJson
-                result = extractCityGeos(stateID, placeID, JSON.parse(result));
+                // State db check was a hit, pull out city tract geos from the
+                // state geoJson. Result contains
+                result = extractCityGeos(stateID,
+                                        placeID,
+                                        JSON.parse(result),
+                                        cityBoundary);
                 binDensities(result);
                 // TODO get rid of this save
                 writeCityToDb(stateID, placeID, result);
             }
         }
 
-        callback.call(context||this, result);
+        callback.call(context||this, {
+            cityTracts: result,
+            cityBoundary: cityBoundary
+        });
     }
 
     function writeCityToDb(stateID, placeID, cityGeoJson) {
@@ -72,8 +79,24 @@ define(['scripts/utils/censusAPI',
             console.error("Unable to read state " + stateID + " geoJson: "
                             + err);
         }
+        return false;
+    }
 
-
+    function getCityBoundary(stateID, placeID) {
+        var files = fs.readdirSync(globalvars.placeBoundaryDir);
+        for(var i = 0; i < files.length; i++) {
+            if(files[i] === "Place" + stateID + ".json") {
+                var file = fs.readFileSync(path.join(globalvars.placeBoundaryDir, files[i]));
+                var places = JSON.parse(file).features;
+                for(var j = 0; j < places.length; j++) {
+                    if(places[j].properties.PLACEFP === placeID) {
+                        console.log("Found the matching place for "
+                            + stateID + placeID);
+                        return places[j];
+                    }
+                }
+            }
+        }
         return false;
     }
 
@@ -84,28 +107,10 @@ define(['scripts/utils/censusAPI',
      * @param stateGeoJson GeoJSON containing all tracts in the state
      * @param cityBoundary List of coordinates representing the city's boundary
      */
-    function extractCityGeos(stateID, placeID, stateGeoJson) {
+    function extractCityGeos(stateID, placeID, stateGeoJson, cityBoundary) {
 
         var cityGeos = [];
-
         var stateTracts = stateGeoJson.features;
-        var cityBoundary = {};
-        var files = fs.readdirSync(globalvars.placeBoundaryDir);
-        for(var i = 0; i < files.length; i++) {
-            if(files[i] === "Place" + stateID + ".json") {
-                var file = fs.readFileSync(path.join(globalvars.placeBoundaryDir, files[i]));
-                var places = JSON.parse(file).features;
-                for(var j = 0; j < places.length; j++) {
-                    if(places[j].properties.PLACEFP === placeID) {
-                        console.log("Found the matching place for "
-                                                    + stateID + placeID);
-                        cityBoundary = places[j];
-                        break;
-                    }
-                }
-                break;
-            }
-        }
 
         for(var i = 0; i < stateTracts.length; i++) {
             var stateTract = stateTracts[i];
@@ -121,17 +126,21 @@ define(['scripts/utils/censusAPI',
         }
 
         console.log("Extracted " + cityGeos.length + " city tracts from "
-                    + stateTracts.length + " state " + stateID + " tracts ");
+                    + stateTracts.length + " state " + stateID
+                    + " tracts for place " + placeID);
+
         return tractList2GeoJson(cityGeos);
     }
 
     /**
      * Returns true if the polygons intersect, or if tractPolygon is fully
      * contained by cityPolygon
-     * @param tractPolygon The tract polygon
-     * @param cityPolygon The city polygon
+     * @param tractGeometry The tract polygon
+     * @param cityGeometry The city polygon
      */
     function checkPolygonIntersection(tractGeometry, cityGeometry) {
+
+        var result = false;
 
         var tractPolygon = tractGeometry.coordinates[0];
 
@@ -143,16 +152,23 @@ define(['scripts/utils/censusAPI',
                 type: "Point",
                 coordinates: tractPolygon[i]
             }
-            if(geojsonUtils.pointInPolygon(curPoint, cityGeometry))
-                return true;
+
+            if(cityGeometry.type === "MultiPolygon")
+                result = geojsonUtils.pointInMultiPolygon(curPoint, cityGeometry);
+            else
+                result = geojsonUtils.pointInPolygon(curPoint, cityGeometry);
+
+            // Immediately return true if this point is within the polygon
+            if(result)
+                return result;
         }
-        return false;
+        return result; // If we've gotten here, no points were in the city
     }
 
     /**
      * Converts the list of city tracts to a GeoJson
      * @param tractList List of city tracts
-     * @returns
+     * @returns GeoJson feature collection containing specified tracts
      */
     function tractList2GeoJson(tractList) {
         var geoJson = {

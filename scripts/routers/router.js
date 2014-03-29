@@ -64,9 +64,10 @@ define(['scripts/utils/censusAPI',
 
 
         cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.placeID,
-            function(geoJson) {
+            function(result) {
                 // TODO handle city geo json
-                cityModel.censusTracts = geoJson;
+                cityModel.censusTracts = result.cityTracts;
+                cityModel.boundary = result.cityBoundary;
                 completedSteps.cityTracts = true;
                 checkCallsFinished(request, appResponse, cityModel)
             }, this);
@@ -107,9 +108,10 @@ define(['scripts/utils/censusAPI',
         }
 
         cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.placeID,
-            cityPops, function(geoJson) {
+            cityPops, function(result) {
                 // TODO handle city geo json
-                cityModel.censusTracts = geoJson;
+                cityModel.censusTracts = result.cityTracts;
+                cityModel.cityBoundary = result.cityBoundary;
                 completedSteps.cityTracts = true;
                 checkCallsFinished(request, appResponse, cityModel)
             }, this);
