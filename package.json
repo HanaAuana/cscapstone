@@ -8,11 +8,11 @@
         "express": "3.x",
         "jsftp": "1.x",
         "forever": "0.x",
-        "bufferedstream": "*",
         "seq": "*",
         "morestreams": "*",
         "memorystream": "*",
         "mysql": "*",
-        "weighted": "*"
+        "weighted": "*",
+        "byline": "*"
     }
 }

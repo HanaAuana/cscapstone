@@ -13,7 +13,9 @@ requirejs.config({
         text: 'lib/text',
         async: 'lib/async',
         leaflet: 'leaflet/leaflet',
-        leafletDraw: "leaflet/leaflet-draw"
+        tinycolor: 'lib/tinycolor-min',
+        leafletDraw: "leaflet/leaflet-draw",
+        bootstrap: "lib/bootstrap-min"
     },
 
     shim: {
@@ -31,6 +33,9 @@ requirejs.config({
         'leafletDraw':{
         	deps: ['leaflet'],
         	exports: 'leafletDraw'
+        },
+        'bootstrap': {
+            deps: ['jquery']
         }
     }
 });

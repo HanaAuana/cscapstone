@@ -103,7 +103,7 @@ define(['scripts/utils/censusAPI',
                 // TODO handle city geo json
                 cityModel.censusTracts = geoJson;
                 completedSteps.cityTracts = true;
-                checkCallsFinished(request, appResponse, cityModel)
+                checkCallsFinished(request, appResponse, cityModel);
             }, this);
     }
 

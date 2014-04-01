@@ -46,9 +46,8 @@ requirejs.config({
 // Start the server, using the server and router modules as dependencies
 requirejs(['scripts/server',
     'scripts/routers/router',
-    'scripts/utils/stategeograbber',
-    'scripts/utils/censusAPI'
-], function (server, router, stategeo, censusAPI) {
-      server.start(router.route);
-//    stategeo.checkGeographies();
+    'scripts/utils/tractEmploymentParser'
+], function (server, router, tractEmp) {
+      server.start(router.route)
+//        tractEmp.parse('./tmp');
 });

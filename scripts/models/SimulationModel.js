@@ -15,7 +15,10 @@ define(['backbone',
     'models/TripModel',
     'collections/TripCollection',
     'views/ChooseCityView',
-    'views/MapView'
+    'views/MapView',
+    'views/MapLayerCtrlView',
+    'views/HeaderView',
+    'views/CtrlSelectorView'
 ], function(Backbone,
             _,
             $,
@@ -27,7 +30,10 @@ define(['backbone',
             TripModel,
             TripCollection,
             ChooseCityView,
-            MapView)
+            MapView,
+            MapLayerCtrlView,
+            HeaderView,
+            CtrlSelectorView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -36,8 +42,7 @@ define(['backbone',
             'transitRoutes': null,
             'sim2Gtfs': null,
             'city': null,
-            'trips': null,
-            'mapView': null
+            'trips': null
         },
 
         initialize: function() {
@@ -53,18 +58,34 @@ define(['backbone',
                         'sim2Gtfs': sim2Gtfs,
                         'city': city});
 
-//            this.on("change:city", this.setTimezone, this);
-//            this.get('city').on("change:timezone", this.setTimezone, this);
+            this.set({"layers" : {
+                    popLevels: {name: "Population Levels",
+                                toggled: false},
+                    empLevels: {name: "Employment Levels",
+                                toggled: false},
+                    transitNet: {name: "Transit Network",
+                                toggled: false}}
+            });
 
-            // add in the the city selector
+//            this.on("change:city", this.setTimezone, this);
+
+            // add in the header
+            new HeaderView().render();
+
+            // and the city selector
             var chooseCity = new ChooseCityView({'model': this});
             chooseCity.render();
+
+            // and the control selector
+            new CtrlSelectorView().render();
 
             // and the map
             var mapView = new MapView({'model': this});
             mapView.initMap();
-//            this.set({'mapView': mapView});
 
+            // and the map layer selector
+            var mapLayerSelector = new MapLayerCtrlView({'model': this});
+            mapLayerSelector.render();
 
             this.generateTrips();
         },
@@ -75,8 +96,6 @@ define(['backbone',
         setLocation: function(longLat) {
 
             this.get('city').set({'location': longLat});
-
-//            this.set({'location': longLat});
 
             var that = this;
 
