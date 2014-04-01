@@ -27,12 +27,18 @@ define(['scripts/utils/censusAPI',
 ], function(censusAPI, googleStaticAPI, fs, cityTracts) {
 
     var completedSteps;
+    var self = this;
 
     function checkCallsFinished(request, response, cityModel) {
+
+        console.log("Checking calls finished");
+
         // Wait until all steps have completed
         for(var step in completedSteps) {
-            if(completedSteps[step] === false)
+            if(completedSteps[step] === false) {
+                console.log(step + " step not finished");
                 return;
+            }
         }
 
         var results = {
@@ -57,20 +63,17 @@ define(['scripts/utils/censusAPI',
         cityModel.cityName = geoObj.cityName;
         cityModel.centroid = geoObj.centroid;
         cityModel.stateID = geoObj.stateID;
-        cityModel.countyID = geoObj.countyID;
-        cityModel.countySubdivID = geoObj.countySubdivID;
         cityModel.placeID = geoObj.placeID;
         console.log('setting geo data: \r\n ' + JSON.stringify(geoObj));
 
-        completedSteps.boundaries = true;
-
-        // Now get the census tract population info
-        censusAPI.getCensusTractPopulations(cityModel.stateID,
-            cityModel.countyID, cityModel.countySubdivID, cityModel.placeID,
-            function(res) {
-                onCensusTractPopResponse(cityModel, request, appResponse,
-                    res, context)
-            });
+        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.placeID,
+            function(result) {
+                // TODO handle city geo json
+                cityModel.censusTracts = result.cityTracts;
+                cityModel.boundary = result.cityBoundary;
+                completedSteps.cityTracts = true;
+                checkCallsFinished(request, appResponse, cityModel)
+            }, this);
     }
 
     function onTzResponse(cityModel, request, appResponse, res, context) {
@@ -131,9 +134,7 @@ define(['scripts/utils/censusAPI',
         // keep track of how many calbacks have returned
         completedSteps = {
             timezone: false,
-            boundaries: false,
             cityTracts: false
-//            stateTracts: false
         };
 
         var that = this;

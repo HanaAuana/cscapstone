@@ -27,8 +27,7 @@ define(['http',
         // put all the geoIDs into the url
         var url = 'http://api.census.gov/data/2010/acs5?key=' + globalvars.censusKey
             + '&get=' + totalRace + '&for=tract:*&in=state:' + stateID
-            + '+county:' + countyID + '+county+subdivision:' + countySubdivID
-            + '+place:' + placeID;
+            + '+county:*';
 
         console.log(url);
         var body = '';
@@ -139,12 +138,10 @@ define(['http',
                 parsedObj.cityName = curGeoObj.name;
                 parsedObj.placeID = curGeoObj.metadata.PLACEFP10;
                 parsedObj.centroid = [curGeoObj.centroid.coordinates[1],
-                    curGeoObj.centroid.coordinates[0]]
+                    curGeoObj.centroid.coordinates[0]];
             // Process the county subdivision object
             } else if(curGeoObj.kind == "County Subdivision") {
                 parsedObj.stateID = curGeoObj.metadata.STATEFP10;
-                parsedObj.countyID = curGeoObj.metadata.COUNTYFP10;
-                parsedObj.countySubdivID = curGeoObj.metadata.COUSUBFP10;
             }
         }
         return parsedObj;
