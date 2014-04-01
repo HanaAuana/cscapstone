@@ -100,6 +100,7 @@ define(['scripts/utils/censusAPI',
         return false;
     }
 
+    var minIntersectionPct = 0.5;
     /**
      * Extracts all the geoJson components from the state geoJson which lie
      * within the specified place
@@ -111,17 +112,35 @@ define(['scripts/utils/censusAPI',
 
         var cityGeos = [];
         var stateTracts = stateGeoJson.features;
+        var cityArea = cityBoundary.properties.ALAND
+                            + cityBoundary.properties.AWATER;
 
         for(var i = 0; i < stateTracts.length; i++) {
             var stateTract = stateTracts[i];
 
-            if(i % 300 === 0)
-                console.log('on tract ' + i);
+            if(i % 50 === 0) {
+                var pct = Math.floor((i * 100) / stateTracts.length);
+                process.stdout.clearLine();
+                process.stdout.cursorTo(0);
+                process.stdout.write("Finding city tracts: " + pct + "%");
+            }
 
-            // If the tract intersects the city boundary, add it to the list of
-            // city tracts
-            if(checkPolygonIntersection(stateTract.geometry, cityBoundary.geometry)) {
-                cityGeos.push(stateTract);
+            // Skip tracts that only encompass water
+            if(stateTract.properties.ALAND === 0.0)
+                continue;
+
+            // If the tract intersects the city boundary, it MAY be desirable.
+            if(checkPolygonIntersection(stateTract.geometry,
+                                            cityBoundary.geometry)) {
+                // Sometimes we get false positives, where tracts that border a
+                // city have a point that is just barely within the boundary. We
+                // want to ignore those. So if we get a hit with polygon
+                // intersection, we only accept the tract if the intersection
+                // area of the two polygons is above a threshold
+//                var interArea = getPolygonIntersectionArea(stateTract.geometry,
+//                                                        cityBoundary.geometry);
+//                if(interArea / cityArea >= minIntersectionPct)
+                    cityGeos.push(stateTract);
             }
         }
 
@@ -130,6 +149,10 @@ define(['scripts/utils/censusAPI',
                     + " tracts for place " + placeID);
 
         return tractList2GeoJson(cityGeos);
+    }
+
+    function getPolygonIntersectionArea(polygonFeature1, polygonFeature2) {
+        return 5;
     }
 
     /**

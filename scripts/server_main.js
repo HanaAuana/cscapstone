@@ -45,6 +45,6 @@ requirejs(['scripts/server',
     'scripts/routers/router',
     'scripts/utils/tractPopulationParser'
 ], function (server, router, tractPop) {
-//      server.start(router.route)
-        tractPop.parse('./geo/tract-pop/');
+      server.start(router.route)
+//        tractPop.parse('./geo/tract-pop/');
 });

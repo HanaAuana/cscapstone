@@ -27,12 +27,18 @@ define(['scripts/utils/censusAPI',
 ], function(censusAPI, googleStaticAPI, fs, cityTracts) {
 
     var completedSteps;
+    var self = this;
 
     function checkCallsFinished(request, response, cityModel) {
+
+        console.log("Checking calls finished");
+
         // Wait until all steps have completed
         for(var step in completedSteps) {
-            if(completedSteps[step] === false)
+            if(completedSteps[step] === false) {
+                console.log(step + " step not finished");
                 return;
+            }
         }
 
         var results = {
@@ -60,9 +66,6 @@ define(['scripts/utils/censusAPI',
         cityModel.placeID = geoObj.placeID;
         console.log('setting geo data: \r\n ' + JSON.stringify(geoObj));
 
-        completedSteps.boundaries = true;
-
-
         cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.placeID,
             function(result) {
                 // TODO handle city geo json
@@ -71,15 +74,6 @@ define(['scripts/utils/censusAPI',
                 completedSteps.cityTracts = true;
                 checkCallsFinished(request, appResponse, cityModel)
             }, this);
-
-
-//        // Now get the census tract population info
-//        censusAPI.getCensusTractPopulations(cityModel.stateID,
-//            cityModel.countyID, cityModel.countySubdivID, cityModel.placeID,
-//                function(res) {
-//                    onCensusTractPopResponse(cityModel, request, appResponse,
-//                        res, context)
-//            });
     }
 
     function onTzResponse(cityModel, request, appResponse, res, context) {
@@ -98,52 +92,12 @@ define(['scripts/utils/censusAPI',
         checkCallsFinished(request, appResponse, cityModel);
     }
 
-    function onCensusTractPopResponse(cityModel, request,
-                                      appResponse, cityPops, context) {
-
-        if(cityPops === false) {
-            completedSteps.cityTracts = true;
-            checkCallsFinished(request, appResponse, cityModel);
-            return;
-        }
-
-        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.placeID,
-            cityPops, function(result) {
-                // TODO handle city geo json
-                cityModel.censusTracts = result.cityTracts;
-                cityModel.cityBoundary = result.cityBoundary;
-                completedSteps.cityTracts = true;
-                checkCallsFinished(request, appResponse, cityModel)
-            }, this);
-    }
-
-    function onStateTractResponse(cityModel, request, appResponse, res, context) {
-        if(res === false) {
-            console.log("error retrieving state census tractrs")
-        } else {
-            console.log('got state tract callback, file length ' + res.length);
-            fs.writeFile('./tract.zip', res, function(err) {
-                if(err)
-                    console.log("error writing file")
-                else
-                    console.log("file saved");
-            });
-        }
-
-
-
-        completedSteps.stateTracts = true;
-        checkCallsFinished(request, appResponse, cityModel)
-    }
-
     function simSessionRoute(req, response) {
 
         // keep track of how many calbacks have returned
         completedSteps = {
             timezone: false,
-            boundaries: false,
             cityTracts: false
-//            stateTracts: false
         };
 
         var that = this;
