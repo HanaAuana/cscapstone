@@ -10,9 +10,9 @@ define(['mysql'
   var connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
-    password : 'root',
+    password : 'trainbus',
     database : DATABASE,
-    port     : 8889
+    port     : 3306
   });
 
 
