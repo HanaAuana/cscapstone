@@ -144,7 +144,7 @@ define(['scripts/utils/censusAPI',
             }
         }
 
-        console.log("Extracted " + cityGeos.length + " city tracts from "
+        console.log("\r\nExtracted " + cityGeos.length + " city tracts from "
                     + stateTracts.length + " state " + stateID
                     + " tracts for place " + placeID);
 
