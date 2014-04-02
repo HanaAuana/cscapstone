@@ -29,6 +29,7 @@ define(['mysql'
                var str = tract.tractBlob.toString();
                var test = str.substring(1, str.length-1);
                callback.call(context||this, JSON.parse(test));
+               return;
             }
             callback.call(context||this, false);
         }
