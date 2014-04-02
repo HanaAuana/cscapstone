@@ -5,8 +5,9 @@
 define(['backbone',
     'underscore',
     'jquery',
+    'utils/globalvars',
     'text!HeaderViewTemplate.ejs'
-], function(backbone, _, $, headerViewTemplate) {
+], function(backbone, _, $, globalvars, headerViewTemplate) {
 
     var HeaderView = Backbone.View.extend({
 
@@ -17,9 +18,10 @@ define(['backbone',
         },
 
         render: function() {
-
-            // Compile the template, and pass in the city list;
-            var template = _.template(headerViewTemplate, {});
+            // Compile the template, and pass in the app name
+            var template = _.template(headerViewTemplate, {
+                name: globalvars.appName
+            });
             // Load the compiled HTML into the Backbone "el"
             this.$el.html( template );
         }

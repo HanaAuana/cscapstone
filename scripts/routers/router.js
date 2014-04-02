@@ -76,22 +76,6 @@ define(['scripts/utils/censusAPI',
             }, this);
     }
 
-    function onTzResponse(cityModel, request, appResponse, res, context) {
-        if(cityModel === false) {
-            console.log("tz fails");
-            appResponse.writeHead(404);
-            appResponse.send();
-            return;
-        }
-
-        // If successful, grab the timezone
-        cityModel.timezone = res.timeZoneId;
-        console.log('setting tz: ' + cityModel.timezone);
-
-        completedSteps.timezone = true;
-        checkCallsFinished(request, appResponse, cityModel);
-    }
-
     function onCensusTractPopResponse(cityModel, request,
                                       appResponse, cityPops, context) {
 
@@ -129,7 +113,7 @@ define(['scripts/utils/censusAPI',
         checkCallsFinished(request, appResponse, cityModel)
     }
 
-    function simSessionRoute(req, response) {
+    function simSessionRoute(request, response) {
 
         // keep track of how many calbacks have returned
         completedSteps = {
@@ -141,19 +125,28 @@ define(['scripts/utils/censusAPI',
         // A put means this is a new model. We nee to do all the initializing
         // stuff, including setting the city, getting all geo, and generating
         // trips
-        if(req.route.method === 'put') {
+        if(request.route.method === 'put') {
             console.log('handling put');
 
-            var cityModel = req.body.city;
+            var cityModel = request.body.city;
 
             // get the city name, boundary and centroid
-            censusAPI.getBoundaryLocation(req.body.city.location, function(res) {
-                onBoundaryResponse(cityModel, req, response, res, that)
+            censusAPI.getBoundaryLocation(cityModel.location, function(res) {
+                onBoundaryResponse(cityModel, request, response, res, that);
             }, this);
 
             // get the timezone
-            googleStaticAPI.getTimezone(req.body.city.location, function(res) {
-                onTzResponse(cityModel, req, response, res, that);
+            googleStaticAPI.getTimezone(cityModel.location, function(res) {
+                if(res === false) {
+                    console.error("TZ fails");
+                    // TODO error handling
+                } else {
+                    // If successful, grab the timezone
+                    cityModel.timezone = res.timeZoneId;
+                    console.log('Setting TZ: ' + cityModel.timezone);
+                }
+            	completedSteps.timezone = true;
+            	checkCallsFinished(request, response, cityModel);
             }, this);
 
         } else if(req.route.method === 'post') {
