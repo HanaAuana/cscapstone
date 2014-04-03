@@ -18,7 +18,8 @@ define(['backbone',
     'views/MapView',
     'views/MapLayerCtrlView',
     'views/HeaderView',
-    'views/CtrlSelectorView'
+    'views/CtrlSelectorView',
+    'views/CityLoadingView'
 ], function(Backbone,
             _,
             $,
@@ -33,7 +34,8 @@ define(['backbone',
             MapView,
             MapLayerCtrlView,
             HeaderView,
-            CtrlSelectorView)
+            CtrlSelectorView,
+            CityLoadingView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -95,9 +97,9 @@ define(['backbone',
         // coordinates to a city and state code
         setLocation: function(longLat) {
 
-            this.get('city').set({'location': longLat});
+            new CityLoadingView({'model': this}).render();
 
-            var that = this;
+            this.get('city').set({'location': longLat});
 
             // Now that we've set the location, the server can do the rest.
             // But tell the server what needs changing. In particular, set the

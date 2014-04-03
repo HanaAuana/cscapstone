@@ -6,28 +6,28 @@ define(['scripts/utils/censusAPI',
     'scripts/utils/globalvars',
     'fs',
     'path',
-    'geojson-utils'
-], function(censusAPI, globalvars, fs, path, geojsonUtils) {
+    'geojson-utils',
+//    'raphael',
+//    'raphael-poly'
+], function(censusAPI, globalvars, fs, path, geojsonUtils, raphael, raphaelPoly) {
 
     // Pass in a list of coordinate representing the city boundary, and
     // the state and place FIPS codes
     function getCityTractsGeo(stateID, placeID, callback, context)
     {
-        // TODO:
-        // We need geographies for all census tracts in a city. Three levels of
-        // caching, misses hit the next level:
-        //   1. Check if city tracts are cached locally
+        // We need geographies for all census tracts in a city. We use on level
+        // of caching:
+        //   1. Check if city tracts are cached locally in the database
         //      - if so, return them
-        //   2. Check if state tracts are cached locally
-        //      - if so, union them with the tracts returned from the population query
-        //   3. Go to census API to get state tracts
+        //   2. Get the state tracts from the file system.
+        //      - if so, extract and return all that lie within the city boundary
         var cityBoundary = getCityBoundary(stateID, placeID);
 
         var result = checkDbCity(stateID, placeID);
         if(result === false) {
             result = checkDbState(stateID)
             if(result === false) {
-                // TODO go to interwebz
+                throw "Unable to find geography for state " + stateID;
             } else {
                 // State db check was a hit, pull out city tract geos from the
                 // state geoJson. Result contains

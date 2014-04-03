@@ -12,6 +12,7 @@
         "morestreams": "*",
         "memorystream": "*",
         "byline": "*",
-        "geojson-utils": "*"
+        "geojson-utils": "*",
+        "raphael": "*"
     }
 }

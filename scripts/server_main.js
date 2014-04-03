@@ -20,6 +20,7 @@ requirejs.config({
     paths: {
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
+        'raphael-poly': 'scripts/lib/raphael.polygon.js'
     },
 
     shim: {

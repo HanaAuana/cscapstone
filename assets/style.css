@@ -33,3 +33,9 @@
     width:80%;
     height:600px;
 }
+#modal-loading-header {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px
+}
