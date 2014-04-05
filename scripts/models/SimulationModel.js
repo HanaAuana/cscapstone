@@ -69,8 +69,6 @@ define(['backbone',
                                 toggled: false}}
             });
 
-//            this.on("change:city", this.setTimezone, this);
-
             // add in the header
             new HeaderView().render();
 
@@ -107,13 +105,6 @@ define(['backbone',
             var response = this.save(['city', 'sessionID'], {
                 success: function() {
                     console.log('model persisted, id and city info updated');
-                    // Pan to the new location
-//                    var mapView = context.get('mapView');
-//                    if(mapView !== undefined && mapView !== null) {
-////                        var loc = this.get('city').get('centroid');
-//                        mapView.setLocation(context.get('city').get('centroid'));
-//                    }
-
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');

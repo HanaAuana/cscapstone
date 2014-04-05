@@ -20,7 +20,7 @@ requirejs.config({
     paths: {
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
-        'raphael-poly': 'scripts/lib/raphael.polygon.js'
+        clipper: 'scripts/lib/clipper-min'
     },
 
     shim: {
@@ -37,7 +37,7 @@ requirejs.config({
         'leafletDraw':{
         	deps: ['leaflet'],
         	exports: 'L'
-        }
+        },
     }
 });
 

@@ -27,16 +27,12 @@ define(['scripts/utils/censusAPI',
 ], function(censusAPI, googleStaticAPI, fs, cityTracts) {
 
     var completedSteps;
-    var self = this;
 
     function checkCallsFinished(request, response, cityModel) {
-
-        console.log("Checking calls finished");
 
         // Wait until all steps have completed
         for(var step in completedSteps) {
             if(completedSteps[step] === false) {
-                console.log(step + " step not finished");
                 return;
             }
         }
