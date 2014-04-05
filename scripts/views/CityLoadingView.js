@@ -41,7 +41,6 @@ define(['backbone',
         },
 
         remove: function() {
-            console.log("Removing alert");
             $(this.modalId).on('hidden.bs.modal', function () {
                $(this.el).remove();
             });
