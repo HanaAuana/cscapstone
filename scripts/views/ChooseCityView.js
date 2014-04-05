@@ -37,6 +37,15 @@ define(['backbone',
             var template = _.template(chooseCityTemplate, {});
             // Load the compiled HTML into the Backbone "el"
             this.$el.html( template );
+
+            var that = this
+            // Capture the enter key
+            $('#city-selector').keypress(function(e) {
+                if (e.which == "13") {
+                    that.onCitySelected();
+                    return false;
+                }
+            });
         },
 
         onCitySelected: function() {

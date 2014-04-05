@@ -122,13 +122,13 @@ define(['leaflet',
 
         calcPopColor: function(bin, numBins) {
             var amount = Math.floor(bin * 100 / numBins);
-            var hex = tinycolor.darken("yellow", amount).toHexString();
+            var hex = tinycolor.darken('#92278f', amount).toHexString();
             return hex;
         },
 
         calcEmpColor: function(bin, numBins) {
             var amount = Math.floor(bin * 100 / numBins);
-            var hex = tinycolor.darken("red", amount).toHexString();
+            var hex = tinycolor.darken('#f7941e', amount).toHexString();
             return hex;
         },
 

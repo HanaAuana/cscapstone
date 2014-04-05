@@ -83,8 +83,7 @@ define(['scripts/utils/censusAPI',
                 }
             }
         } catch (err) {
-            console.error("Unable to read state " + stateID + " geoJson: "
-                            + err);
+            console.error("Unable to read state " + stateID + " geoJson: " + err);
         }
         return false;
     }
@@ -119,6 +118,7 @@ define(['scripts/utils/censusAPI',
 
         var cityGeos = [];
         var stateTracts = stateGeoJson.features;
+
         var cityArea = getPolygonArea(cityBoundary.geometry, false);
 
         var length = stateTracts.length;
@@ -193,10 +193,10 @@ define(['scripts/utils/censusAPI',
             var coordsLength = featureCoords.length;
             var featurePath = [];
 
-            for(var i = 0; i < coordsLength; i++) {
-                var coordinate = featureCoords[i];
+            for(var j = 0; j < coordsLength; j++) {
+                var coordinate = featureCoords[j];
                 featurePath.push(new ClipperLib.IntPoint(coordinate[0], coordinate[1]));
-                if(i+1 === coordsLength) {
+                if(j+1 === coordsLength) {
                     coordinate = featureCoords[0];
                     featurePath.push(new ClipperLib.IntPoint(coordinate[0], coordinate[1]));
                 }
