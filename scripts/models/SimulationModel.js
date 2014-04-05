@@ -18,7 +18,8 @@ define(['backbone',
     'views/MapView',
     'views/MapLayerCtrlView',
     'views/HeaderView',
-    'views/CtrlSelectorView'
+    'views/CtrlSelectorView',
+    'views/CityLoadingView'
 ], function(Backbone,
             _,
             $,
@@ -33,7 +34,8 @@ define(['backbone',
             MapView,
             MapLayerCtrlView,
             HeaderView,
-            CtrlSelectorView)
+            CtrlSelectorView,
+            CityLoadingView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -67,8 +69,6 @@ define(['backbone',
                                 toggled: false}}
             });
 
-//            this.on("change:city", this.setTimezone, this);
-
             // add in the header
             new HeaderView().render();
 
@@ -95,9 +95,9 @@ define(['backbone',
         // coordinates to a city and state code
         setLocation: function(longLat) {
 
-            this.get('city').set({'location': longLat});
+            new CityLoadingView({'model': this}).render();
 
-            var that = this;
+            this.get('city').set({'location': longLat});
 
             // Now that we've set the location, the server can do the rest.
             // But tell the server what needs changing. In particular, set the
@@ -105,13 +105,6 @@ define(['backbone',
             var response = this.save(['city', 'sessionID'], {
                 success: function() {
                     console.log('model persisted, id and city info updated');
-                    // Pan to the new location
-//                    var mapView = context.get('mapView');
-//                    if(mapView !== undefined && mapView !== null) {
-////                        var loc = this.get('city').get('centroid');
-//                        mapView.setLocation(context.get('city').get('centroid'));
-//                    }
-
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');
