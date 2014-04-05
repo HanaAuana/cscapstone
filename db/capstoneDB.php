@@ -19,7 +19,7 @@
              
     // Create the table
     $myQuery = "CREATE TABLE CityPops (tractID   VARCHAR(10),
-			                    tractBlob LONGBLOB,
+			                    tractBlob LONGTEXT,
 								PRIMARY KEY (tractID)
 								)";
 	mysql_query($myQuery, $db_server) or die("Failed to create table " . mysql_error());
