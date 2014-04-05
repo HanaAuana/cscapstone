@@ -29,10 +29,12 @@ define(['scripts/utils/censusAPI',
     var completedSteps;
 
     function checkCallsFinished(request, response, cityModel) {
+
         // Wait until all steps have completed
         for(var step in completedSteps) {
-            if(completedSteps[step] === false)
+            if(completedSteps[step] === false) {
                 return;
+            }
         }
 
         var results = {
@@ -57,102 +59,54 @@ define(['scripts/utils/censusAPI',
         cityModel.cityName = geoObj.cityName;
         cityModel.centroid = geoObj.centroid;
         cityModel.stateID = geoObj.stateID;
-        cityModel.countyID = geoObj.countyID;
-        cityModel.countySubdivID = geoObj.countySubdivID;
         cityModel.placeID = geoObj.placeID;
         console.log('setting geo data: \r\n ' + JSON.stringify(geoObj));
 
-        completedSteps.boundaries = true;
-
-        // Now get the census tract population info
-        censusAPI.getCensusTractPopulations(cityModel.stateID,
-            cityModel.countyID, cityModel.countySubdivID, cityModel.placeID,
-            function(res) {
-                onCensusTractPopResponse(cityModel, request, appResponse,
-                    res, context)
-            });
-    }
-
-    function onTzResponse(cityModel, request, appResponse, res, context) {
-        if(cityModel === false) {
-            console.log("tz fails");
-            appResponse.writeHead(404);
-            appResponse.send();
-            return;
-        }
-
-        // If successful, grab the timezone
-        cityModel.timezone = res.timeZoneId;
-        console.log('setting tz: ' + cityModel.timezone);
-
-        completedSteps.timezone = true;
-        checkCallsFinished(request, appResponse, cityModel);
-    }
-
-    function onCensusTractPopResponse(cityModel, request,
-                                      appResponse, cityPops, context) {
-
-        if(cityPops === false) {
-            completedSteps.cityTracts = true;
-            checkCallsFinished(request, appResponse, cityModel);
-            return;
-        }
-
-        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.countyID,
-            cityModel.placeID, cityPops, function(geoJson) {
+        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.placeID,
+            function(result) {
                 // TODO handle city geo json
-                cityModel.censusTracts = geoJson;
+                cityModel.censusTracts = result.cityTracts;
+                cityModel.boundary = result.cityBoundary;
                 completedSteps.cityTracts = true;
                 checkCallsFinished(request, appResponse, cityModel)
             }, this);
     }
 
-    function onStateTractResponse(cityModel, request, appResponse, res, context) {
-        if(res === false) {
-            console.log("error retrieving state census tractrs")
-        } else {
-            console.log('got state tract callback, file length ' + res.length);
-            fs.writeFile('./tract.zip', res, function(err) {
-                if(err)
-                    console.log("error writing file")
-                else
-                    console.log("file saved");
-            });
-        }
-
-
-
-        completedSteps.stateTracts = true;
-        checkCallsFinished(request, appResponse, cityModel)
-    }
-
-    function simSessionRoute(req, response) {
+    function simSessionRoute(request, response) {
 
         // keep track of how many calbacks have returned
         completedSteps = {
             timezone: false,
-            boundaries: false,
             cityTracts: false
-//            stateTracts: false
         };
 
         var that = this;
         // A put means this is a new model. We nee to do all the initializing
         // stuff, including setting the city, getting all geo, and generating
         // trips
-        if(req.route.method === 'put') {
+        if(request.route.method === 'put') {
             console.log('handling put');
 
-            var cityModel = req.body.city;
+            var cityModel = request.body.city;
 
             // get the city name, boundary and centroid
-            censusAPI.getBoundaryLocation(req.body.city.location, function(res) {
-                onBoundaryResponse(cityModel, req, response, res, that)
+            censusAPI.getBoundaryLocation(cityModel.location, function(res) {
+                onBoundaryResponse(cityModel, request, response, res, that);
             }, this);
 
             // get the timezone
-            googleStaticAPI.getTimezone(req.body.city.location, function(res) {
-                onTzResponse(cityModel, req, response, res, that);
+            googleStaticAPI.getTimezone(cityModel.location, function(res) {
+                if(res === false) {
+                    console.error("TZ fails");
+                    // TODO error handling
+                } else {
+                    // If successful, grab the timezone
+                    cityModel.timezone = res.timeZoneId;
+                    console.log('Setting TZ: ' + cityModel.timezone);
+
+                    completedSteps.timezone = true;
+                    checkCallsFinished(request, response, cityModel);
+                }
             }, this);
 
         } else if(req.route.method === 'post') {

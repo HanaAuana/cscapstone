@@ -18,11 +18,9 @@ requirejs.config({
     baseUrl: "../capstone/",
 
     paths: {
-    	jquery: 'scripts/lib/jquery',
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
-        leaflet: "scripts/leaflet/leaflet",
-        leafletDraw: "scripts/leaflet/leaflet-draw"
+        clipper: 'scripts/lib/clipper-min'
     },
 
     shim: {
@@ -39,16 +37,15 @@ requirejs.config({
         'leafletDraw':{
         	deps: ['leaflet'],
         	exports: 'L'
-        }
+        },
     }
 });
 
 // Start the server, using the server and router modules as dependencies
 requirejs(['scripts/server',
     'scripts/routers/router',
-    'scripts/utils/stategeograbber',
-    'scripts/utils/censusAPI'
-], function (server, router, stategeo, censusAPI) {
-      server.start(router.route);
-//    stategeo.checkGeographies();
+    'scripts/utils/tractPopulationParser'
+], function (server, router, tractPop) {
+      server.start(router.route)
+//        tractPop.parse('./geo/tract-pop/');
 });
