@@ -25,6 +25,9 @@ define(['leaflet',
         render: function () {
             this.$el.html(this.template);
             $("#map-container").append(this.el); //Make sure our View el is attached to the document
+
+            var height = $(window).height() - $('#title').height();
+            $(this.el).height(height);
         },
 
         initMap: function () {
@@ -128,7 +131,7 @@ define(['leaflet',
 
         calcEmpColor: function(bin, numBins) {
             var amount = Math.floor(bin * 100 / numBins);
-            var hex = tinycolor.darken('#f7941e', amount).toHexString();
+            var hex = tinycolor.darken('#', amount).toHexString();
             return hex;
         },
 
