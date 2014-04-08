@@ -19,7 +19,8 @@ define(['backbone',
     'views/MapLayerCtrlView',
     'views/HeaderView',
     'views/CtrlSelectorView',
-    'views/CityLoadingView'
+    'views/CityLoadingView',
+    'views/NetworkStatsView'
 ], function(Backbone,
             _,
             $,
@@ -35,7 +36,8 @@ define(['backbone',
             MapLayerCtrlView,
             HeaderView,
             CtrlSelectorView,
-            CityLoadingView)
+            CityLoadingView,
+            NetworkStatsView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -53,11 +55,11 @@ define(['backbone',
             this.id = this.cid;
 
             var transitRoutes = new TransitRouteCollection();
-            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
+//            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
             var city = new CityModel();
 
             this.set({'transitRoutes': transitRoutes,
-                        'sim2Gtfs': sim2Gtfs,
+//                        'sim2Gtfs': sim2Gtfs,
                         'city': city});
 
             this.set({"layers" : {
@@ -76,16 +78,9 @@ define(['backbone',
             var chooseCity = new ChooseCityView({'model': this});
             chooseCity.render();
 
-            // and the control selector
-            new CtrlSelectorView().render();
-
             // and the map
             var mapView = new MapView({'model': this});
             mapView.initMap();
-
-            // and the map layer selector
-            var mapLayerSelector = new MapLayerCtrlView({'model': this});
-            mapLayerSelector.render();
 
             this.generateTrips();
         },
@@ -110,6 +105,15 @@ define(['backbone',
                     console.log('persist fails');
                 }});
             console.log(response);
+
+            // add the control selector
+            new CtrlSelectorView().render();
+
+            // and the map layer selector and render it by default
+            new MapLayerCtrlView({'model': this}).render();
+
+            // and the network stats
+            new NetworkStatsView({'collection': this.get('transitRoutes')});
         },
 
         setTimezone: function() {

@@ -5,8 +5,11 @@ define(['leaflet',
     'backbone',
     'tinycolor',
     'leafletDraw',
-    'text!MapViewTemplate.ejs'
-], function (L, $, _, Backbone, tinycolor, leafletDraw, MapViewTemplate) {
+    'text!MapViewTemplate.ejs',
+    'models/TransitRouteModel',
+    'models/TransitModeModel'
+], function (L, $, _, Backbone,
+             tinycolor, leafletDraw, MapViewTemplate, TransitRoute, TransitMode) {
 
     var MapView = Backbone.View.extend({
         id: "map-container",
@@ -14,6 +17,7 @@ define(['leaflet',
         map: null,
         centroid: null,
         visibleLayers: {},
+        transitModeTypes: new TransitMode().get('typeString'),
 
         initialize: function () {
              // Register listeners
@@ -25,6 +29,9 @@ define(['leaflet',
         render: function () {
             this.$el.html(this.template);
             $("#map-container").append(this.el); //Make sure our View el is attached to the document
+
+            var height = $(window).height() - $('#title').height();
+            $(this.el).height(height);
         },
 
         initMap: function () {
@@ -41,8 +48,24 @@ define(['leaflet',
                 }
             }).addTo(this.map);
 
+            var that = this;
             this.map.on('draw:created', function(e) {
-                featureGroup.addLayer(e.layer);
+                // Route has been drawn, do any route initialization logic and
+                // draw the resulting geoJSON. The resulting geoJSON may be
+                // different than the one passed in. For example, bus routes must
+                // be snapped to the road
+                if(e.layer.toGeoJSON().geometry.type === "LineString") {
+                    that.handleRouteDraw(e, function(geoJSON) {
+                        var geoJson = L.geoJson(geoJSON, {
+                            style: function (feature) {
+                                return {
+                                    color: feature.properties.color
+                                };
+                            }
+                        });
+                        geoJson.addTo(that.map);
+                    }, this);
+                }
             });
         },
 
@@ -146,6 +169,17 @@ define(['leaflet',
                 }
                 // TODO other layers
             }
+        },
+
+        handleRouteDraw: function(event, callback, context) {
+
+            var route = new TransitRoute({'geoJson': event.layer.toGeoJSON()}, {
+                'modeId': this.transitModeTypes.subway // TODO for now assume subway. fix this
+            });
+            this.model.get('transitRoutes').addRoute(route);
+
+            // Do callback with the potentially modified GeoJSON
+            callback.call(context||this, route.get('geoJson'));
         }
     });
 
