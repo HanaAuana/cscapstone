@@ -29,6 +29,10 @@ define(['backbone',
                     this.set({'mode': new SubwayMode()});
             }
 
+            // Persist route id change to the geoJson. The map will need this
+            this.on('change:id', function() {
+                this.get('geoJson').properties.id = this.get('id');
+            }, this);
         },
 
         // Gets the stops geometry object from the GeoJson

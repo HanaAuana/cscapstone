@@ -12,6 +12,8 @@ define(['backbone',
 
          routeId: 1,
 
+         colors: ['red', 'green', 'blue', 'yellow', 'cyan', 'orange', 'purple'],
+
 
         /**
          * Adds the route to the collection. DON'T DIRECTLY CALL Collection.add;
@@ -20,11 +22,10 @@ define(['backbone',
          */
         addRoute: function(route) {
 
-            var keysbyindex = Object.keys(tinycolor.names);
-
             // Set the route id and color
             // TODO don't pick random colors
-            route.get('geoJson').properties.color = '#' + tinycolor.names[keysbyindex[this.routeId]];
+            route.get('geoJson').properties.color = '#'
+                    + tinycolor.names[this.colors[this.routeId % this.colors.length]];
             route.set({'id': this.routeId++});
 
             // And finally, add the route to the collection
