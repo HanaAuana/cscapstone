@@ -1,0 +1,12 @@
+<table class="table" id="ctrl-network-stats">
+    <tr>
+        <th>Route</th>
+        <th>Ridership</th>
+    </tr>
+    <% for(var i = 0; i < routes.length; i++) { %>
+    <tr>
+        <td>Route <%= routes[i].id%></td>
+        <td><%= routes[i].ridership %></td>
+    </tr>
+    <% } %>
+</table>
