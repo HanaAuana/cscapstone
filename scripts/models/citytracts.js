@@ -123,7 +123,8 @@ define(['scripts/utils/censusAPI',
         return false;
     }
 
-    var minIntersectionPct = 0.001;
+    var minPctOfCity = 0.001;
+    var minPctOfTract = 0.60;
     /**
      * Extracts all the geoJson components from the state geoJson which lie
      * within the specified place
@@ -136,8 +137,7 @@ define(['scripts/utils/censusAPI',
         var cityGeos = [];
         var stateTracts = stateGeoJson.features;
 
-        var cityArea = getPolygonArea(cityBoundary.geometry, false,
-                            cityBoundary.geometry.type === "MultiPolygon");
+        var cityArea = getPolygonArea(cityBoundary.geometry, false);
 
         var length = stateTracts.length;
         for(var i = 0; i < length; i++) {
@@ -164,12 +164,15 @@ define(['scripts/utils/censusAPI',
                 // area of the two polygons is above a threshold
                 var interArea = getPolygonIntersectionArea(stateTract.geometry,
                                                         cityBoundary.geometry);
-                var pct = (interArea / cityArea).toFixed(4);
+                var pctOfCity = (interArea / cityArea).toFixed(4);
                 console.log("Area of intersection: " + interArea
                                     + ", city area: " + cityArea
-                                    + ", pct: " + pct + "%");
-                if(pct < minIntersectionPct) {
-                    console.log("Skipping tract of city pct " + pct + "%")
+                                    + ", pct: " + pctOfCity + "%");
+                var tractArea = getPolygonArea(stateTract.geometry, false);
+                var pctOfTract = (interArea / tractArea).toFixed(4);
+                if(pctOfCity < minPctOfCity && pctOfTract < minPctOfTract ) {
+                    console.log("Skipping tract. Pct of city: " + pctOfCity
+                        + "%, pct of tract " + pctOfTract + "%");
                 } else {
                     cityGeos.push(stateTract);
                 }
@@ -182,7 +185,7 @@ define(['scripts/utils/censusAPI',
         return tractList2GeoJson(cityGeos);
     }
 
-    function getPolygonArea(polygon, isPath, isMultiPolygon) {
+    function getPolygonArea(polygon, isPath) {
         var polyPaths;
         if(isPath) {
             polyPaths = [polygon];
@@ -276,7 +279,7 @@ define(['scripts/utils/censusAPI',
             return 0;
 
         // Find the intersection area. NOTE THAT THIS IS THE SCALED-UP AREA
-        return getPolygonArea(solutionPaths, true, true);
+        return getPolygonArea(solutionPaths, true);
     }
 
     /**
