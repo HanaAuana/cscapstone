@@ -15,12 +15,18 @@ define(['backbone',
 
         initialize: function() {
             $('#title').append(this.el);
+            var that = this;
+            this.model.on('sync', function() {
+                var cityName = that.model.get('city').cityName;
+                that.render(cityName);
+            }, this);
         },
 
-        render: function() {
+        render: function(cityName) {
             // Compile the template, and pass in the app name
             var template = _.template(headerViewTemplate, {
-                name: globalvars.appName
+                name: globalvars.appName,
+                cityName: cityName ? cityName : ""
             });
             // Load the compiled HTML into the Backbone "el"
             this.$el.html( template );
