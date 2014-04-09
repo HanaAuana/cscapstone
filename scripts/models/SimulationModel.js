@@ -72,7 +72,7 @@ define(['backbone',
             });
 
             // add in the header
-            new HeaderView().render();
+            new HeaderView({'model': this}).render();
 
             // and the city selector
             var chooseCity = new ChooseCityView({'model': this});
