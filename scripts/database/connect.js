@@ -1,10 +1,9 @@
 define(['mysql'
 ], function(mysql) {
 
-
-  var mysql = require('mysql');
   var DATABASE = "capstone";
   var TABLE = "CityPops";
+  var TABLE2 = "CityTrips";
 
  
   var connection = mysql.createConnection({
@@ -16,7 +15,7 @@ define(['mysql'
   });
 
 
-  function queryDB(cityTract, callback, context){
+  function queryTracts(cityTract, callback, context){
     connection.query('select tractBlob from ' + TABLE + ' where tractID = ' + cityTract,
     function(err, result) {
         if (err){
@@ -35,7 +34,7 @@ define(['mysql'
     });
   }
   
-  function writeDB(cityTract, cityBlob){    
+  function writeTracts(cityTract, cityBlob){    
     var query = connection.query('INSERT INTO ' + TABLE + ' (tractID, tractBlob) VALUES ("' + cityTract + '", "' + connection.escape(cityBlob) + '")', function(err, result) {
         if (err) {
         console.log("An error occurred!", err);
@@ -47,7 +46,9 @@ define(['mysql'
 
 
   return {
-    makeQuery: queryDB,
-    makeWrite: writeDB
+    makeQuery: queryTracts,
+    makeWrite: writeTracts,
+    makeTripQuery: queryTrips,
+    makeTripWrite: writeTrips 
   }
 });
