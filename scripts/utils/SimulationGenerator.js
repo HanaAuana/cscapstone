@@ -37,3 +37,7 @@ define(['connect',
 			callback.call(context||this, result
 		});
 	}
+
+return {
+	makeTrips : genTrips
+}

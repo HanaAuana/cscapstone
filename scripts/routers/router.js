@@ -23,8 +23,9 @@
 define(['scripts/utils/censusAPI',
     'scripts/utils/googleStaticAPI',
     'fs',
-    'scripts/models/citytracts'
-], function(censusAPI, googleStaticAPI, fs, cityTracts) {
+    'scripts/models/citytracts',
+    'scripts/utils/SimulationGenerator'
+], function(censusAPI, googleStaticAPI, fs, cityTracts, SimulationGenerator) {
 
     var completedSteps;
     var self = this;
@@ -49,6 +50,8 @@ define(['scripts/utils/censusAPI',
         // Send back the modified body
         response.send(JSON.stringify(results));
         console.log('sent sim session response');
+
+        SimulationGenerator.makeTrips(cityModel.censusTracts, cityModel.stateID + cityModel.placeID, function(result));
     }
 
     function onBoundaryResponse(cityModel, request, appResponse, geoObj, context) {
