@@ -8,8 +8,8 @@
 define([], function(){
 
     return {
-        'appName': 'TransitBuilder',
-        'gtfsAgencyName': 'TransitBuilder',
+        'appName': 'TransitBuildr',
+        'gtfsAgencyName': 'TransitBuildr',
         'url': '127.0.0.1:1337',
         'gApiKey':'AIzaSyBx2VkEiP4AF9RSvJZ1P9j1La-Y3HL2EOU',
         'censusKey': 'a0965f148ffbe78ef6a53f59a4842fdbec722ea7',

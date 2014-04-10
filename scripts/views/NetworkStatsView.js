@@ -50,9 +50,10 @@ define(['backbone',
             for(var i = 0; i < numRoutes; i++) {
                 var route = this.collection.at(i);
                 var routeObj = {
-                    id: route.get('id'),
+                    name: route.get('name'),
                     ridership: route.get('ridership'),
-                    color: route.get('geoJson').properties.color
+                    color: route.get('geoJson').properties.color,
+                    mode: route.get('mode').get('typeString')
                 }
                 routes.push(routeObj);
             }

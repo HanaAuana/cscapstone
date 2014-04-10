@@ -4,8 +4,9 @@
 
 define(['backbone',
     'underscore',
-    'models/SubwayModeModel'
-], function(Backbone, Underscore, SubwayMode){
+    'models/SubwayModeModel',
+    'models/BusModeModel'
+], function(Backbone, Underscore, SubwayMode, BusMode){
 
     var TransitRouteModel = Backbone.Model.extend({
 
@@ -23,10 +24,14 @@ define(['backbone',
 
         initialize: function(attrs, options) {
 //            console.log("initializing new route, mode " + options.modeId);
-            switch (options.modeId) {
+            switch (options.mode) {
                 // Based on GTFS constants TODO other modes
-                case 1:
+                case 'subway':
                     this.set({'mode': new SubwayMode()});
+                    break;
+                case 'bus':
+                    this.set({'mode': new BusMode()});
+                    break;
             }
 
             // Persist route id change to the geoJson. The map will need this
