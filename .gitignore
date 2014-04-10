@@ -4,3 +4,7 @@
 
 # NodeJs Modules #
 node_modules
+
+# Data #
+tmp
+geo

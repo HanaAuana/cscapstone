@@ -28,7 +28,7 @@ define(['backbone',
             this.geocoder = new gmaps.Geocoder();
 
             // Append the el (defaults to an empty div) to the document
-            $('#title').append(this.el);
+            $('#ctrl-container').append(this.el);
         },
 
         render: function() {
@@ -37,6 +37,15 @@ define(['backbone',
             var template = _.template(chooseCityTemplate, {});
             // Load the compiled HTML into the Backbone "el"
             this.$el.html( template );
+
+            var that = this
+            // Capture the enter key
+            $('#city-selector').keypress(function(e) {
+                if (e.which == "13") {
+                    that.onCitySelected();
+                    return false;
+                }
+            });
         },
 
         onCitySelected: function() {
@@ -53,10 +62,12 @@ define(['backbone',
                         if(status === gmaps.GeocoderStatus.OK) {
                             // TODO more error checking on the result
                             var loc = results[0].geometry.location;
-                            console.log('setting loc');
                             if(that.model !== undefined) {
                                 console.log('setting loc');
                                 that.model.setLocation(loc);
+
+                                // TODO the model should probably control removal
+                                that.remove();
                             }
 
                         } else {

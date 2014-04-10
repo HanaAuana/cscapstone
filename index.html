@@ -5,20 +5,20 @@
     <!-- data-main attribute tells require.js to load
          scripts/main.js after require.js loads. -->
     <script data-main="main" src="lib/require.js"></script>
-    <script type = "text/template" id = "map-template">
-        <div id = "mapView"></div>
-    </script>
+
+    <link href="/favicon.ico" rel="shortcut icon">
+    <!-- It's CSS, so order is important. Don't rearrange. -->
+    <link rel="stylesheet" href="http://leaflet.github.io/Leaflet.draw/leaflet.draw.css"/>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
-    <style>
-        #mapView {
-            width:900px;
-            height:500px;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-<div id="title">
-    <h1>Capstone</h1>
+<div id="title"></div>
+<div id="map-container"></div>
+<div id="ctrl-container-outer">
+    <div id="ctrl-container"></div>
 </div>
+<div id="dialog"></div>
 </body>
 </html>

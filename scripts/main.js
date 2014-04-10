@@ -12,7 +12,10 @@ requirejs.config({
         jquery: 'lib/jquery',
         text: 'lib/text',
         async: 'lib/async',
-        leaflet: 'leaflet/leaflet'
+        leaflet: 'leaflet/leaflet',
+        tinycolor: 'lib/tinycolor-min',
+        leafletDraw: "leaflet/leaflet-draw",
+        bootstrap: "lib/bootstrap-min"
     },
 
     shim: {
@@ -24,8 +27,15 @@ requirejs.config({
         'underscore': {
             exports: '_'
         },
-        'leaflet':{
+        'leaflet': {
             exports: 'L'
+        },
+        'leafletDraw':{
+        	deps: ['leaflet'],
+        	exports: 'leafletDraw'
+        },
+        'bootstrap': {
+            deps: ['jquery']
         }
     }
 });
@@ -44,11 +54,10 @@ requirejs([
     'underscore',
     'jquery',
     'utils/globalvars',
-    'models/SimulationModel',
-    'views/ChooseCityView'
-], function(Backbone, _, $, globalvars, SimModel, ChooseCityView) {
+    'models/SimulationModel'
+], function(Backbone, _, $, globalvars, SimModel) {
     console.log("here we begin front end app logic");
-    console.log("app name: "  + globalvars.appName);
+    document.title = globalvars.appName;
 
     // TODO check for persisted sessions, for now we build a new session
     // add in the map view
