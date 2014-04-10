@@ -13,7 +13,7 @@ define(['backbone',
     var CityLoadingView = Backbone.View.extend({
 
         dialogText: "Compiling data for your city. Please wait...",
-        modalId: '#loadingAlert',
+        modalId: '#loading-alert',
 
         initialize: function() {
             $('#dialog').append(this.el);
@@ -37,14 +37,14 @@ define(['backbone',
         },
 
         render: function() {
+            var that = this;
+            $(this.modalId).on('hidden.bs.modal', function () {
+                $(that.$el).remove();
+            });
             $(this.modalId).modal('show');
         },
 
         remove: function() {
-            console.log("Removing alert");
-            $(this.modalId).on('hidden.bs.modal', function () {
-               $(this.el).remove();
-            });
             $(this.modalId).modal('hide');
         }
     });

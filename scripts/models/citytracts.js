@@ -83,8 +83,7 @@ define(['scripts/utils/censusAPI',
                 }
             }
         } catch (err) {
-            console.error("Unable to read state " + stateID + " geoJson: "
-                            + err);
+            console.error("Unable to read state " + stateID + " geoJson: " + err);
         }
         return false;
     }
@@ -107,7 +106,8 @@ define(['scripts/utils/censusAPI',
         return false;
     }
 
-    var minIntersectionPct = 0.001;
+    var minPctOfCity = 0.001;
+    var minPctOfTract = 0.60;
     /**
      * Extracts all the geoJson components from the state geoJson which lie
      * within the specified place
@@ -119,6 +119,7 @@ define(['scripts/utils/censusAPI',
 
         var cityGeos = [];
         var stateTracts = stateGeoJson.features;
+
         var cityArea = getPolygonArea(cityBoundary.geometry, false);
 
         var length = stateTracts.length;
@@ -146,13 +147,15 @@ define(['scripts/utils/censusAPI',
                 // area of the two polygons is above a threshold
                 var interArea = getPolygonIntersectionArea(stateTract.geometry,
                                                         cityBoundary.geometry);
-                var pct = (interArea / cityArea).toFixed(4);
-//                console.log("Area of intersection: " + interArea
-//                                    + ", city area: " + cityArea
-//                                    + ", pct: " + pct + "%");
-//                if(interArea / cityArea >= minIntersectionPct)
-                if(pct < minIntersectionPct) {
-                    console.log("Skipping tract of city pct " + pct + "%")
+                var pctOfCity = (interArea / cityArea).toFixed(4);
+                console.log("Area of intersection: " + interArea
+                                    + ", city area: " + cityArea
+                                    + ", pct: " + pctOfCity + "%");
+                var tractArea = getPolygonArea(stateTract.geometry, false);
+                var pctOfTract = (interArea / tractArea).toFixed(4);
+                if(pctOfCity < minPctOfCity && pctOfTract < minPctOfTract ) {
+                    console.log("Skipping tract. Pct of city: " + pctOfCity
+                        + "%, pct of tract " + pctOfTract + "%");
                 } else {
                     cityGeos.push(stateTract);
                 }
@@ -169,38 +172,57 @@ define(['scripts/utils/censusAPI',
     function getPolygonArea(polygon, isPath) {
         var polyPaths;
         if(isPath) {
-            polyPaths = polygon;
+            polyPaths = [polygon];
         } else {
             polyPaths = geoJsonFeature2Paths(polygon);
-            var scale = 50000000;
-            clipper.ClipperLib.JS.ScaleUpPaths(polyPaths, scale);
         }
 
         var area = 0;
-        for(var i = 0; i < polyPaths.length; i++)
-            area += Math.abs(clipper.ClipperLib.Clipper.Area(polyPaths[i]));
+//        area += Math.abs(clipper.ClipperLib.JS.AreaOfPolygon(polyPaths, 1));
+        for(var i = 0; i < polyPaths.length; i++) {
+            var curPath = polyPaths[i];
+            area += Math.abs(clipper.ClipperLib.JS.AreaOfPolygons(curPath));
+        }
 
         return area;
     }
 
     function geoJsonFeature2Paths(feature) {
+        var multiPath = [];
+        if(feature.type === "Polygon") {
+            multiPath.push(polygonFeature2Path(feature.coordinates));
+        } else {
+            // Multipolygon requires another loop
+            var length = feature.coordinates.length;
+            for(var i = 0; i < length; i++) {
+                multiPath.push(polygonFeature2Path(feature.coordinates[i]));
+            }
+//            console.log("Multipolygon: \r\n %j", multipolygon);
+        }
+        return multiPath;
+    }
+
+    function polygonFeature2Path(coordinates) {
         var ClipperLib = clipper.ClipperLib;
 
         var featurePaths = [];
 
-        for(var i = 0; i  < feature.coordinates.length; i++) {
-            var featureCoords = feature.coordinates[i];
+        for(var i = 0; i  < coordinates.length; i++) {
+            var featureCoords = coordinates[i];
             var coordsLength = featureCoords.length;
             var featurePath = [];
 
-            for(var i = 0; i < coordsLength; i++) {
-                var coordinate = featureCoords[i];
+            for(var j = 0; j < coordsLength; j++) {
+                var coordinate = featureCoords[j];
                 featurePath.push(new ClipperLib.IntPoint(coordinate[0], coordinate[1]));
-                if(i+1 === coordsLength) {
+                if(j+1 === coordsLength) {
                     coordinate = featureCoords[0];
                     featurePath.push(new ClipperLib.IntPoint(coordinate[0], coordinate[1]));
                 }
             }
+
+            var scale = 50000000;
+            ClipperLib.JS.ScaleUpPath(featurePath, scale);
             featurePaths.push(featurePath);
         }
         return featurePaths;
@@ -209,26 +231,26 @@ define(['scripts/utils/censusAPI',
     // TODO fix for multipolygons!!!!!!!!!!
     // http://sourceforge.net/p/jsclipper/wiki/Home%206/#a2-create-paths
     function getPolygonIntersectionArea(polygonFeature1, polygonFeature2) {
-        if(polygonFeature1.type == "MultiPolygon"
-                || polygonFeature2.type == "MultiPolygon")
-            console.log("Getting area for a " + polygonFeature1.type
-                                    + " and a " + polygonFeature2.type);
+//        if(polygonFeature1.type == "MultiPolygon"
+//                || polygonFeature2.type == "MultiPolygon")
+//            console.log("Getting area for a " + polygonFeature1.type
+//                                    + " and a " + polygonFeature2.type);
 
         var ClipperLib = clipper.ClipperLib;
 
-        // Convert the feature to a path the Clipper can use
+        // Convert the features to paths that Clipper can use
         var poly1Path = geoJsonFeature2Paths(polygonFeature1);
         var poly2Path = geoJsonFeature2Paths(polygonFeature2);
 
-        // Scale up the paths - clipper only deals with ints
-        var scale = 50000000;
-        ClipperLib.JS.ScaleUpPaths(poly1Path, scale);
-        ClipperLib.JS.ScaleUpPaths(poly2Path, scale);
+//        console.log('TRACT PATH: \r\n %j', poly1Path);
+//        console.log('BOUNDARY PATH: \r\n %j', poly2Path);
 
         // Add the paths
         var cpr = new ClipperLib.Clipper();
-        cpr.AddPaths(poly1Path, ClipperLib.PolyType.ptSubject, true);
-        cpr.AddPaths(poly2Path, ClipperLib.PolyType.ptClip, true);
+        for(var i = 0; i < poly1Path.length; i++)
+            cpr.AddPaths(poly1Path[i], ClipperLib.PolyType.ptSubject, true);
+        for(var i = 0; i < poly2Path.length; i++)
+            cpr.AddPaths(poly2Path[i], ClipperLib.PolyType.ptClip, true);
         var solutionPaths = [];
 
         // Find the intersection!

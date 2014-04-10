@@ -13,10 +13,6 @@ define(['backbone',
 
         rendered: false,
 
-        events: {
-            "click #map-layer-ctrl": "onLayerToggled"
-        },
-
         initialize: function() {
             var layers = this.model.get('layers');
             // Compile the template, and pass in the layer list
@@ -34,12 +30,18 @@ define(['backbone',
                 else
                     that.remove();
             });
+
         },
 
         render: function() {
             if(!this.rendered) {
                 $('#ctrl-container').append(this.$el);
                 this.rendered = true
+
+                var that = this;
+                $("#map-layer-ctrl").click(function(){
+                    that.onLayerToggled();
+                });
             }
         },
 
