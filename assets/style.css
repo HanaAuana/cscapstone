@@ -87,3 +87,6 @@
     user-select: none;
     cursor: pointer;
 }
+.control-label {
+    margin-right: 10px;
+}

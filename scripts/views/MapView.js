@@ -6,10 +6,10 @@ define(['leaflet',
     'tinycolor',
     'leafletDraw',
     'text!MapViewTemplate.ejs',
-    'models/TransitRouteModel',
-    'models/TransitModeModel'
+    'views/NewRouteView'
 ], function (L, $, _, Backbone,
-             tinycolor, leafletDraw, MapViewTemplate, TransitRoute, TransitMode) {
+             tinycolor, leafletDraw, MapViewTemplate,
+             NewRouteView) {
 
     var MapView = Backbone.View.extend({
         id: "map-container",
@@ -17,13 +17,12 @@ define(['leaflet',
         map: null,
         centroid: null,
         visibleLayers: {},
-        transitModeTypes: new TransitMode().get('typeString'),
 
         initialize: function () {
-             // Register listeners
+            // Register listeners
             this.model.on('sync', this.handleModelSync, this);
             this.model.on('change:layers', this.toggleLayers, this);
-
+            this.model.get('transitRoutes').on('add', this.onRouteAdded, this);
         },
 
         render: function () {
@@ -55,16 +54,7 @@ define(['leaflet',
                 // different than the one passed in. For example, bus routes must
                 // be snapped to the road
                 if(e.layer.toGeoJSON().geometry.type === "LineString") {
-                    that.handleRouteDraw(e, function(geoJSON) {
-                        var geoJson = L.geoJson(geoJSON, {
-                            style: function (feature) {
-                                return {
-                                    color: feature.properties.color
-                                };
-                            }
-                        });
-                        geoJson.addTo(that.map);
-                    }, this);
+                    that.handleRouteDraw(e);
                 }
             });
         },
@@ -76,8 +66,6 @@ define(['leaflet',
             if (this.centroid == null || this.centroid != newCentroid) {
                 console.log('panning to ' + newCentroid);
                 this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
-
-
 				this.centroid = newCentroid;
 			}
 		},
@@ -171,15 +159,24 @@ define(['leaflet',
             }
         },
 
-        handleRouteDraw: function(event, callback, context) {
-
-            var route = new TransitRoute({'geoJson': event.layer.toGeoJSON()}, {
-                'modeId': this.transitModeTypes.subway // TODO for now assume subway. fix this
+        onRouteAdded: function(route) {
+            var geoJSON = route.get('geoJson');
+            
+            console.log("Route has been added, drawing");
+            var geoJson = L.geoJson(geoJSON, {
+                style: function (feature) {
+                    return {
+                        color: feature.properties.color
+                    };
+                }
             });
-            this.model.get('transitRoutes').addRoute(route);
+            geoJson.addTo(this.map);
+        },
 
-            // Do callback with the potentially modified GeoJSON
-            callback.call(context||this, route.get('geoJson'));
+        handleRouteDraw: function(event) {
+            new NewRouteView({geoJson: event.layer.toGeoJSON(),
+                              routes: this.model.get('transitRoutes')}
+            ).render();
         }
     });
 
