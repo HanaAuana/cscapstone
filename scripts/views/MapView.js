@@ -161,12 +161,13 @@ define(['leaflet',
 
         onRouteAdded: function(route) {
             var geoJSON = route.get('geoJson');
-            
+
+            var color = geoJSON.properties.color;
             console.log("Route has been added, drawing");
             var geoJson = L.geoJson(geoJSON, {
                 style: function (feature) {
                     return {
-                        color: feature.properties.color
+                        color: color
                     };
                 }
             });

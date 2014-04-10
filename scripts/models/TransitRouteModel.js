@@ -38,6 +38,8 @@ define(['backbone',
             this.on('change:id', function() {
                 this.get('geoJson').properties.id = this.get('id');
             }, this);
+
+            this.initializeGeoJSON(options.rawRouteFeature);
         },
 
         // Gets the stops geometry object from the GeoJson
@@ -70,6 +72,40 @@ define(['backbone',
                         return features[i].properties.outboundDriveTimes;
                 }
             }
+        },
+
+        initializeGeoJSON: function(rawRouteFeature) {
+            // Wrap the route feature in a GeoJSON feature collection
+            var geoJSON = {
+                type: "FeatureCollection",
+                properties: {},
+                features: []
+            }
+
+            // Indicate that the drawn line is the route feature, and push it
+            // onto the features list
+            rawRouteFeature.properties = {
+                geoType: "route"
+            }
+            geoJSON.features.push(rawRouteFeature);
+
+            // Build and push an outline for the stops feature
+            var stopsFeature = {
+                type: "Feature",
+                properties: {
+                    geoType: "stops",
+                    inboundDriveTimes: [],
+                    outboundDriveTimes: []
+                },
+                geometry: {
+                    type: "LineString",
+                    coordinates: []
+                }
+            }
+            geoJSON.features.push(stopsFeature);
+
+            this.set({'geoJson': geoJSON});
+            console.log('%j', this.get('geoJson'));
         }
     });
 

@@ -50,9 +50,9 @@ define(['backbone',
             // Ignore button click if the user hasn't entered anything
             if(routeName.length > 0 && routeMode.length > 0) {
 
-                var route = new TransitRoute({'geoJson': this.rawGeoJson,
-                        'name': routeName},
-                    {'mode': routeMode});
+                var route = new TransitRoute({'name': routeName},
+                                            {'mode': routeMode,
+                                            'rawRouteFeature': this.rawGeoJson});
                 this.routes.addRoute(route);
 
                 $('#new-route-alert').modal('hide');
