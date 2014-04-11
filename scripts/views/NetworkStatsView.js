@@ -53,14 +53,19 @@ define(['backbone',
                     name: route.get('name'),
                     ridership: route.get('ridership'),
                     color: route.get('geoJson').properties.color,
-                    mode: route.get('mode').get('typeString')
+                    mode: route.get('mode').get('typeString'),
                 }
                 routes.push(routeObj);
             }
 
+            var globalStats = {
+                pctDemandSatisfied: 0 //TODO
+            }
+
             // Compile the template, and pass in the layer list
             this.template = _.template(networkStatsTemplate,
-                {routes: routes});
+                {routes: routes,
+                globalStats: globalStats});
 
             // Only re-render if the view is already visible
             if(this.rendered)

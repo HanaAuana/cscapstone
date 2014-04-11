@@ -94,6 +94,9 @@
 #loading-div {
     text-align: center;
 }
+#network-stats-div {
+    text-align: center;
+}
 .loading-div-elements {
     margin-left: auto;
     margin-right: auto;

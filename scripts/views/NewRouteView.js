@@ -57,7 +57,8 @@ define(['backbone',
             // Ignore button click if the user hasn't entered anything
             if(routeName.length > 0 && routeMode.length > 0) {
 
-                 new TransitRoute({'name': routeName},
+                 new TransitRoute({'name': routeName,
+                                    'headway': $('#inputHeadways').val()},
                                 {mode: routeMode,
                                 rawRouteFeature: this.rawGeoJson,
                                 onRouteInitialized: function(route) {
