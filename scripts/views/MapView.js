@@ -67,6 +67,19 @@ define(['leaflet',
                 console.log('panning to ' + newCentroid);
                 this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
 				this.centroid = newCentroid;
+
+                console.log(city.boundary);
+                // Draw the city boundary
+                var geoJson = L.geoJson(city.boundary, {
+                    style: function () {
+                        return {
+                            opacity: "0,7",
+                            color: '#000000',
+                            fillOpacity: 0
+                        }
+                    }
+                });
+                geoJson.addTo(this.map);
 			}
 		},
 
