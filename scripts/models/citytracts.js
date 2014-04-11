@@ -145,9 +145,9 @@ define(['scripts/utils/censusAPI',
 
             if(i % 50 === 0) {
                 var pct = Math.floor((i * 100) / stateTracts.length);
-                process.stdout.clearLine();
-                process.stdout.cursorTo(0);
-                process.stdout.write("Finding city tracts: " + pct + "%");
+                // process.stdout.clearLine();
+                // process.stdout.cursorTo(0);
+                console.log("Finding city tracts: " + pct + "%");
             }
 
             // Skip tracts that only encompass water
