@@ -54,14 +54,13 @@ define(['http',
                 });
         });
 
-        // All our API calls end up here
-        app.get('/api/*', function(req, res) {
-
-        });
-
         // All saves/fetches for the simulation model
         app.all('/sim_session/*', function(req, response) {
             router.simSession(req, response);
+        });
+
+        app.all('/route_sync/*', function(req, response) {
+            router.routeSync(req, response);
         });
 
         app.listen(80);

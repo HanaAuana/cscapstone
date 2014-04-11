@@ -9,11 +9,8 @@ define(['backbone',
 
     var TransitRouteCollection = Backbone.Collection.extend({
 
-
          routeId: 1,
-
          colors: ['red', 'green', 'blue', 'yellow', 'cyan', 'orange', 'purple'],
-
 
         /**
          * Adds the route to the collection. DON'T DIRECTLY CALL Collection.add;

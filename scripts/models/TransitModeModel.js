@@ -30,6 +30,7 @@ define(['backbone',
                 'funicular': 7
             },
             'type': null,
+            'typeString': null,
             'dwellTime': null
         },
 
