@@ -11,7 +11,6 @@ define(['backbone',
     var TransitRouteModel = Backbone.Model.extend({
 
         defaults: {
-            'id': -1,
             'geoJson': null,
             'mode': null,
             'routeName': null,
@@ -23,7 +22,9 @@ define(['backbone',
         },
 
         initialize: function(attrs, options) {
-//            console.log("initializing new route, mode " + options.modeId);
+
+            this.id = this.cid;
+            this.urlRoot = '/route_sync';
             switch (options.mode) {
                 // Based on GTFS constants TODO other modes
                 case 'subway':
@@ -39,7 +40,11 @@ define(['backbone',
                 this.get('geoJson').properties.id = this.get('id');
             }, this);
 
-            this.initializeGeoJSON(options.rawRouteFeature);
+            var that = this;
+            this.initializeGeoJSON(options.rawRouteFeature, function(model) {
+                if(options.onRouteInitialized)
+                    options.onRouteInitialized.call(that, model);
+            });
         },
 
         // Gets the stops geometry object from the GeoJson
@@ -74,7 +79,7 @@ define(['backbone',
             }
         },
 
-        initializeGeoJSON: function(rawRouteFeature) {
+        initializeGeoJSON: function(rawRouteFeature, callback) {
             // Wrap the route feature in a GeoJSON feature collection
             var geoJSON = {
                 type: "FeatureCollection",
@@ -106,6 +111,39 @@ define(['backbone',
 
             this.set({'geoJson': geoJSON});
             console.log('%j', this.get('geoJson'));
+
+            var that = this;
+            // Some routes must be snapped to roads. Handle accordingly.
+            var modeString = this.get('mode').get('typeString');
+            switch(modeString) {
+                case 'subway':
+                    break;
+                case 'bus':
+                    this.syncRoute(function(result) {
+                        callback.call(this, result);
+                    });
+                    return;
+            }
+
+            callback.call(this, this);
+        },
+
+        syncRoute: function(callback) {
+
+            var that = this;
+            var response = this.save(['geoJson'], {
+                success: function(model, response, options) {
+                    // Set the updated route feature
+                    that.get('geoJson').features = response;
+
+                    console.log('route successfully synced');
+                    callback.call(this, model);
+                },
+                error: function (model, response, options) {
+                    console.log('route sync fails');
+                    callback.call(this, false);
+                }});
+            console.log(response);
         }
     });
 
