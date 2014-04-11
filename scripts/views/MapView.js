@@ -169,7 +169,8 @@ define(['leaflet',
             var geoJson = L.geoJson(geoJSON, {
                 style: function (feature) {
                     return {
-                        color: color
+                        color: color,
+                        weight: 8
                     };
                 }
             });
