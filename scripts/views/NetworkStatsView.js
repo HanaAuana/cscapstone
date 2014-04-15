@@ -17,14 +17,16 @@ define(['backbone',
             this.collection.on('add', this.updateRoutes, this);
             this.collection.on('remove', this.updateRoutes, this);
 
-            $(document).on('click', ".delete-route", function(event) {
+            var that = this;
+            $(document).on('click', ".delete-route-btn", function(event) {
                 var id = event.target.id;
-                console.log("removing " + id);
+                // Remove the specified route from the collection
+                console.log('removing route of id ' + id);
+                that.collection.remove(id);
             });
 
             this.updateRoutes();
 
-            var that = this;
             // Listen for events fired when the in focus tab changes. These
             // events are fired by the CtrlSelectorView
             Backbone.pubSub.on('ctrl-tab-change', function(id) {

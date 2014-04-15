@@ -16,13 +16,17 @@ define(['leaflet',
         template: _.template(MapViewTemplate, {}),
         map: null,
         centroid: null,
-        visibleLayers: {},
+        visibleLayers: {
+            routeLayers: {}
+        },
 
         initialize: function () {
             // Register listeners
             this.model.on('sync', this.handleModelSync, this);
             this.model.on('change:layers', this.toggleLayers, this);
-            this.model.get('transitRoutes').on('add', this.onRouteAdded, this);
+            var transitRoutes = this.model.get('transitRoutes');
+            transitRoutes.on('add', this.onRouteAdded, this);
+            transitRoutes.on('remove', this.onRouteRemoved, this);
         },
 
         render: function () {
@@ -39,11 +43,11 @@ define(['leaflet',
             this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
 
-            var featureGroup = L.featureGroup().addTo(this.map);
+            this.routeFeatureGroup = L.featureGroup().addTo(this.map);
 
             var drawControl = new L.Control.Draw({
                 edit : {
-                    featureGroup : featureGroup
+                    featureGroup : this.routeFeatureGroup
                 }
             }).addTo(this.map);
 
@@ -140,7 +144,17 @@ define(['leaflet',
                     this.visibleLayers.empLevels = undefined;
                 }
             }
+        },
 
+        toggleTransitNetwork: function(toggle) {
+            var routeLayers = this.visibleLayers.routeLayers;
+            for(var key in routeLayers) {
+                var layer = routeLayers[key];
+                if(toggle)
+                    this.routeFeatureGroup.addLayer(layer);
+                else
+                    this.routeFeatureGroup.removeLayer(layer);
+            }
         },
 
         calcPopColor: function(bin, numBins) {
@@ -166,8 +180,8 @@ define(['leaflet',
                     this.toggleTractPopLayer(layer.toggled);
                 } else if(layer.name === "Employment Levels") {
                     this.toggleTractEmpLayer(layer.toggled);
-                }
-                // TODO other layers
+                } else if(layer.name === "Transit Network")
+                    this.toggleTransitNetwork(layer.toggled);
             }
         },
 
@@ -186,7 +200,18 @@ define(['leaflet',
                     };
                 }
             });
-            geoJson.addTo(this.map);
+            this.routeFeatureGroup.addLayer(geoJson);
+            this.visibleLayers.routeLayers[route.get('id')] = geoJson;
+        },
+
+        onRouteRemoved: function(route) {
+            var id = route.get('id');
+            var layer = this.visibleLayers.routeLayers[id];
+
+            // Remove the route layer, and then remove reference from our list
+            // of layers
+            this.routeFeatureGroup.removeLayer(layer);
+            delete this.visibleLayers.routeLayers[id];
         },
 
         handleRouteDraw: function(event) {
