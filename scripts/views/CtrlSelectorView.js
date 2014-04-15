@@ -5,9 +5,8 @@
 define(['jquery',
     'underscore',
     'backbone',
-    'bootstrap',
     'text!CtrlSelectorTemplate.ejs'
-], function ($, _, Backbone, bootstrap, ctrlSelectorTemplate) {
+], function ($, _, Backbone, ctrlSelectorTemplate) {
 
     var CtrlSelectorView = Backbone.View.extend({
 

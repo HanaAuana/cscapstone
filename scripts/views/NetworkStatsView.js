@@ -17,6 +17,11 @@ define(['backbone',
             this.collection.on('add', this.updateRoutes, this);
             this.collection.on('remove', this.updateRoutes, this);
 
+            $(document).on('click', ".delete-route", function(event) {
+                var id = event.target.id;
+                console.log("removing " + id);
+            });
+
             this.updateRoutes();
 
             var that = this;
@@ -54,6 +59,7 @@ define(['backbone',
                     ridership: route.get('ridership'),
                     color: route.get('geoJson').properties.color,
                     mode: route.get('mode').get('typeString'),
+                    id: route.get('id')
                 }
                 routes.push(routeObj);
             }

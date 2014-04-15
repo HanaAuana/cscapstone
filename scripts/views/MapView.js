@@ -68,7 +68,6 @@ define(['leaflet',
                 this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
 				this.centroid = newCentroid;
 
-                console.log(city.boundary);
                 // Draw the city boundary
                 var geoJson = L.geoJson(city.boundary, {
                     style: function () {
