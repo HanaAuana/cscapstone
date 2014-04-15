@@ -12,7 +12,13 @@
         <tr>
             <td style="color:<%= color%>"><%= route.name%></td>
             <td style="color:<%= color%>"><%= route.mode%></td>
-            <td style="color:<%= color%>"><%= route.ridership %></td>
+            <td style="color:<%= color%>"><%= route.ridership %>
+                <span>
+                    <button class="btn btn-default btn-xs delete-route-btn" id=<%= route.id%>>
+                        <i class="glyphicon glyphicon-trash"></i>
+                    </button>
+                </span>
+            </td>
         </tr>
         <% } %>
     </table>
