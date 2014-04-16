@@ -5,14 +5,6 @@
 # NodeJs Modules #
 node_modules
 
-<<<<<<< HEAD
-# Our temp data #
-tmp
-
-#Project files#
-.project
-=======
 # Data #
 tmp
 geo
->>>>>>> develop
