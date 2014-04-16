@@ -12,7 +12,7 @@
         "morestreams": "*",
         "memorystream": "*",
         "mysql": "*",
-        "weighted": "*",
+        "weighted": "0.2",
         "byline": "*",
         "geojson-utils": "*"
     }

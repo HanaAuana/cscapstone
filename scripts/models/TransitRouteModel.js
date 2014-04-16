@@ -3,8 +3,9 @@
  */
 
 define(['backbone',
-    'underscore'
-], function(Backbone, Underscore){
+    'underscore',
+    'models/SubwayModeModel'
+], function(Backbone, Underscore, SubwayMode){
 
     var TransitRouteModel = Backbone.Model.extend({
 
@@ -16,11 +17,22 @@ define(['backbone',
             'headway': 15,
             'serviceId': 1, // Specifies operation hours in GTFS. Don't change
             'startServiceMins': 360, // 6am
-            'endServiceMins': 480 // 1260 mins = 9pm = 21hrs
+            'endServiceMins': 480, // 1260 mins = 9pm = 21hrs
+            'ridership': 0
         },
 
-        initialize: function() {
-            console.log("TransitRouteModel : initializing");
+        initialize: function(attrs, options) {
+//            console.log("initializing new route, mode " + options.modeId);
+            switch (options.modeId) {
+                // Based on GTFS constants TODO other modes
+                case 1:
+                    this.set({'mode': new SubwayMode()});
+            }
+
+            // Persist route id change to the geoJson. The map will need this
+            this.on('change:id', function() {
+                this.get('geoJson').properties.id = this.get('id');
+            }, this);
         },
 
         // Gets the stops geometry object from the GeoJson

@@ -19,7 +19,15 @@ define(['backbone',
                 4: 'ferry',
                 5: 'cable car',
                 6: 'gondola',
-                7: 'funicular'
+                7: 'funicular',
+                'tram': 0,
+                'subway': 1,
+                'rail': 2,
+                'bus': 3,
+                'ferry': 4,
+                'cable car': 5,
+                'gondola': 6,
+                'funicular': 7
             },
             'type': null,
             'dwellTime': null

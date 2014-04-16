@@ -5,8 +5,11 @@ define(['leaflet',
     'backbone',
     'tinycolor',
     'leafletDraw',
-    'text!MapViewTemplate.ejs'
-], function (L, $, _, Backbone, tinycolor, leafletDraw, MapViewTemplate) {
+    'text!MapViewTemplate.ejs',
+    'views/NewRouteView'
+], function (L, $, _, Backbone,
+             tinycolor, leafletDraw, MapViewTemplate,
+             NewRouteView) {
 
     var MapView = Backbone.View.extend({
         id: "map-container",
@@ -16,15 +19,18 @@ define(['leaflet',
         visibleLayers: {},
 
         initialize: function () {
-             // Register listeners
+            // Register listeners
             this.model.on('sync', this.handleModelSync, this);
             this.model.on('change:layers', this.toggleLayers, this);
-
+            this.model.get('transitRoutes').on('add', this.onRouteAdded, this);
         },
 
         render: function () {
             this.$el.html(this.template);
             $("#map-container").append(this.el); //Make sure our View el is attached to the document
+
+            var height = $(window).height() - $('#title').height();
+            $(this.el).height(height);
         },
 
         initMap: function () {
@@ -41,8 +47,15 @@ define(['leaflet',
                 }
             }).addTo(this.map);
 
+            var that = this;
             this.map.on('draw:created', function(e) {
-                featureGroup.addLayer(e.layer);
+                // Route has been drawn, do any route initialization logic and
+                // draw the resulting geoJSON. The resulting geoJSON may be
+                // different than the one passed in. For example, bus routes must
+                // be snapped to the road
+                if(e.layer.toGeoJSON().geometry.type === "LineString") {
+                    that.handleRouteDraw(e);
+                }
             });
         },
 
@@ -53,8 +66,6 @@ define(['leaflet',
             if (this.centroid == null || this.centroid != newCentroid) {
                 console.log('panning to ' + newCentroid);
                 this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
-
-
 				this.centroid = newCentroid;
 			}
 		},
@@ -122,13 +133,13 @@ define(['leaflet',
 
         calcPopColor: function(bin, numBins) {
             var amount = Math.floor(bin * 100 / numBins);
-            var hex = tinycolor.darken("yellow", amount).toHexString();
+            var hex = tinycolor.darken('#92278f', amount).toHexString();
             return hex;
         },
 
         calcEmpColor: function(bin, numBins) {
             var amount = Math.floor(bin * 100 / numBins);
-            var hex = tinycolor.darken("red", amount).toHexString();
+            var hex = tinycolor.darken('#f7941e', amount).toHexString();
             return hex;
         },
 
@@ -146,6 +157,26 @@ define(['leaflet',
                 }
                 // TODO other layers
             }
+        },
+
+        onRouteAdded: function(route) {
+            var geoJSON = route.get('geoJson');
+            
+            console.log("Route has been added, drawing");
+            var geoJson = L.geoJson(geoJSON, {
+                style: function (feature) {
+                    return {
+                        color: feature.properties.color
+                    };
+                }
+            });
+            geoJson.addTo(this.map);
+        },
+
+        handleRouteDraw: function(event) {
+            new NewRouteView({geoJson: event.layer.toGeoJSON(),
+                              routes: this.model.get('transitRoutes')}
+            ).render();
         }
     });
 

@@ -28,6 +28,7 @@ define(['mysql'
                var str = tract.tractBlob.toString();
                var test = str.substring(1, str.length-1);
                callback.call(context||this, JSON.parse(test));
+               return;
             }
             callback.call(context||this, false);
         }
@@ -41,7 +42,35 @@ define(['mysql'
         process.exit(1);
     }
     });
-    console.log("*************Writing to DB***************");
+  }
+
+    function queryTrips(cityTract, callback, context){
+    connection.query('select tripBlob from ' + TABLE2 + ' where tractID = ' + cityTract,
+    function(err, result) {
+        if (err){
+           throw err;
+        }
+        else {
+          // console.log(result[0].tractBlob);
+            for (var i =0; i < result.length; i++) {
+               var trip = result[i];
+               var str = trip.tripBlob.toString();
+               var test = str.substring(1, str.length-1);
+               callback.call(context||this, JSON.parse(test));
+               return;
+            }
+            callback.call(context||this, false);
+        }
+    });
+  }
+
+   function writeTrips(cityTract, tripBlob){    
+    var query = connection.query('INSERT INTO ' + TABLE2 + ' (tractID, tripBlob) VALUES ("' + cityTract + '", "' + connection.escape(tripBlob) + '")', function(err, result) {
+        if (err) {
+        console.log("An error occurred!", err);
+        process.exit(1);
+    }
+    });
   }
 
 

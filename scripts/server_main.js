@@ -20,6 +20,7 @@ requirejs.config({
     paths: {
         underscore: 'scripts/lib/underscore',
         backbone: 'scripts/lib/backbone',
+        clipper: 'scripts/lib/clipper-min'
     },
 
     shim: {
@@ -36,7 +37,7 @@ requirejs.config({
         'leafletDraw':{
         	deps: ['leaflet'],
         	exports: 'L'
-        }
+        },
     }
 });
 
