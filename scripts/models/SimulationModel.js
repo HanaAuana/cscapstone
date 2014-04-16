@@ -50,7 +50,7 @@ define(['backbone',
             this.id = this.cid;
 
             var transitRoutes = new TransitRouteCollection();
-//            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
+            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
             var city = new CityModel();
 
             this.set({'transitRoutes': transitRoutes,
