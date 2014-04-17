@@ -107,11 +107,10 @@ define(['scripts/database/connect',
             type: 'FeatureCollection',
             features: []
         };
-        console.log(trips.length);
         for(var i = 0; i < trips.length; i++) {
             var feature1 = {
                 type: "Feature",
-                geometry: result[i].origin,
+                geometry: trips[i].origin,
                 properties: {}
             };
 
@@ -127,8 +126,7 @@ define(['scripts/database/connect',
     }
 
 	return {
-		makeTrips : genTrips,
-		testPointNPoly : randomPointInPolygon
+		makeTrips : genTrips
 	}
 
 });
