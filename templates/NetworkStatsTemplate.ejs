@@ -1,12 +1,25 @@
-<table class="table" id="ctrl-network-stats">
-    <tr>
-        <th>Route</th>
-        <th>Ridership</th>
-    </tr>
-    <% for(var i = 0; i < routes.length; i++) { %>
-    <tr>
-        <td style="color:<%=routes[i].color%>">Route <%= routes[i].id%></td>
-        <td style="color:<%=routes[i].color%>"><%= routes[i].ridership %></td>
-    </tr>
-    <% } %>
-</table>
+<div id="network-stats-div">
+    <h5 style="margin-left:auto;margin-right:auto">Total Demand Satisfied: <%= globalStats.pctDemandSatisfied%>%</h5>
+    <table class="table" id="ctrl-network-stats">
+        <tr>
+            <th>Route</th>
+            <th>Mode</th>
+            <th>Ridership</th>
+        </tr>
+        <% for(var i = 0; i < routes.length; i++) { %>
+        <%      var route = routes[i]; %>
+        <%      var color = route.color; %>
+        <tr>
+            <td style="color:<%= color%>"><%= route.name%></td>
+            <td style="color:<%= color%>"><%= route.mode%></td>
+            <td style="color:<%= color%>"><%= route.ridership %>
+                <span>
+                    <button class="btn btn-default btn-xs delete-route-btn" id=<%= route.id%>>
+                        <i class="glyphicon glyphicon-trash"></i>
+                    </button>
+                </span>
+            </td>
+        </tr>
+        <% } %>
+    </table>
+</div>

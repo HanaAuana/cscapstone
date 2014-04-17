@@ -67,7 +67,21 @@ define(['scripts/utils/censusAPI',
     }
 
     function checkDbCity(stateID, placeID) {
+        var fips = stateID + placeID;
         // TODO query the db
+        try {
+            var files = fs.readdirSync('./tmp/');
+            for(var i = 0; i < files.length; i++) {
+                if(RegExp("^" + fips).test(files[i])) {
+                    var filepath = path.join("./tmp", files[i]);
+                    console.log("Reading city geoJson at: " + filepath);
+                    var file = fs.readFileSync(filepath, 'utf8');
+                    return file;
+                }
+            }
+        } catch (err) {
+            console.error("Unable to read city tracts for place " + fips + ": " + err);
+        }
         return false;
     }
 
