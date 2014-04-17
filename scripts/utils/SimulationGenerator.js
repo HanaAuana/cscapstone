@@ -3,11 +3,15 @@ define(['scripts/database/connect',
 		'clipper',
 		'scripts/models/Trip',
 		'scripts/models/citytracts',
-		'geojson-utils'], function(connect, weighted, clipper, Trip, citytracts, geojsonUtils) {
-
+		'geojson-utils',
+		'scripts/utils/drivingDirectionsAPI',
+		'fs'
+], function(connect, weighted, clipper, Trip, citytracts, geojsonUtils, drivingDirections, fs) {
+	var MIN_TRIP_TIME = 480;
 
 	//Check to see if there are trips alread generated...
 	function checkTrips(cityTract, callback){
+
 		var that = this;
 		connect.makeTripQuery(cityTract, function(result){
 			if(result === false){
@@ -21,6 +25,7 @@ define(['scripts/database/connect',
 	function genTrips(cityTracts, fips, callback, context){
 		checkTrips(fips, function(result){
 			if(result === false){
+				var testSet = [];
 				var popList = {};
 				var empList = {};
 				var features = cityTracts.features;
@@ -30,36 +35,80 @@ define(['scripts/database/connect',
 					popList[tractID] =  parseInt(feat.properties.population);
 					empList[tractID] =  parseInt(feat.properties.employment);
 				}
+				//console.log(popList);
+				//console.log(empList);
 				var trips = [];
-				for(var j = 0; j < 1000; j++){
-					var currTrip = new Trip(j, weighted.select(popList), weighted.select(empList));
-					trips.push(currTrip);
+				for(var j = 0; j < 10; j++){
+					trips.push(new Trip(j));
 				}
-				for(var k = 0; k < trips.length; k++){
-					//if(k%100 === 0){
-						console.log(k);
-					//}
-					var curTrip = trips[k];
-					var tract1Bound;
-					var tract2Bound;					
+					var isValid = false;
+					var curTrip = new Trip(j);
+					while(!isValid) {
+						curTrip.tract1 =  weighted.select(popList);
+						curTrip.tract2 =  weighted.select(popList);
+						if(testSet.indexOf(curTrip.tract1) < 0){
+							testSet.push(curTrip.tract1);
+						}if(testSet.indexOf(curTrip.tract2) < 0){
+							testSet.push(curTrip.tract2);
+						}
+						console.log("Tract1:" + curTrip.tract1);
+						console.log("Tract2:" + curTrip.tract2);
+						var tract1Bound;
+						var tract2Bound;					
 
-					for(var l = 0; l < features.length; l++){
-						var feat = features[l];
-						var tractID = feat.properties.COUNTYFP + feat.properties.TRACTCE;
-						if(tractID == curTrip.tract1){
-							tract1Bound = feat;
+						for(var l = 0; l < features.length; l++){
+							var feat = features[l];
+							var tractID = feat.properties.COUNTYFP + feat.properties.TRACTCE;
+							if(tractID == curTrip.tract1){
+								tract1Bound = feat;
+							}
+							if(tractID == curTrip.tract2){
+								tract2Bound = feat;
+							}
+							if(tract1Bound === null && tract2Bound === null){
+								break;
+							}
 						}
-						if(tractID == curTrip.tract2){
-							tract2Bound = feat;
-						}
-						if(tract1Bound !== undefined && tract2Bound !== undefined){
-							break;
-						}
+						curTrip.origin = randomPointInPolygon(tract1Bound);
+						curTrip.dest = randomPointInPolygon(tract2Bound);
+						drivingDirections.getRoute([curTrip.origin.coordinates, curTrip.dest.coordinates], function(result){
+							if(result !== false){
+								console.log(result.time);
+								if(result.time >= MIN_TRIP_TIME){
+									isValid = true;
+								}
+							}
+							else{
+								console.log("error");
+							}
+						}, this);
 					}
-					curTrip.origin = randomPointInPolygon(tract1Bound);
-					curTrip.dest = randomPointInPolygon(tract2Bound);
-				}
+				console.log("Success");
+				trips.push(curTrip);
 			}
+				console.log(testSet.length + " " + features.length);
+				result = trips;
+			}
+			var points = {
+                type: 'FeatureCollection',
+                features: []
+            }
+            for(var i = 0; i < result.length; i++) {
+                var feature1 = {
+                    type: "Feature",
+                    geometry: result[i].origin,
+                    properties: {}
+                };
+
+                var feature2 = {
+                    type: "Feature",
+                    geometry: result[i].dest,
+                    properties: {}
+                }
+                points.features.push(feature1);
+                points.features.push(feature2);
+            }
+            fs.writeFileSync('./temp/tripPoints.json', JSON.stringify(points));
 			callback.call(context||this, result);
 		});
 	}
@@ -88,11 +137,11 @@ define(['scripts/database/connect',
 				result = geojsonUtils.pointInMultiPolygon(point, geojson.geometry);
 			}
 			if(result){
-				console.log("Success!");
 				return point;
 			}
 		}
 	}	
+
 
 	return {
 		makeTrips : genTrips,

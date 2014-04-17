@@ -3,7 +3,7 @@
  */
 
 define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
-
+    
     function routeGraphhopper(waypoints, callback, context) {
         var url = "http://transit.pugetsound.edu:8989/route?"
             + "instructions=false&type=json&points_encoded=true";
