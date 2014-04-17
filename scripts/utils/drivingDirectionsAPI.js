@@ -3,7 +3,7 @@
  */
 
 define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
-
+    
     function routeGraphhopper(waypoints, callback, context) {
         var url = "http://transit.pugetsound.edu:8989/route?"
             + "instructions=false&type=json&points_encoded=true";
@@ -19,8 +19,6 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
                 body += chunk;
                 // do callback when transmission has finished
             }).on('end', function() {
-
-                console.log(body);
 
                 var responseJson = JSON.parse(body);
                 var parsedJson = {
@@ -80,8 +78,8 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
                                     + ". " + responseJson.info.messages);
                 } else {
                     parsedJson = {
-                        time: responseJson.time,
-                        distance: responseJson.distance,
+                        time: responseJson.route.time,
+                        distance: responseJson.route.distance,
                         routeShape: {
                             type: "LineString",
                             coordinates: []
