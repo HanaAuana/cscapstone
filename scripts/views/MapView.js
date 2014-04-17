@@ -5,10 +5,12 @@ define(['leaflet',
     'backbone',
     'tinycolor',
     'leafletDraw',
+    'leafletGeometryUtil',
+    'leafletSnap',
     'text!MapViewTemplate.ejs',
     'views/NewRouteView'
 ], function (L, $, _, Backbone,
-             tinycolor, leafletDraw, MapViewTemplate,
+             tinycolor, leafletDraw, leafletGeometryUtil, leafletSnap, MapViewTemplate,
              NewRouteView) {
 
     var MapView = Backbone.View.extend({
@@ -40,6 +42,8 @@ define(['leaflet',
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
 
             var featureGroup = L.featureGroup().addTo(this.map);
+            
+            var guides = new L.polyLine([]).addTo(this.map);
 
             var drawControl = new L.Control.Draw({
                 edit : {
@@ -49,12 +53,31 @@ define(['leaflet',
 
             var that = this;
             this.map.on('draw:created', function(e) {
+            	
+
                 // Route has been drawn, do any route initialization logic and
                 // draw the resulting geoJSON. The resulting geoJSON may be
                 // different than the one passed in. For example, bus routes must
                 // be snapped to the road
                 if(e.layer.toGeoJSON().geometry.type === "LineString") {
+                	
+                	var newGuide = e.layer;
+                	newGuide.snapediting = new L.Handler.PolylineSnap(this.map, newGuide);
+        			newGuide.snapediting.addGuideLayer(this.guides);
+        			newGuide.snapediting.enable();
+        			
+        			for (var m in newGuide.snapediting._markerGroup._layers) {
+            			newGuide.snapediting._markerGroup._layers[m].fire('move');
+        			}
+        			
                     that.handleRouteDraw(e);
+                }
+                if(e.layerType === "marker") {
+                	var marker = e.layer.addTo(this.map);
+                	marker.snapediting = new L.Handler.MarkerSnap(this.map, marker);
+                	marker.snapediting.addGuideLayer(this.guides);
+                	marker.snapediting.enable();
+                	this.map.addLayer(e.layer);
                 }
             });
         },

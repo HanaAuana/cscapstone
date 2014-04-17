@@ -38,6 +38,13 @@ requirejs.config({
         	deps: ['leaflet'],
         	exports: 'L'
         },
+        'leafletGeometryUtil':{
+        	exports: 'leafletGeometryUtil'
+        },
+        'leafletSnap':{
+        	deps: ['leafletDraw', 'leafletGeometryUtil'],
+        	exports: 'leafletSnap'
+        }
     }
 });
 
