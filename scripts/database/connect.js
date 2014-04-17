@@ -1,31 +1,54 @@
-var mysql = require('mysql');
-var DATABASE = "capstone";
-var TABLE = "CityPops";
-//Test to see if it writes..
-var post  = {tractIDvariable:01, tractBlobVariable:20};
+define(['mysql'
+], function(mysql) {
 
-var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'root',
-  password : 'root',
-  database : DATABASE,
-  port     : 8889
-});
 
-//Need to wrap this inside a function.
-//Need to change 01 to varaible being passed in....
-connection.query('select tractBlob from ' + TABLE + ' where tractID = 01',
-function(err, result) {
-    if (err) throw err;
-    else {
-        for (var i in result) {
-            var tract = result[i];
-            console.log('01 : '+ tract.tractBlob);
+  var mysql = require('mysql');
+  var DATABASE = "capstone";
+  var TABLE = "CityPops";
+
+ 
+  var connection = mysql.createConnection({
+    host     : 'localhost',
+    user     : 'root',
+    password : 'trainbus',
+    database : DATABASE,
+    port     : 3306
+  });
+
+
+  function queryDB(cityTract, callback, context){
+    connection.query('select tractBlob from ' + TABLE + ' where tractID = ' + cityTract,
+    function(err, result) {
+        if (err){
+           throw err;
         }
+        else {
+          // console.log(result[0].tractBlob);
+            for (var i =0; i < result.length; i++) {
+               var tract = result[i];
+               var str = tract.tractBlob.toString();
+               var test = str.substring(1, str.length-1);
+               callback.call(context||this, JSON.parse(test));
+               return;
+            }
+            callback.call(context||this, false);
+        }
+    });
+  }
+  
+  function writeDB(cityTract, cityBlob){    
+    var query = connection.query('INSERT INTO ' + TABLE + ' (tractID, tractBlob) VALUES ("' + cityTract + '", "' + connection.escape(cityBlob) + '")', function(err, result) {
+        if (err) {
+        console.log("An error occurred!", err);
+        process.exit(1);
     }
-});
-//Need to wrap this inside a function.
-//Write to the database.
-connection.query('INSERT INTO messages VALUES ?', post, function(err, result) {
+    });
+    console.log("*************Writing to DB***************");
+  }
 
+
+  return {
+    makeQuery: queryDB,
+    makeWrite: writeDB
+  }
 });

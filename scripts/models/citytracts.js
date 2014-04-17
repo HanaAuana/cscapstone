@@ -7,8 +7,9 @@ define(['scripts/utils/censusAPI',
     'fs',
     'path',
     'geojson-utils',
-    'clipper'
-], function(censusAPI, globalvars, fs, path, geojsonUtils, clipper) {
+    'clipper',
+    'scripts/database/connect'
+], function(censusAPI, globalvars, fs, path, geojsonUtils, clipper, connect) {
 
     /**
      * Gets the specified place's boundary, and every census tract within the
@@ -22,6 +23,7 @@ define(['scripts/utils/censusAPI',
      */
     function getCityTractsGeo(stateID, placeID, callback, context)
     {
+
         // We need geographies for all census tracts in a city. We use one level
         // of caching:
         //   1. Check if city tracts are cached locally in the database
@@ -30,59 +32,60 @@ define(['scripts/utils/censusAPI',
         //      - if so, extract and return all that lie within the city boundary
         var cityBoundary = getCityBoundary(stateID, placeID);
 
-        var result = checkDbCity(stateID, placeID);
-        if(result === false) {
-            result = checkDbState(stateID)
+        checkDbCity(stateID, placeID, function(result){
             if(result === false) {
-                throw "Unable to find geography for state " + stateID;
-            } else {
-                // State db check was a hit, pull out city tract geos from the
-                // state geoJson. Result contains
-                result = extractCityGeos(stateID,
-                                        placeID,
-                                        JSON.parse(result),
-                                        cityBoundary);
-                binDensities(result);
-                // TODO get rid of this save
-                writeCityToDb(stateID, placeID, result);
+                result = checkDbState(stateID);
+                if(result === false) {
+                    throw "NO state geo " + stateID;
+                } else {
+                    // State db check was a hit, pull out city tract geos from the
+                    // state geoJson. Result contains
+                    result = extractCityGeos(stateID,
+                                            placeID,
+                                            JSON.parse(result),
+                                            cityBoundary);
+                    binDensities(result);
+                    // TODO get rid of this save
+                    writeCityToDb(stateID, placeID, result);
+                }
             }
-        }
-
-        callback.call(context||this, {
-            cityTracts: result,
-            cityBoundary: cityBoundary
-        });
+            callback.call(context||this, {
+                cityTracts: result,
+                cityBoundary: cityBoundary
+            });
+         });
     }
 
     function writeCityToDb(stateID, placeID, cityGeoJson) {
         // TODO write to db
         var geoID = stateID + placeID;
         try {
-            fs.writeFile("./tmp/" + geoID + "_emp_pop.json",
-                JSON.stringify(cityGeoJson));
+            //fs.writeFile("./tmp/" + geoID + "_emp_pop.json",
+              //  JSON.stringify(cityGeoJson));
+            
+            var test = JSON.stringify(cityGeoJson);
+           // test = JSON.stringify(test);
+           // var str = test.replace('"','\"');
+            var str2 = test.replace("'","\'");
+            connect.makeWrite(geoID, str2);
         } catch (err) {
             console.error("Unable to write city geoID + " + geoID + " to db: "
                             + err);
         }
     }
 
-    function checkDbCity(stateID, placeID) {
-        var fips = stateID + placeID;
-        // TODO query the db
-        try {
-            var files = fs.readdirSync('./tmp/');
-            for(var i = 0; i < files.length; i++) {
-                if(RegExp("^" + fips).test(files[i])) {
-                    var filepath = path.join("./tmp", files[i]);
-                    console.log("Reading city geoJson at: " + filepath);
-                    var file = fs.readFileSync(filepath, 'utf8');
-                    return file;
-                }
+    function checkDbCity(stateID, placeID, callback) {
+        var that = this;
+        var geoID = stateID + placeID;
+        connect.makeQuery(geoID, function(result) {
+            if(result === false){
+                console.log("Miss for "+ geoID);
+                callback.call(that, false);
+            } else{
+                console.log("Hit for "+ geoID);
+                callback.call(that, result);
             }
-        } catch (err) {
-            console.error("Unable to read city tracts for place " + fips + ": " + err);
-        }
-        return false;
+        }, this);
     }
 
     function checkDbState(stateID) {
@@ -142,9 +145,9 @@ define(['scripts/utils/censusAPI',
 
             if(i % 50 === 0) {
                 var pct = Math.floor((i * 100) / stateTracts.length);
-                process.stdout.clearLine();
-                process.stdout.cursorTo(0);
-                process.stdout.write("Finding city tracts: " + pct + "%");
+                // process.stdout.clearLine();
+                // process.stdout.cursorTo(0);
+                console.log("Finding city tracts: " + pct + "%");
             }
 
             // Skip tracts that only encompass water
@@ -179,7 +182,6 @@ define(['scripts/utils/censusAPI',
         console.log("\r\nExtracted " + cityGeos.length + " city tracts from "
                     + stateTracts.length + " state " + stateID
                     + " tracts for place " + placeID);
-
         return tractList2GeoJson(cityGeos);
     }
 

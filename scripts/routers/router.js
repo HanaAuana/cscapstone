@@ -73,6 +73,43 @@ define(['scripts/utils/censusAPI',
             }, this);
     }
 
+    function onCensusTractPopResponse(cityModel, request,
+                                      appResponse, cityPops, context) {
+
+        if(cityPops === false) {
+            completedSteps.cityTracts = true;
+            checkCallsFinished(request, appResponse, cityModel);
+            return;
+        }
+
+        cityTracts.getCityTractsGeo(cityModel.stateID, cityModel.countyID,
+            cityModel.placeID, cityPops, function(geoJson) {
+                // TODO handle city geo json
+                cityModel.censusTracts = geoJson;
+                completedSteps.cityTracts = true;
+                checkCallsFinished(request, appResponse, cityModel);
+            }, this);
+    }
+
+    function onStateTractResponse(cityModel, request, appResponse, res, context) {
+        if(res === false) {
+            console.log("error retrieving state census tractrs")
+        } else {
+            console.log('got state tract callback, file length ' + res.length);
+            fs.writeFile('./tract.zip', res, function(err) {
+                if(err)
+                    console.log("error writing file")
+                else
+                    console.log("file saved");
+            });
+        }
+
+
+
+        completedSteps.stateTracts = true;
+        checkCallsFinished(request, appResponse, cityModel)
+    }
+
     function simSessionRoute(request, response) {
 
         // keep track of how many calbacks have returned
@@ -104,10 +141,9 @@ define(['scripts/utils/censusAPI',
                     // If successful, grab the timezone
                     cityModel.timezone = res.timeZoneId;
                     console.log('Setting TZ: ' + cityModel.timezone);
-
-                    completedSteps.timezone = true;
-                    checkCallsFinished(request, response, cityModel);
                 }
+            	completedSteps.timezone = true;
+            	checkCallsFinished(request, response, cityModel);
             }, this);
 
         } else if(req.route.method === 'post') {
