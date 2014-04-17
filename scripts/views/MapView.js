@@ -5,10 +5,12 @@ define(['leaflet',
     'backbone',
     'tinycolor',
     'leafletDraw',
+    'leafletGeometryUtil',
+    'leafletSnap',
     'text!MapViewTemplate.ejs',
     'views/NewRouteView'
 ], function (L, $, _, Backbone,
-             tinycolor, leafletDraw, MapViewTemplate,
+             tinycolor, leafletDraw, leafletGeometryUtil, leafletSnap, MapViewTemplate,
              NewRouteView) {
 
     var MapView = Backbone.View.extend({
@@ -50,6 +52,29 @@ define(['leaflet',
                     featureGroup : this.routeFeatureGroup
                 }
             }).addTo(this.map);
+            
+            var guides = L.polyline([[48.505431207150885, 1.3999843597412107], [48.47600819398379, 1.388998031616211]],
+            		{
+            			weight: 5,
+            			color:'red',
+            			opacity: 1.0
+            		}).addTo(this.map);
+            		
+            var marker = L.marker([48.488, 1.395]).addTo(this.map);
+        	marker.snapediting = new L.Handler.MarkerSnap(this.map, marker);
+        	marker.snapediting.addGuideLayer(guides);
+        	marker.snapediting.enable();
+        	
+        	var guideLayers = [guides];
+        	
+        	drawControl.setDrawingOptions({
+            	polyline: { guideLayers: guideLayers },
+            	polygon: { guideLayers: guideLayers, snapDistance: 5 },
+            	marker: { guideLayers: guideLayers, snapVertices: false },
+            	rectangle: false,
+            	circle: false
+        	});
+        	
 
             var that = this;
             this.map.on('draw:created', function(e) {
@@ -59,7 +84,16 @@ define(['leaflet',
                 // be snapped to the road
                 if(e.layer.toGeoJSON().geometry.type === "LineString") {
                     that.handleRouteDraw(e);
+                    guideLayers.push(e.layer);
                 }
+                if(e.layerType === "Marker") {
+                    var marker = e.layer;
+        			marker.snapediting = new L.Handler.MarkerSnap(map, marker);
+        			marker.snapediting.addGuideLayer(guides);
+        			marker.snapediting.enable();
+        			this.routeFeatureGroup.addLayer(marker);
+                }
+                
             });
         },
 
