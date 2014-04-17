@@ -47,7 +47,10 @@ define(['scripts/utils/censusAPI',
                     // TODO get rid of this save
                     writeCityToDb(stateID, placeID, result);
                 }
+            } else {
+                result = JSON.parse(result);
             }
+
             callback.call(context||this, {
                 cityTracts: result,
                 cityBoundary: cityBoundary
@@ -59,32 +62,32 @@ define(['scripts/utils/censusAPI',
         // TODO write to db
         var geoID = stateID + placeID;
         try {
-            //fs.writeFile("./tmp/" + geoID + "_emp_pop.json",
-              //  JSON.stringify(cityGeoJson));
-            
-            var test = JSON.stringify(cityGeoJson);
-           // test = JSON.stringify(test);
-           // var str = test.replace('"','\"');
-            var str2 = test.replace("'","\'");
-            connect.makeWrite(geoID, str2);
+            fs.writeFile("./tmp/" + geoID + "_emp_pop.json", JSON.stringify(cityGeoJson));
         } catch (err) {
             console.error("Unable to write city geoID + " + geoID + " to db: "
                             + err);
         }
     }
 
+
     function checkDbCity(stateID, placeID, callback) {
-        var that = this;
-        var geoID = stateID + placeID;
-        connect.makeQuery(geoID, function(result) {
-            if(result === false){
-                console.log("Miss for "+ geoID);
-                callback.call(that, false);
-            } else{
-                console.log("Hit for "+ geoID);
-                callback.call(that, result);
+        var fips = stateID + placeID;
+        // TODO query the db
+        try {
+            var files = fs.readdirSync('./tmp/');
+            for(var i = 0; i < files.length; i++) {
+                if(RegExp("^" + fips).test(files[i])) {
+                    var filepath = path.join("./tmp/", files[i]);
+                    console.log("Reading city geoJson at: " + filepath);
+                    var file = fs.readFileSync(filepath, 'utf8');
+                    callback.call(this, file);
+                    return
+                }
             }
-        }, this);
+        } catch(err) {
+            throw err
+        }
+        callback.call(this, false);
     }
 
     function checkDbState(stateID) {

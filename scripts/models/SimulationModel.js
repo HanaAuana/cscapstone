@@ -90,23 +90,23 @@ define(['backbone',
             // Now that we've set the location, the server can do the rest.
             // But tell the server what needs changing. In particular, set the
             // city!
+            var that = this;
             var response = this.save(['city', 'sessionID'], {
                 success: function() {
                     console.log('model persisted, id and city info updated');
+                    // add the control selector
+                    new CtrlSelectorView().render();
+
+                    // and the map layer selector and render it by default
+                    new MapLayerCtrlView({'model': that}).render();
+
+                    // and the network stats
+                    new NetworkStatsView({'collection': that.get('transitRoutes')});
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');
                 }});
             console.log(response);
-
-            // add the control selector
-            new CtrlSelectorView().render();
-
-            // and the map layer selector and render it by default
-            new MapLayerCtrlView({'model': this}).render();
-
-            // and the network stats
-            new NetworkStatsView({'collection': this.get('transitRoutes')});
         },
 
         setTimezone: function() {
