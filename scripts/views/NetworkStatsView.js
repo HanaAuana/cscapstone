@@ -17,9 +17,16 @@ define(['backbone',
             this.collection.on('add', this.updateRoutes, this);
             this.collection.on('remove', this.updateRoutes, this);
 
+            var that = this;
+            $(document).on('click', ".delete-route-btn", function(event) {
+                var id = event.target.id;
+                // Remove the specified route from the collection
+                console.log('removing route of id ' + id);
+                that.collection.remove(id);
+            });
+
             this.updateRoutes();
 
-            var that = this;
             // Listen for events fired when the in focus tab changes. These
             // events are fired by the CtrlSelectorView
             Backbone.pubSub.on('ctrl-tab-change', function(id) {
@@ -50,16 +57,23 @@ define(['backbone',
             for(var i = 0; i < numRoutes; i++) {
                 var route = this.collection.at(i);
                 var routeObj = {
-                    id: route.get('id'),
+                    name: route.get('name'),
                     ridership: route.get('ridership'),
-                    color: route.get('geoJson').properties.color
+                    color: route.get('geoJson').properties.color,
+                    mode: route.get('mode').get('typeString'),
+                    id: route.get('id')
                 }
                 routes.push(routeObj);
             }
 
+            var globalStats = {
+                pctDemandSatisfied: 0 //TODO
+            }
+
             // Compile the template, and pass in the layer list
             this.template = _.template(networkStatsTemplate,
-                {routes: routes});
+                {routes: routes,
+                globalStats: globalStats});
 
             // Only re-render if the view is already visible
             if(this.rendered)

@@ -23,8 +23,9 @@
 define(['scripts/utils/censusAPI',
     'scripts/utils/googleStaticAPI',
     'fs',
-    'scripts/models/citytracts'
-], function(censusAPI, googleStaticAPI, fs, cityTracts) {
+    'scripts/models/citytracts',
+    'scripts/utils/drivingDirectionsAPI'
+], function(censusAPI, googleStaticAPI, fs, cityTracts, drivingDirections) {
 
     var completedSteps;
 
@@ -114,9 +115,48 @@ define(['scripts/utils/censusAPI',
         }
     }
 
+    /**
+     * Called when syncing transit routes
+     * @param request
+     * @param response
+     */
+    function routeSyncRoute(request, response) {
+
+        // Pull out the route feature
+        var routeFeature = null;
+        var routeFeatureIdx = -1;
+        var features = request.body.geoJson.features;
+        for(var i = 0; i < features.length; i++) {
+            if(features[i].properties.geoType === "route") {
+                routeFeature = features[i];
+                routeFeatureIdx = i;
+                break;
+            }
+        }
+
+        console.log("Route Feature \r\n %j", routeFeature);
+        // Snap that route to roads by getting driving directions between each
+        // pair of points
+        drivingDirections.getRoute(routeFeature.geometry.coordinates,
+                                    function(result) {
+            if(!result) {
+                response.statusCode = 500;
+                response.send();
+            } else {
+                // Put the new route in the geoJSON
+                routeFeature.geometry = result.routeShape;
+
+                // Stringify and send the response
+                response.send(JSON.stringify(features));
+            }
+            console.log('sent route sync response');
+        }, this);
+    }
+
     // These are the exports
     return {
-        simSession: simSessionRoute
+        simSession: simSessionRoute,
+        routeSync: routeSyncRoute
     };
 
 });

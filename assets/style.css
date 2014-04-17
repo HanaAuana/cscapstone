@@ -25,9 +25,10 @@
     right: 0px;
     width: 100%;
     height: 45px;
-    /*background: #2B75A6;*/
-    background: #539CBE;
+    /*background: #539CBE;*/
+    background: #78AECC;
 }
+
 #title-text {
     color: #F4F4F4;
     line-height: 45px;
@@ -87,6 +88,23 @@
     user-select: none;
     cursor: pointer;
 }
-.control-label {
-    margin-right: 10px;
+#loading-div {
+    text-align: center;
+}
+#network-stats-div {
+    text-align: center;
+}
+.loading-div-elements {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+}
+.btn-primary {
+    background: #f7941e;
+}
+.btn-primary:hover {
+    background: #92278f;
+}
+.delete-route-btn {
+    margin-left: 10px;
 }

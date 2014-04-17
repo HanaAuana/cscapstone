@@ -3,9 +3,12 @@
     <% for (var layer in layers) { %>
     <%  if(!layers.hasOwnProperty(layer)) { %>
     <%      continue; } %>
-    <input type="checkbox" class="checkbox" name=<%= layer %> value=<%= layer %>
-            <%= layers[layer].toggled ? 'checked' : ''  %>>
-    <%= layers[layer].name %>
-    <br>
+    <div class="checkbox">
+        <label>
+            <input type="checkbox" name=<%= layer %> value=<%= layer %>
+                    <%= layers[layer].toggled ? 'checked' : ''  %>>
+            <%= layers[layer].name %>
+        </label>
+    </div>
     <% } %>
 </form>
