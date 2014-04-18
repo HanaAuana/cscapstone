@@ -85,10 +85,10 @@ define(['scripts/database/connect',
 					}
 				console.log("Success");
 				trips.push(curTrip);
-			}
-				console.log(testSet.length + " " + features.length);
-				result = trips;
-			}
+				}
+			console.log(testSet.length + " " + features.length);
+			result = trips;
+			
 			var points = {
                 type: 'FeatureCollection',
                 features: []
