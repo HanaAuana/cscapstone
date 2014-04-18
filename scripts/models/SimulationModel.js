@@ -18,7 +18,8 @@ define(['backbone',
     'views/HeaderView',
     'views/CtrlSelectorView',
     'views/CityLoadingView',
-    'views/NetworkStatsView'
+    'views/NetworkStatsView',
+    'views/ChooseCitySessionView'
 ], function(Backbone,
             _,
             $,
@@ -33,7 +34,8 @@ define(['backbone',
             HeaderView,
             CtrlSelectorView,
             CityLoadingView,
-            NetworkStatsView)
+            NetworkStatsView,
+            ChooseCitySessionView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -76,6 +78,9 @@ define(['backbone',
             // and the map
             var mapView = new MapView({'model': this});
             mapView.initMap();
+
+            // and the city session selection
+            new ChooseCitySessionView({'model': this}).render();
         },
 
         // Called from the ChooseCityView, once the user has entered a location
@@ -112,6 +117,24 @@ define(['backbone',
         setTimezone: function() {
             var timezone = this.get('city').get('timezone');
             this.get('sime2Gtfs').set({'timezone': timezone});
+        },
+
+        onCitySessionSelected: function(sessionName, isNew, callback, context) {
+            var url = '/city_session_auth?new=' + isNew
+                                + '&session='  + sessionName;
+            var that = this;
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(data, status, jqXHR) {
+
+                    callback.call(context||that, true);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log("error: " + textStatus + '\r\n' + errorThrown);
+                    callback.call(context||that, false);
+                }
+            });
         }
 
     });
