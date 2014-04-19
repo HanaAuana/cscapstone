@@ -47,7 +47,6 @@ define(['scripts/database/connect',
                         console.log("FOUND A VALID ROUTE");
                         if(++numTripsCompleted === NUM_TRIPS) {
                             console.log("trip gen complete");
-                            writeTripPoints(trips);
                             callback.call(context||this, trips);
                 			connect.makeTripWrite(fips, trips);
                         }
@@ -94,8 +93,6 @@ define(['scripts/database/connect',
         curTrip.tract1 =  weighted.select(popList);
         curTrip.tract2 =  weighted.select(empList);
 
-        console.log("Tract1:" + curTrip.tract1);
-        console.log("Tract2:" + curTrip.tract2);
         var tract1Bound = null;
         var tract2Bound = null;
 
@@ -118,7 +115,6 @@ define(['scripts/database/connect',
             if(result !== false && result.time >= MIN_TRIP_TIME){
                 console.log(result.time);
                 callback.call(this, curTrip);
-                //write to the db..
             } else {
                 console.log("error or trip time too short");
                 generateEndpoints(curTrip, features, popList, empList, callback);
@@ -146,7 +142,6 @@ define(['scripts/database/connect',
             points.features.push(feature1);
             points.features.push(feature2);
         }
-        fs.writeFileSync('./temp/tripPoints.json', JSON.stringify(points));
     }
 
 

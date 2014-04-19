@@ -18,7 +18,9 @@ define(['backbone',
     'views/HeaderView',
     'views/CtrlSelectorView',
     'views/CityLoadingView',
-    'views/NetworkStatsView'
+    'views/NetworkStatsView',
+    'views/ChooseCitySessionView',
+    'views/UpdateRidershipView'
 ], function(Backbone,
             _,
             $,
@@ -33,7 +35,9 @@ define(['backbone',
             HeaderView,
             CtrlSelectorView,
             CityLoadingView,
-            NetworkStatsView)
+            NetworkStatsView,
+            ChooseCitySessionView,
+            UpdateRidershipView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -54,7 +58,7 @@ define(['backbone',
             var city = new CityModel();
 
             this.set({'transitRoutes': transitRoutes,
-//                        'sim2Gtfs': sim2Gtfs,
+                        'sim2Gtfs': sim2Gtfs,
                         'city': city});
 
             this.set({"layers" : {
@@ -76,6 +80,10 @@ define(['backbone',
             // and the map
             var mapView = new MapView({'model': this});
             mapView.initMap();
+
+            // and the city session selection
+            new ChooseCitySessionView({'model': this}).render();
+
         },
 
         // Called from the ChooseCityView, once the user has entered a location
@@ -90,30 +98,53 @@ define(['backbone',
             // Now that we've set the location, the server can do the rest.
             // But tell the server what needs changing. In particular, set the
             // city!
+            var that = this;
             var response = this.save(['city', 'sessionID'], {
                 success: function() {
                     console.log('model persisted, id and city info updated');
+                    // add the control selector
+                    new CtrlSelectorView().render();
+
+                    // and the map layer selector and render it by default
+                    new MapLayerCtrlView({'model': that}).render();
+
+                    // and the network stats
+                    new NetworkStatsView({'collection': that.get('transitRoutes')});
+
+                    // and the ridership update view
+                    new UpdateRidershipView({'model': that}).render();
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');
                 }});
             console.log(response);
-
-            // add the control selector
-            new CtrlSelectorView().render();
-
-            // and the map layer selector and render it by default
-            new MapLayerCtrlView({'model': this}).render();
-
-            // and the network stats
-            new NetworkStatsView({'collection': this.get('transitRoutes')});
         },
 
         setTimezone: function() {
             var timezone = this.get('city').get('timezone');
             this.get('sime2Gtfs').set({'timezone': timezone});
-        }
+        },
 
+        onCitySessionSelected: function(sessionName, isNew, callback, context) {
+            var url = '/city_session_auth?new=' + isNew
+                                + '&session='  + sessionName;
+            // TODO implement all this
+            var that = this;
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(data, status, jqXHR) {
+
+                    callback.call(context||that, true);
+                    that.set({'sessionName': sessionName});
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log("error: " + textStatus + '\r\n' + errorThrown);
+                    callback.call(context||that, true);
+                    that.set({'sessionName': sessionName});
+                }
+            });
+        }
     });
 
     return SimulationModel;

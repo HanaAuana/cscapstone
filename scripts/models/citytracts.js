@@ -47,7 +47,10 @@ define(['scripts/utils/censusAPI',
                     // TODO get rid of this save
                     writeCityToDb(stateID, placeID, result);
                 }
+            } else {
+                result = JSON.parse(result);
             }
+
             callback.call(context||this, {
                 cityTracts: result,
                 cityBoundary: cityBoundary
@@ -59,13 +62,6 @@ define(['scripts/utils/censusAPI',
         // TODO write to db
         var geoID = stateID + placeID;
         try {
-            //fs.writeFile("./tmp/" + geoID + "_emp_pop.json",
-              //  JSON.stringify(cityGeoJson));
-            
-            //var cityObj = JSON.stringify(cityGeoJson);
-           // test = JSON.stringify(test);
-           // var str = test.replace('"','\"');
-            //var safeCityObj = cityObj.replace("'","\'");
             connect.makeWrite(geoID, cityGeoJson);
         } catch (err) {
             console.error("Unable to write city geoID + " + geoID + " to db: "
@@ -73,7 +69,8 @@ define(['scripts/utils/censusAPI',
         }
     }
 
-    function checkDbCity(stateID, placeID, callback) {
+
+   function checkDbCity(stateID, placeID, callback) {
         var that = this;
         var geoID = stateID + placeID;
         connect.makeQuery(geoID, function(result) {

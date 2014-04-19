@@ -102,9 +102,22 @@
 .btn-primary {
     background: #f7941e;
 }
+.btn-primary:active {
+    background: #f7941e;
+}
+.btn-primary:focus {
+    background: #f7941e;
+}
 .btn-primary:hover {
     background: #92278f;
 }
 .delete-route-btn {
     margin-left: 10px;
+}
+#update-ridership-btn {
+    text-align: center;
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    margin: 0 auto;
 }

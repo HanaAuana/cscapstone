@@ -6,8 +6,9 @@ define(['http',
     'url',
     'fs',
     'express',
-    'scripts/routers/router'
-], function (http, url, fs, express, router) {
+    'scripts/routers/router',
+    'scripts/routers/gtfsRouter'
+], function (http, url, fs, express, router, gtfsRouter) {
 
     // Starts the server with a router instance
     function start(route) {
@@ -63,13 +64,15 @@ define(['http',
             router.routeSync(req, response);
         });
 
-        app.all('/authenticate/*', function(req, response){
-            router.authenticate(req, response);
+        app.all(/^\/update_ridership/, function(req, response) {
+
+            gtfsRouter.updateRidership(req, response);
+            console.log("got update ridership request");
         });
 
-        app.all('/new_user/*', function(req, response){
-            router.newUser(req, respone);//new_user/user=username
-        });
+        app.all(/^\/city_session_auth/, function(req, response){
+            router.routeAuth(req, response);
+        })
 
         app.listen(1337, '127.0.0.1');
     };

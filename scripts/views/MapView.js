@@ -27,14 +27,18 @@ define(['leaflet',
             var transitRoutes = this.model.get('transitRoutes');
             transitRoutes.on('add', this.onRouteAdded, this);
             transitRoutes.on('remove', this.onRouteRemoved, this);
+
+            var that = this;
+            $( window ).resize(function() {
+                that.onResize();
+            });
         },
 
         render: function () {
             this.$el.html(this.template);
             $("#map-container").append(this.el); //Make sure our View el is attached to the document
 
-            var height = $(window).height() - $('#title').height();
-            $(this.el).height(height);
+            this.onResize();
         },
 
         initMap: function () {
@@ -218,6 +222,11 @@ define(['leaflet',
             new NewRouteView({geoJson: event.layer.toGeoJSON(),
                               routes: this.model.get('transitRoutes')}
             ).render();
+        },
+
+        onResize: function() {
+            var height = $(window).height() - $('#title').height();
+            $(this.el).height(height);
         }
     });
 

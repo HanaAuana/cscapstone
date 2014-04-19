@@ -4,6 +4,7 @@ define(['mysql'
   var DATABASE = "capstone";
   var TABLE = "CityPops";
   var TABLE2 = "CityTrips";
+  var TABLE3 = "CityUsers";
 
  
   var connection = mysql.createConnection({
@@ -75,6 +76,81 @@ define(['mysql'
     });
   }
 
+  function authSession(sessionID, callback, context){
+    connection.query('select sessionName from ' + TABLE3 + 'where sessionName = ' + sessionID,
+      function(err, result){
+          if(err){
+            throw err;
+          }
+          else{
+              if(result.length === 0){
+                callback.call(context}||this, false);
+              }
+              else{
+                callback.call(context||this, true);
+              }
+          }
+      });
+  }
+
+  function querySession(sessionID, callback, context){
+    var that = this;
+    connection.query('select routeCollection, cityFips, gtfs from ' + TABLE3 + 'where sessionName = ' + sessionID,
+    function(err, result) {
+        if (err){
+          throw err;
+        }
+        else{
+          if(result.length === 0){
+            callback.call(context||that, false);
+          }
+          else {
+            var fips = result[0].cityFips;
+            queryTracts(fips, function(tractResult) {
+                if(tractResult === false){
+                    console.log("MAJOR ISSUE NO TRACTS FOR SESSION "+ geoID);
+                    callback.call(that, false);
+                } else{
+                    console.log("Hit for "+ geoID);
+                    callback.call(that, {
+                          tracts: tractResult,
+                          routeCollection: result[0].routeCollection,
+                          gtfs: result[0].gtfs
+                    });
+                  }
+            }, this);)
+          }
+        }
+    });
+  }
+
+  function writeSession(sessionID, routeCol, fips, graph, gtfs){
+    var jsonRoute = stringifyJSON(routeCol);
+    var jsonGTFS = stringifyJSON(gtfs);
+    authSession(sessionID, function(result){
+        if(result === false) {
+            var query = connection.query('INSERT INTO ' + TABLE3 + ' (sessionName, routeCollection, cityFips, simGraph, gtfs) VALUES ("' 
+            + sessionID + '", "' + connection.escape(jsonRoute) + '", "' + fips + '", "' + graph + '" ,"' + connection.escape(jsonGTFS) +'")', 
+              function(err, result) {
+                if (err) {
+                console.log("An error occurred!", err);
+                process.exit(1);
+              }
+          });
+        }
+        else{
+              //Update route and gtfs...
+              var query = connection.query('UPDATE ' + TABLE3 + 'SET routeCollection = ' + jsonRoute ', gtfs = ' + jsonGTFS + 'WHERE sessionName = ' +sessionID, 
+                function(err, result){
+                  if(err){
+                    console.log("An error occurred!", err);
+                    process.exit(1);
+                  }
+                });
+        }
+    });
+  }
+
   function stringifyJSON(jsonObject){
     var obj = JSON.stringify(jsonObject);
     var safeObj = obj.replace("'","\'");
@@ -86,6 +162,9 @@ define(['mysql'
     makeQuery: queryTracts,
     makeWrite: writeTracts,
     makeTripQuery: queryTrips,
-    makeTripWrite: writeTrips 
+    makeTripWrite: writeTrips,
+    makeSessAuth: authSession,
+    makeSessWrite: writeSession,
+    makeSessQuery: querySession
   }
 });
