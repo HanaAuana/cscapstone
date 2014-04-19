@@ -5,9 +5,9 @@
 define(['backbone',
     'underscore',
     'jquery',
-    // load in the template as raw text
+    'views/AlertModalView',
     'text!UpdateRidershipTemplate.ejs'
-], function(backbone, _, $, updateRidershipTemplate) {
+], function(backbone, _, $, AlertView, updateRidershipTemplate) {
 
     var UpdateRidershipView = Backbone.View.extend({
 
@@ -26,6 +26,7 @@ define(['backbone',
             console.log("do update ridership");
 
             var sim2Gtfs = this.model.get('sim2Gtfs');
+            var transitRoutes = this.model.get('transitRoutes');
             // Build the gtfs json
             var gtfs = {
                 agencyTxt: sim2Gtfs.get('agencyTxt'),
@@ -49,9 +50,14 @@ define(['backbone',
                 url: url,
                 type: 'PUT',
                 contentType: "application/json",
-                data: JSON.stringify(gtfs),
+                data: JSON.stringify({
+                    gtfs: gtfs,
+                    routes: transitRoutes
+                }),
                 success: function(data, status, jqXHR) {
-
+                    var alertString = 'Informing the residents of your transit network upgrades. '
+                                        + 'Please check back in several hours for updated ridership';
+                    new AlertView().render(alertString);
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
 

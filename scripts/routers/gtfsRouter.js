@@ -3,14 +3,30 @@
  */
 
 define(['fs',
-    'url'
-], function(fs, url) {
+    'url',
+    'child_process'
+], function(fs, url, childProcess) {
 
     function updateRidership(request, response) {
 
         console.log(request.query);
-        var body = request.body;
-//        console.log(body);
+
+        writeRiderDB(request, function(result) {
+
+        });
+
+        updateGraphAndRidership(request);
+
+
+        response.send();
+    }
+
+    function writeRiderDB(request, callback) {
+        callback.call(this, true);
+    }
+
+    function updateGraphAndRidership(request) {
+
     }
 
 

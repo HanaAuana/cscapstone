@@ -48,12 +48,12 @@ define(['scripts/utils/censusAPI',
         response.send(JSON.stringify(results));
         console.log('sent sim session response');
 
-        SimulationGenerator.makeTrips(cityModel.censusTracts,
-                                      cityModel.stateID + cityModel.placeID,
-                                      function(result){
-            console.log("Trip gen done, writing to db");
-            
-        });
+//        SimulationGenerator.makeTrips(cityModel.censusTracts,
+//                                      cityModel.stateID + cityModel.placeID,
+//                                      function(result){
+//            console.log("Trip gen done, writing to db");
+//
+//        });
     }
 
     function onBoundaryResponse(cityModel, request, appResponse, geoObj, context) {
