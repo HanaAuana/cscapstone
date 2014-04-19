@@ -9,6 +9,7 @@ node_modules
 tmp
 geo
 temp
+sessions
 
 # Silly Mac Stuff #
 .DS_Store
