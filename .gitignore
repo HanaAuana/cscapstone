@@ -8,6 +8,7 @@ node_modules
 # Data #
 tmp
 geo
+temp
 
 # Silly Mac Stuff #
 .DS_Store

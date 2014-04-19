@@ -19,7 +19,8 @@ define(['backbone',
     'views/CtrlSelectorView',
     'views/CityLoadingView',
     'views/NetworkStatsView',
-    'views/ChooseCitySessionView'
+    'views/ChooseCitySessionView',
+    'views/UpdateRidershipView'
 ], function(Backbone,
             _,
             $,
@@ -35,7 +36,8 @@ define(['backbone',
             CtrlSelectorView,
             CityLoadingView,
             NetworkStatsView,
-            ChooseCitySessionView)
+            ChooseCitySessionView,
+            UpdateRidershipView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -56,7 +58,7 @@ define(['backbone',
             var city = new CityModel();
 
             this.set({'transitRoutes': transitRoutes,
-//                        'sim2Gtfs': sim2Gtfs,
+                        'sim2Gtfs': sim2Gtfs,
                         'city': city});
 
             this.set({"layers" : {
@@ -81,6 +83,7 @@ define(['backbone',
 
             // and the city session selection
             new ChooseCitySessionView({'model': this}).render();
+
         },
 
         // Called from the ChooseCityView, once the user has entered a location
@@ -107,6 +110,9 @@ define(['backbone',
 
                     // and the network stats
                     new NetworkStatsView({'collection': that.get('transitRoutes')});
+
+                    // and the ridership update view
+                    new UpdateRidershipView({'model': that}).render();
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');
@@ -122,6 +128,7 @@ define(['backbone',
         onCitySessionSelected: function(sessionName, isNew, callback, context) {
             var url = '/city_session_auth?new=' + isNew
                                 + '&session='  + sessionName;
+            // TODO implement all this
             var that = this;
             $.ajax({
                 url: url,
@@ -129,14 +136,15 @@ define(['backbone',
                 success: function(data, status, jqXHR) {
 
                     callback.call(context||that, true);
+                    that.set({'sessionName': sessionName});
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     console.log("error: " + textStatus + '\r\n' + errorThrown);
-                    callback.call(context||that, false);
+                    callback.call(context||that, true);
+                    that.set({'sessionName': sessionName});
                 }
             });
         }
-
     });
 
     return SimulationModel;

@@ -13,10 +13,6 @@ define(['backbone',
             "click #city-session-btn": 'onCitySessionSelected'
         },
 
-        initialize: function(attrs) {
-
-        },
-
         render: function() {
             var template = _.template(citySessionTemplate, {});
 

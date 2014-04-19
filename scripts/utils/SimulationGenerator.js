@@ -93,8 +93,6 @@ define(['scripts/database/connect',
         curTrip.tract1 =  weighted.select(popList);
         curTrip.tract2 =  weighted.select(empList);
 
-        console.log("Tract1:" + curTrip.tract1);
-        console.log("Tract2:" + curTrip.tract2);
         var tract1Bound = null;
         var tract2Bound = null;
 

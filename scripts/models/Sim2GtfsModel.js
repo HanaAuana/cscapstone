@@ -12,7 +12,6 @@ define(['backbone',
     var Sim2GtfsModel = GtfsModel.extend({
 
         defaults: {
-            'simModel': null,
             'transitRoutes': null,
             // some constants
             'commaDelim': ',',
@@ -21,6 +20,7 @@ define(['backbone',
         },
 
         initialize: function() {
+
             this.set({'csvHelper': new CsvHelper()});
             console.log("Sim2GtfsModel : initializing");
             this.buildFileHeaders();
