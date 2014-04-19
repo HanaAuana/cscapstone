@@ -7,14 +7,15 @@ define(['scripts/database/connect',
 		'scripts/utils/drivingDirectionsAPI',
 		'fs'
 ], function(connect, weighted, clipper, Trip, citytracts, geojsonUtils, drivingDirections, fs) {
-	var MIN_TRIP_TIME = 480;
+	var MIN_TRIP_TIME = 360;
+    var NUM_TRIPS = 2;
 
-	//Check to see if there are trips alread generated...
+	//Check to see if there are trips already generated...
 	function checkTrips(cityTract, callback){
-
 		var that = this;
 		connect.makeTripQuery(cityTract, function(result){
 			if(result === false){
+				console.log("MISS");
 	            callback.call(that, false);
 			} else{
 	            callback.call(that, result);
@@ -22,94 +23,41 @@ define(['scripts/database/connect',
 	    }, this);
 	}
 
-	function genTrips(cityTracts, fips, callback, context){
+	function initTripGeneration(cityTracts, fips, callback, context){
 		checkTrips(fips, function(result){
+
 			if(result === false){
-				var testSet = [];
+
 				var popList = {};
 				var empList = {};
 				var features = cityTracts.features;
-				for(var i = 0; i < features.length; i++){
-					var feat = features[i];
-					var tractID = feat.properties.COUNTYFP + feat.properties.TRACTCE;
-					popList[tractID] =  parseInt(feat.properties.population);
-					empList[tractID] =  parseInt(feat.properties.employment);
+				for(var ii = 0; ii < features.length; ii++){
+					var feature = features[ii];
+					var tractID = feature.properties.COUNTYFP + feature.properties.TRACTCE;
+					popList[tractID] =  parseInt(feature.properties.population);
+					empList[tractID] =  parseInt(feature.properties.employment);
 				}
-				//console.log(popList);
-				//console.log(empList);
-				var trips = [];
-				for(var j = 0; j < 10; j++){
-					trips.push(new Trip(j));
-				}
-					var isValid = false;
-					var curTrip = new Trip(j);
-					while(!isValid) {
-						curTrip.tract1 =  weighted.select(popList);
-						curTrip.tract2 =  weighted.select(popList);
-						if(testSet.indexOf(curTrip.tract1) < 0){
-							testSet.push(curTrip.tract1);
-						}if(testSet.indexOf(curTrip.tract2) < 0){
-							testSet.push(curTrip.tract2);
-						}
-						console.log("Tract1:" + curTrip.tract1);
-						console.log("Tract2:" + curTrip.tract2);
-						var tract1Bound;
-						var tract2Bound;					
 
-						for(var l = 0; l < features.length; l++){
-							var feat = features[l];
-							var tractID = feat.properties.COUNTYFP + feat.properties.TRACTCE;
-							if(tractID == curTrip.tract1){
-								tract1Bound = feat;
-							}
-							if(tractID == curTrip.tract2){
-								tract2Bound = feat;
-							}
-							if(tract1Bound === null && tract2Bound === null){
-								break;
-							}
-						}
-						curTrip.origin = randomPointInPolygon(tract1Bound);
-						curTrip.dest = randomPointInPolygon(tract2Bound);
-						drivingDirections.getRoute([curTrip.origin.coordinates, curTrip.dest.coordinates], function(result){
-							if(result !== false){
-								console.log(result.time);
-								if(result.time >= MIN_TRIP_TIME){
-									isValid = true;
-								}
-							}
-							else{
-								console.log("error");
-							}
-						}, this);
-					}
-				console.log("Success");
-				trips.push(curTrip);
-				}
-			console.log(testSet.length + " " + features.length);
-			result = trips;
-			
-			var points = {
-                type: 'FeatureCollection',
-                features: []
-            }
-            for(var i = 0; i < result.length; i++) {
-                var feature1 = {
-                    type: "Feature",
-                    geometry: result[i].origin,
-                    properties: {}
-                };
-
-                var feature2 = {
-                    type: "Feature",
-                    geometry: result[i].dest,
-                    properties: {}
+                var trips = [];
+                var numTripsCompleted = 0;
+                for(var j = 0; j < NUM_TRIPS; j++){
+                    var curTrip = new Trip(j);
+                    trips.push(curTrip);
+                    generateEndpoints(curTrip, features, popList, empList, function() {
+                        console.log("FOUND A VALID ROUTE");
+                        if(++numTripsCompleted === NUM_TRIPS) {
+                            console.log("trip gen complete");
+                            writeTripPoints(trips);
+                            callback.call(context||this, trips);
+                			connect.makeTripWrite(fips, trips);
+                        }
+                    });
                 }
-                points.features.push(feature1);
-                points.features.push(feature2);
+			} else {
+                console.log("trip gen completed: found in cache")
+                writeTripPoints(result);
+                callback.call(context||this, result);
             }
-            fs.writeFileSync('./temp/tripPoints.json', JSON.stringify(points));
-			callback.call(context||this, result);
 		});
 	}
 
@@ -132,20 +80,78 @@ define(['scripts/database/connect',
 			var result;
 			if(geojson.geometry.type == "Polygon"){
 				result = geojsonUtils.pointInPolygon(point, geojson.geometry);
-			}
-			else{
+			} else {
 				result = geojsonUtils.pointInMultiPolygon(point, geojson.geometry);
 			}
-			if(result){
+
+			if(result)
 				return point;
-			}
 		}
-	}	
+	}
+
+    function generateEndpoints(curTrip, features, popList, empList, callback) {
+
+        curTrip.tract1 =  weighted.select(popList);
+        curTrip.tract2 =  weighted.select(empList);
+
+        console.log("Tract1:" + curTrip.tract1);
+        console.log("Tract2:" + curTrip.tract2);
+        var tract1Bound = null;
+        var tract2Bound = null;
+
+        for(var l = 0; l < features.length; l++){
+            var feat = features[l];
+            var tractID = feat.properties.COUNTYFP + feat.properties.TRACTCE;
+            if(tractID == curTrip.tract1){
+                tract1Bound = feat;
+            }
+            if(tractID == curTrip.tract2){
+                tract2Bound = feat;
+            }
+            if(tract1Bound !== null && tract2Bound !== null){
+                break;
+            }
+        }
+        curTrip.origin = randomPointInPolygon(tract1Bound);
+        curTrip.dest = randomPointInPolygon(tract2Bound);
+        drivingDirections.getRoute([curTrip.origin.coordinates, curTrip.dest.coordinates], function(result){
+            if(result !== false && result.time >= MIN_TRIP_TIME){
+                console.log(result.time);
+                callback.call(this, curTrip);
+                //write to the db..
+            } else {
+                console.log("error or trip time too short");
+                generateEndpoints(curTrip, features, popList, empList, callback);
+            }
+        }, this);
+    }
+
+    function writeTripPoints(trips) {
+        var points = {
+            type: 'FeatureCollection',
+            features: []
+        };
+        for(var i = 0; i < trips.length; i++) {
+            var feature1 = {
+                type: "Feature",
+                geometry: trips[i].origin,
+                properties: {}
+            };
+
+            var feature2 = {
+                type: "Feature",
+                geometry: trips[i].dest,
+                properties: {}
+            };
+            points.features.push(feature1);
+            points.features.push(feature2);
+        }
+        fs.writeFileSync('./temp/tripPoints.json', JSON.stringify(points));
+    }
 
 
 	return {
-		makeTrips : genTrips,
-		testPointNPoly : randomPointInPolygon
+		makeTrips : initTripGeneration
 	}
 
 });

@@ -35,8 +35,9 @@ define(['mysql'
     });
   }
   
-  function writeTracts(cityTract, cityBlob){    
-    var query = connection.query('INSERT INTO ' + TABLE + ' (tractID, tractBlob) VALUES ("' + cityTract + '", "' + connection.escape(cityBlob) + '")', function(err, result) {
+  function writeTracts(cityTract, cityBlob){  
+   var jsonString = stringifyJSON(cityBlob);  
+    var query = connection.query('INSERT INTO ' + TABLE + ' (tractID, tractBlob) VALUES ("' + cityTract + '", "' + connection.escape(jsonString) + '")', function(err, result) {
         if (err) {
         console.log("An error occurred!", err);
         process.exit(1);
@@ -64,13 +65,20 @@ define(['mysql'
     });
   }
 
-   function writeTrips(cityTract, tripBlob){    
-    var query = connection.query('INSERT INTO ' + TABLE2 + ' (tractID, tripBlob) VALUES ("' + cityTract + '", "' + connection.escape(tripBlob) + '")', function(err, result) {
+   function writeTrips(cityTract, tripBlob){  
+   var jsonString = stringifyJSON(tripBlob);  
+    var query = connection.query('INSERT INTO ' + TABLE2 + ' (tractID, tripBlob) VALUES ("' + cityTract + '", "' + connection.escape(jsonString) + '")', function(err, result) {
         if (err) {
         console.log("An error occurred!", err);
         process.exit(1);
     }
     });
+  }
+
+  function stringifyJSON(jsonObject){
+    var obj = JSON.stringify(jsonObject);
+    var safeObj = obj.replace("'","\'");
+    return safeObj;
   }
 
 

@@ -63,6 +63,14 @@ define(['http',
             router.routeSync(req, response);
         });
 
+        app.all('/authenticate/*', function(req, response){
+            router.authenticate(req, response);
+        });
+
+        app.all('/new_user/*', function(req, response){
+            router.newUser(req, respone);//new_user/user=username
+        });
+
         app.listen(1337, '127.0.0.1');
     };
 

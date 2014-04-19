@@ -20,8 +20,6 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
                 // do callback when transmission has finished
             }).on('end', function() {
 
-                console.log(body);
-
                 var responseJson = JSON.parse(body);
                 var parsedJson = {
                     time: responseJson.paths[0].time,
@@ -80,8 +78,8 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
                                     + ". " + responseJson.info.messages);
                 } else {
                     parsedJson = {
-                        time: responseJson.time,
-                        distance: responseJson.distance,
+                        time: responseJson.route.time,
+                        distance: responseJson.route.distance,
                         routeShape: {
                             type: "LineString",
                             coordinates: []

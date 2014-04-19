@@ -48,7 +48,9 @@ define(['scripts/utils/censusAPI',
         response.send(JSON.stringify(results));
         console.log('sent sim session response');
 
-        SimulationGenerator.makeTrips(cityModel.censusTracts, cityModel.stateID + cityModel.placeID, function(result){
+        SimulationGenerator.makeTrips(cityModel.censusTracts,
+                                      cityModel.stateID + cityModel.placeID,
+                                      function(result){
             
         });
     }

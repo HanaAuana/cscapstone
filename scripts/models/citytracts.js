@@ -62,11 +62,11 @@ define(['scripts/utils/censusAPI',
             //fs.writeFile("./tmp/" + geoID + "_emp_pop.json",
               //  JSON.stringify(cityGeoJson));
             
-            var test = JSON.stringify(cityGeoJson);
+            //var cityObj = JSON.stringify(cityGeoJson);
            // test = JSON.stringify(test);
            // var str = test.replace('"','\"');
-            var str2 = test.replace("'","\'");
-            connect.makeWrite(geoID, str2);
+            //var safeCityObj = cityObj.replace("'","\'");
+            connect.makeWrite(geoID, cityGeoJson);
         } catch (err) {
             console.error("Unable to write city geoID + " + geoID + " to db: "
                             + err);
