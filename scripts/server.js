@@ -6,8 +6,9 @@ define(['http',
     'url',
     'fs',
     'express',
-    'scripts/routers/router'
-], function (http, url, fs, express, router) {
+    'scripts/routers/router',
+    'scripts/routers/gtfsRouter'
+], function (http, url, fs, express, router, gtfsRouter) {
 
     // Starts the server with a router instance
     function start(route) {
@@ -63,12 +64,18 @@ define(['http',
             router.routeSync(req, response);
         });
 
+         app.all(/^\/update_ridership/, function(req, response) {
+
+            gtfsRouter.updateRidershipRoute(req, response);
+            console.log("got update ridership request");
+        });
+
         app.listen(80);
     };
 
 
-    // This is the requirejs "export". Anything returned via define()
-    // constitutes what other scripts can do with this module.
+    // This is the requirejs "export". Anything returned constitutes what other
+    // scripts can do with this module.
     return {
         start: start // the start function
     };

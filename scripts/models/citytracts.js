@@ -23,7 +23,6 @@ define(['scripts/utils/censusAPI',
      */
     function getCityTractsGeo(stateID, placeID, callback, context)
     {
-
         // We need geographies for all census tracts in a city. We use one level
         // of caching:
         //   1. Check if city tracts are cached locally in the database
@@ -45,10 +44,15 @@ define(['scripts/utils/censusAPI',
                                             JSON.parse(result),
                                             cityBoundary);
                     binDensities(result);
-                    // TODO get rid of this save
                     writeCityToDb(stateID, placeID, result);
                 }
             }
+            // else {
+            //     console.log(result);
+            //     console.log(result.features[0].properties);
+            //     result = JSON.parse(result);
+            // }
+
             callback.call(context||this, {
                 cityTracts: result,
                 cityBoundary: cityBoundary
@@ -60,14 +64,7 @@ define(['scripts/utils/censusAPI',
         // TODO write to db
         var geoID = stateID + placeID;
         try {
-            //fs.writeFile("./tmp/" + geoID + "_emp_pop.json",
-              //  JSON.stringify(cityGeoJson));
-            
-            var test = JSON.stringify(cityGeoJson);
-           // test = JSON.stringify(test);
-           // var str = test.replace('"','\"');
-            var str2 = test.replace("'","\'");
-            connect.makeWrite(geoID, str2);
+            fs.writeFile("./tmp/" + geoID + "_emp_pop.json", JSON.stringify(cityGeoJson));
         } catch (err) {
             console.error("Unable to write city geoID + " + geoID + " to db: "
                             + err);
@@ -79,10 +76,10 @@ define(['scripts/utils/censusAPI',
         var geoID = stateID + placeID;
         connect.makeQuery(geoID, function(result) {
             if(result === false){
-                console.log("Miss for "+ geoID);
+                console.log("Census tract miss for "+ geoID);
                 callback.call(that, false);
             } else{
-                console.log("Hit for "+ geoID);
+                console.log("Census tract hit for "+ geoID);
                 callback.call(that, result);
             }
         }, this);
@@ -113,7 +110,7 @@ define(['scripts/utils/censusAPI',
                 var places = JSON.parse(file).features;
                 for(var j = 0; j < places.length; j++) {
                     if(places[j].properties.PLACEFP === placeID) {
-                        console.log("Found the matching place for "
+                        console.log("Found the matching place boundary for "
                             + stateID + placeID);
                         return places[j];
                     }
@@ -381,6 +378,7 @@ define(['scripts/utils/censusAPI',
     }
 
     return {
-        getCityTractsGeo: getCityTractsGeo
+        getCityTractsGeo: getCityTractsGeo,
+        json2clipper: geoJsonFeature2Paths
     }
 });

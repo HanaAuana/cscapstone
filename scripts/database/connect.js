@@ -1,10 +1,9 @@
 define(['mysql'
 ], function(mysql) {
 
-
-  var mysql = require('mysql');
   var DATABASE = "capstone";
   var TABLE = "CityPops";
+  var TABLE2 = "CityTrips";
 
  
   var connection = mysql.createConnection({
@@ -16,7 +15,7 @@ define(['mysql'
   });
 
 
-  function queryDB(cityTract, callback, context){
+  function queryTracts(cityTract, callback, context){
     connection.query('select tractBlob from ' + TABLE + ' where tractID = ' + cityTract,
     function(err, result) {
         if (err){
@@ -36,19 +35,49 @@ define(['mysql'
     });
   }
   
-  function writeDB(cityTract, cityBlob){    
+  function writeTracts(cityTract, cityBlob){    
     var query = connection.query('INSERT INTO ' + TABLE + ' (tractID, tractBlob) VALUES ("' + cityTract + '", "' + connection.escape(cityBlob) + '")', function(err, result) {
         if (err) {
         console.log("An error occurred!", err);
         process.exit(1);
     }
     });
-    console.log("*************Writing to DB***************");
+  }
+
+    function queryTrips(cityTract, callback, context){
+    connection.query('select tripBlob from ' + TABLE2 + ' where tractID = ' + cityTract,
+    function(err, result) {
+        if (err){
+           throw err;
+        }
+        else {
+          // console.log(result[0].tractBlob);
+            for (var i =0; i < result.length; i++) {
+               var trip = result[i];
+               var str = trip.tripBlob.toString();
+               var test = str.substring(1, str.length-1);
+               callback.call(context||this, JSON.parse(test));
+               return;
+            }
+            callback.call(context||this, false);
+        }
+    });
+  }
+
+   function writeTrips(cityTract, tripBlob){    
+    var query = connection.query('INSERT INTO ' + TABLE2 + ' (tractID, tripBlob) VALUES ("' + cityTract + '", "' + connection.escape(tripBlob) + '")', function(err, result) {
+        if (err) {
+        console.log("An error occurred!", err);
+        process.exit(1);
+    }
+    });
   }
 
 
   return {
-    makeQuery: queryDB,
-    makeWrite: writeDB
+    makeQuery: queryTracts,
+    makeWrite: writeTracts,
+    makeTripQuery: queryTrips,
+    makeTripWrite: writeTrips 
   }
 });

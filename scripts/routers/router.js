@@ -24,8 +24,9 @@ define(['scripts/utils/censusAPI',
     'scripts/utils/googleStaticAPI',
     'fs',
     'scripts/models/citytracts',
+    'scripts/utils/SimulationGenerator',
     'scripts/utils/drivingDirectionsAPI'
-], function(censusAPI, googleStaticAPI, fs, cityTracts, drivingDirections) {
+], function(censusAPI, googleStaticAPI, fs, cityTracts, SimulationGenerator, drivingDirections) {
 
     var completedSteps;
 
@@ -46,6 +47,13 @@ define(['scripts/utils/censusAPI',
         // Send back the modified body
         response.send(JSON.stringify(results));
         console.log('sent sim session response');
+
+       SimulationGenerator.makeTrips(cityModel.censusTracts,
+                                     cityModel.stateID + cityModel.placeID,
+                                     function(result){
+           console.log("Trip gen done, writing to db");
+
+       });
     }
 
     function onBoundaryResponse(cityModel, request, appResponse, geoObj, context) {
@@ -71,6 +79,22 @@ define(['scripts/utils/censusAPI',
                 completedSteps.cityTracts = true;
                 checkCallsFinished(request, appResponse, cityModel)
             }, this);
+    }
+
+    function onTzResponse(cityModel, request, appResponse, res, context) {
+        if(cityModel === false) {
+            console.log("tz fails");
+            appResponse.writeHead(404);
+            appResponse.send();
+            return;
+        }
+
+        // If successful, grab the timezone
+        cityModel.timezone = res.timeZoneId;
+        console.log('setting tz: ' + cityModel.timezone);
+
+        completedSteps.timezone = true;
+        checkCallsFinished(request, appResponse, cityModel);
     }
 
     function onCensusTractPopResponse(cityModel, request,

@@ -29,6 +29,10 @@ define(['backbone',
 
             // Append the el (defaults to an empty div) to the document
             $('#ctrl-container').append(this.el);
+
+            this.model.on('sync', function() {
+                this.remove();
+            }, this);
         },
 
         render: function() {
@@ -65,11 +69,7 @@ define(['backbone',
                             if(that.model !== undefined) {
                                 console.log('setting loc');
                                 that.model.setLocation(loc);
-
-                                // TODO the model should probably control removal
-                                that.remove();
                             }
-
                         } else {
                             console.log('geocode fails');
                         }

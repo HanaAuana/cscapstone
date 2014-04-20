@@ -24,6 +24,13 @@
 								)";
 	mysql_query($myQuery, $db_server) or die("Failed to create table " . mysql_error());
 	echo "Table created...<br />";
+
+	$myQuery2 = "CREATE TABLE CityTrips (tractID   VARCHAR(10),
+			                    tripBlob LONGTEXT,
+								PRIMARY KEY (tractID)
+								)";
+	mysql_query($myQuery2, $db_server) or die("Failed to create table " . mysql_error());
+	echo "Table created...<br />";
 	mysql_close($db_server);     // close the connection
 
 ?>

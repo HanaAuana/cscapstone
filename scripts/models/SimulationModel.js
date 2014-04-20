@@ -12,15 +12,15 @@ define(['backbone',
     'collections/TransitRouteCollection',
     'models/BusModeModel',
     'models/CityModel',
-    'models/TripModel',
-    'collections/TripCollection',
     'views/ChooseCityView',
     'views/MapView',
     'views/MapLayerCtrlView',
     'views/HeaderView',
     'views/CtrlSelectorView',
     'views/CityLoadingView',
-    'views/NetworkStatsView'
+    'views/NetworkStatsView',
+    'views/ChooseCitySessionView',
+    'views/UpdateRidershipView'
 ], function(Backbone,
             _,
             $,
@@ -29,15 +29,15 @@ define(['backbone',
             TransitRouteCollection,
             BusMode,
             CityModel,
-            TripModel,
-            TripCollection,
             ChooseCityView,
             MapView,
             MapLayerCtrlView,
             HeaderView,
             CtrlSelectorView,
             CityLoadingView,
-            NetworkStatsView)
+            NetworkStatsView,
+            ChooseCitySessionView,
+            UpdateRidershipView)
 {
     var SimulationModel = Backbone.Model.extend({
 
@@ -45,8 +45,7 @@ define(['backbone',
             'sessionID': null,
             'transitRoutes': null,
             'sim2Gtfs': null,
-            'city': null,
-            'trips': null
+            'city': null
         },
 
         initialize: function() {
@@ -55,11 +54,9 @@ define(['backbone',
             this.id = this.cid;
 
             var transitRoutes = new TransitRouteCollection();
-            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
             var city = new CityModel();
 
             this.set({'transitRoutes': transitRoutes,
-//                        'sim2Gtfs': sim2Gtfs,
                         'city': city});
 
             this.set({"layers" : {
@@ -82,7 +79,9 @@ define(['backbone',
             var mapView = new MapView({'model': this});
             mapView.initMap();
 
-            this.generateTrips();
+            // and the city session selection
+            new ChooseCitySessionView({'model': this}).render();
+
         },
 
         // Called from the ChooseCityView, once the user has entered a location
@@ -97,48 +96,58 @@ define(['backbone',
             // Now that we've set the location, the server can do the rest.
             // But tell the server what needs changing. In particular, set the
             // city!
+            var that = this;
             var response = this.save(['city', 'sessionID'], {
                 success: function() {
                     console.log('model persisted, id and city info updated');
+                    // add the control selector
+                    new CtrlSelectorView().render();
+
+                    // and the map layer selector and render it by default
+                    new MapLayerCtrlView({'model': that}).render();
+
+                    // and the network stats
+                    new NetworkStatsView({'collection': that.get('transitRoutes')});
+
+                    // and the ridership update view
+                    new UpdateRidershipView({'model': that}).render();
+
+                    that.initSim2Gtfs();
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');
                 }});
             console.log(response);
-
-            // add the control selector
-            new CtrlSelectorView().render();
-
-            // and the map layer selector and render it by default
-            new MapLayerCtrlView({'model': this}).render();
-
-            // and the network stats
-            new NetworkStatsView({'collection': this.get('transitRoutes')});
         },
 
-        setTimezone: function() {
-            var timezone = this.get('city').get('timezone');
-            this.get('sime2Gtfs').set({'timezone': timezone});
+        initSim2Gtfs: function() {
+            var timezone = this.get('city').timezone;
+            var routes = this.get('transitRoutes');
+            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': routes,
+                                         'timezone': timezone});
+            this.set({'sim2Gtfs': sim2Gtfs});
         },
 
-        generateTrips: function() {
+        onCitySessionSelected: function(sessionName, isNew, callback, context) {
+            var url = '/city_session_auth?new=' + isNew
+                                + '&session='  + sessionName;
+            // TODO implement all this
+            var that = this;
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(data, status, jqXHR) {
 
-            var tripCollection = new TripCollection();
-
-//            for(var i = 0; i < 15000; i++) {
-//                var newTrip = new TripModel({'tripId': i});
-//
-//                // All census tract assignment logic
-//
-//                newTrip.set({'tract1': null});
-//                newTrip.set({'tract2': null});
-//
-//                tripCollection.add(newTrip);
-//            }
-
-            this.set({'trips': tripCollection});
+                    callback.call(context||that, true);
+                    that.set({'sessionName': sessionName});
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log("error: " + textStatus + '\r\n' + errorThrown);
+                    callback.call(context||that, true);
+                    that.set({'sessionName': sessionName});
+                }
+            });
         }
-
     });
 
     return SimulationModel;

@@ -15,6 +15,9 @@ define([], function(){
         'censusKey': 'a0965f148ffbe78ef6a53f59a4842fdbec722ea7',
         'mapquestKey': 'Fmjtd%7Cluur2qu7l9%2C2x%3Do5-9a2w5a',
         'stateTractsDir': 'geo/state-tracts',
-        'placeBoundaryDir': 'geo/place-boundaries'
+        'placeBoundaryDir': 'geo/place-boundaries',
+        'osmDir': 'geo/osm',
+        'otpJarPath': 'C:/otp/otp-core/target/otp.jar',
+        'sessionsDir': 'sessions'
     };
 });
