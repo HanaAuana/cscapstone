@@ -11,7 +11,6 @@ define(['scripts/utils/censusAPI',
     'clipper'
 ], function(censusAPI, globalvars, fs, path, geojsonUtils, connect, clipper) {
 
-
     /**
      * Gets the specified place's boundary, and every census tract within the
      * boundary. Each census tract contains population and employment levels and
@@ -24,13 +23,14 @@ define(['scripts/utils/censusAPI',
      */
     function getCityTractsGeo(stateID, placeID, callback, context)
     {
-        var cityBoundary = getCityBoundary(stateID, placeID);
-           // We need geographies for all census tracts in a city. We use one level
+        // We need geographies for all census tracts in a city. We use one level
         // of caching:
         //   1. Check if city tracts are cached locally in the database
         //      - if so, return them
         //   2. Get the state tracts from the file system.
         //      - if so, extract and return all that lie within the city boundary
+        var cityBoundary = getCityBoundary(stateID, placeID);
+
         checkDbCity(stateID, placeID, function(result){
             if(result === false) {
                 result = checkDbState(stateID);
@@ -47,8 +47,9 @@ define(['scripts/utils/censusAPI',
                     // TODO get rid of this save
                     writeCityToDb(stateID, placeID, result);
                 }
+
             } else {
-                result = JSON.parse(result);
+//                result = JSON.parse(result);
             }
 
             callback.call(context||this, {

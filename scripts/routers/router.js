@@ -128,8 +128,6 @@ define(['scripts/utils/censusAPI',
             });
         }
 
-
-
         completedSteps.stateTracts = true;
         checkCallsFinished(request, appResponse, cityModel)
     }
@@ -165,10 +163,9 @@ define(['scripts/utils/censusAPI',
                     // If successful, grab the timezone
                     cityModel.timezone = res.timeZoneId;
                     console.log('Setting TZ: ' + cityModel.timezone);
-
-                    completedSteps.timezone = true;
-                    checkCallsFinished(request, response, cityModel);
                 }
+            	completedSteps.timezone = true;
+            	checkCallsFinished(request, response, cityModel);
             }, this);
 
         } else if(req.route.method === 'post') {
