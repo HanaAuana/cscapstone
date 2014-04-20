@@ -64,14 +64,14 @@ define(['scripts/utils/censusAPI',
         // TODO write to db
         var geoID = stateID + placeID;
         try {
-            fs.writeFile("./tmp/" + geoID + "_emp_pop.json", JSON.stringify(cityGeoJson));
+            connect.makeWrite(geoID, cityGeoJson);
         } catch (err) {
             console.error("Unable to write city geoID + " + geoID + " to db: "
                             + err);
         }
     }
 
-    function checkDbCity(stateID, placeID, callback) {
+   function checkDbCity(stateID, placeID, callback) {
         var that = this;
         var geoID = stateID + placeID;
         connect.makeQuery(geoID, function(result) {

@@ -130,6 +130,9 @@ define(['fs',
         });
     }
 
+    function writeRiderDB(request, gtfsJson, callback){
+    	
+    }
 
     return {
         updateRidershipRoute: updateRidership

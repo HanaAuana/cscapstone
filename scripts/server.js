@@ -64,11 +64,15 @@ define(['http',
             router.routeSync(req, response);
         });
 
-         app.all(/^\/update_ridership/, function(req, response) {
+        app.all(/^\/update_ridership/, function(req, response) {
 
             gtfsRouter.updateRidershipRoute(req, response);
             console.log("got update ridership request");
         });
+
+        app.all(/^\/city_session_auth/, function(req, response){
+            router.routeAuth(req, response);
+        })
 
         app.listen(80);
     };

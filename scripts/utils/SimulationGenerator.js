@@ -12,15 +12,15 @@ define(['scripts/database/connect',
 
 	//Check to see if there are trips already generated...
 	function checkTrips(cityTract, callback){
-//		var that = this;
-//		connect.makeTripQuery(cityTract, function(result){
-//			if(result === false){
-//	            callback.call(that, false);
-//			} else{
-//	            callback.call(that, result);
-//	          }
-//	    }, this);
-        callback.call(this, false);
+		var that = this;
+		connect.makeTripQuery(cityTract, function(result){
+			if(result === false){
+				console.log("MISS");
+	            callback.call(that, false);
+			} else{
+	            callback.call(that, result);
+	          }
+	    }, this);
 	}
 
 	function initTripGeneration(cityTracts, fips, callback, context){
@@ -47,8 +47,8 @@ define(['scripts/database/connect',
                         console.log("FOUND A VALID ROUTE");
                         if(++numTripsCompleted === NUM_TRIPS) {
                             console.log("trip gen complete");
-                            writeTripPoints(trips);
                             callback.call(context||this, trips);
+                			connect.makeTripWrite(fips, trips);
                         }
                     });
                 }
@@ -142,7 +142,6 @@ define(['scripts/database/connect',
             points.features.push(feature1);
             points.features.push(feature2);
         }
-        fs.writeFileSync('./tmp/tripPoints.json', JSON.stringify(points));
     }
 
 

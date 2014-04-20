@@ -31,6 +31,18 @@
 								)";
 	mysql_query($myQuery2, $db_server) or die("Failed to create table " . mysql_error());
 	echo "Table created...<br />";
+
+	$myQuery3 = "CREATE TABLE CityUsers (sessionName   VARCHAR(10),
+			                    routeCollection LONGTEXT,
+			                    cityFips	VARCHAR(20),
+			                    simGraph	LONGTEXT,
+			                    gtfs 		LONGTEXT,
+								PRIMARY KEY (sessionName)
+								)";
+	mysql_query($myQuery3, $db_server) or die("Failed to create table " . mysql_error());
+	echo "Table created...<br />";
+
+
 	mysql_close($db_server);     // close the connection
 
 ?>
