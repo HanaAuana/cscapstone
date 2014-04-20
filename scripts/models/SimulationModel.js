@@ -54,11 +54,9 @@ define(['backbone',
             this.id = this.cid;
 
             var transitRoutes = new TransitRouteCollection();
-            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': transitRoutes});
             var city = new CityModel();
 
             this.set({'transitRoutes': transitRoutes,
-                        'sim2Gtfs': sim2Gtfs,
                         'city': city});
 
             this.set({"layers" : {
@@ -113,6 +111,8 @@ define(['backbone',
 
                     // and the ridership update view
                     new UpdateRidershipView({'model': that}).render();
+
+                    that.initSim2Gtfs();
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');
@@ -120,9 +120,12 @@ define(['backbone',
             console.log(response);
         },
 
-        setTimezone: function() {
-            var timezone = this.get('city').get('timezone');
-            this.get('sime2Gtfs').set({'timezone': timezone});
+        initSim2Gtfs: function() {
+            var timezone = this.get('city').timezone;
+            var routes = this.get('transitRoutes');
+            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': routes,
+                                         'timezone': timezone});
+            this.set({'sim2Gtfs': sim2Gtfs});
         },
 
         onCitySessionSelected: function(sessionName, isNew, callback, context) {

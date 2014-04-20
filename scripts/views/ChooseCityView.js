@@ -70,7 +70,6 @@ define(['backbone',
                                 console.log('setting loc');
                                 that.model.setLocation(loc);
                             }
-
                         } else {
                             console.log('geocode fails');
                         }

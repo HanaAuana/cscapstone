@@ -34,7 +34,7 @@ define(['backbone',
                 calendarTxt: sim2Gtfs.get('calendarTxt'),
                 routesTxt: sim2Gtfs.get('routesTxt'),
                 tripsTxt: sim2Gtfs.get('tripsTxt'),
-                stopTimesTxt: sim2Gtfs.get('agencyTxt')
+                stopTimesTxt: sim2Gtfs.get('stopTimesTxt')
             };
 
             var sessionName = this.model.get('sessionName');
@@ -55,12 +55,16 @@ define(['backbone',
                     routes: transitRoutes
                 }),
                 success: function(data, status, jqXHR) {
-                    var alertString = 'Informing the residents of your transit network upgrades. '
-                                        + 'Please check back in several hours for updated ridership';
+                    var alertString = 'We are informing the residents of your '
+                                        + 'transit network upgrades. Please '
+                                        + 'check back in several hours for '
+                                        + 'updated ridership.';
                     new AlertView().render(alertString);
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-
+                    var alertString = 'An error has occurred. Please try again '
+                                        + 'in a few minutes.';
+                    new AlertView().render(alertString);
                 }
             })
         }

@@ -6,8 +6,9 @@ define(['fs',
     'url',
     'path',
     'child_process',
+    'adm-zip',
     'scripts/utils/globalvars'
-], function(fs, url, path, childProcess, globalvars) {
+], function(fs, url, path, childProcess, AdmZip, globalvars) {
 
     function updateRidership(request, response) {
 
@@ -29,33 +30,56 @@ define(['fs',
 
     function updateGraphAndRidership(request) {
 
-        writeGtfsToFile(request.query.session, request.body.gtfs, function() {
+        var dir = path.join(globalvars.sessionsDir, request.query.session);
 
-        });
-
-//        var child = childProcess.spawn();
-    }
-
-    function writeGtfsToFile(session, gtfsJson, callback) {
-        var dir = path.join(globalvars.sessionsDir, session);
         // Make directory to the session
-        var filesLeft = 6;
         fs.mkdir(dir,0777,function() {
-            var gtfsDir = path.join(dir, 'gtfs');
-            // Make directory to the gtfs feed
-            fs.mkdir(gtfsDir, 0777, function() {
 
-                for(var key in gtfsJson) {
-                    writeGtfsTxt(gtfsDir, key, gtfsJson[key], function() {
-                        if(--filesLeft === 0)
-                            callback.call(this);
-                    });
-                }
+            // Write the gtfs file to this session's directory
+            writeAndZipGtfs(dir, request.body.gtfs);
+
+            // Link the appropriate OSM map to this session's directory
+            linkOsmMap(request.query.state, dir, function() {
+                var child = childProcess.spawn('java', [
+                '-Xmx2g',
+                '-jar',
+                globalvars.otpJarPath,
+                '--build',
+                dir]);
+
+
+                child.stdout.on('data', function (data) {
+                    console.log('child: ' + data);
+                });
+
+                child.stderr.on('data', function (data) {
+                    console.log('child: ' + data);
+                });
+
+                child.on('close', function(code) {
+                    console.log('child closed: ' + code);
+                });
             });
         });
+
+//
+
+//         /path/to/downloads/pdx
     }
 
-    function writeGtfsTxt(gtfsDir, key, fileString, callback) {
+    function writeAndZipGtfs(dir, gtfsJson) {
+
+        var zip = new AdmZip();
+        // Add all files to the zip buffer
+        for(var key in gtfsJson)
+            addGtfsFileToZip(zip, key, gtfsJson[key]);
+
+        var gtfsZip = path.join(dir, 'gtfs.zip');
+        console.log("Writing gtfs zip at " + gtfsZip);
+        zip.writeZip(gtfsZip);
+    }
+
+    function addGtfsFileToZip(zip, key, fileString) {
         var filename;
         switch(key) {
             case 'agencyTxt':
@@ -77,11 +101,37 @@ define(['fs',
                 filename =  'stop_times.txt';
                 break;
         }
-        fs.writeFile(path.join(gtfsDir, filename), fileString, callback);
+        zip.addFile(filename, new Buffer(fileString));
+    }
+
+    function linkOsmMap(stateID, sessionDir, callback) {
+        // Find the osm file corresponding to the state to the session directory
+        fs.readdir(globalvars.osmDir, function(err, files) {
+            if(err)
+                throw err;
+
+            for(var i = 0; i < files.length; i++) {
+                if(RegExp('^' + stateID).test(files[i])) {
+
+                    var from = path.join(globalvars.osmDir, files[i]); // Linking from here
+                    var to = path.join(sessionDir, stateID + '.osm.pbf'); // To here
+                    console.log(from + "   " + to);
+
+                    childProcess.exec('ln ' + from + ' ' + to, {},
+                        function(err, stdout, stderr) {
+                            if(err)
+                                throw err;
+
+                            callback.call(this);
+                        }
+                    );
+                }
+            }
+        });
     }
 
 
     return {
-        updateRidership: updateRidership
+        updateRidershipRoute: updateRidership
     }
 });

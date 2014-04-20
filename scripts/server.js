@@ -66,7 +66,7 @@ define(['http',
 
         app.all(/^\/update_ridership/, function(req, response) {
 
-            gtfsRouter.updateRidership(req, response);
+            gtfsRouter.updateRidershipRoute(req, response);
             console.log("got update ridership request");
         });
 
@@ -74,8 +74,8 @@ define(['http',
     };
 
 
-    // This is the requirejs "export". Anything returned via define()
-    // constitutes what other scripts can do with this module.
+    // This is the requirejs "export". Anything returned constitutes what other
+    // scripts can do with this module.
     return {
         start: start // the start function
     };

@@ -14,6 +14,7 @@
         "mysql": "*",
         "weighted": "0.2",
         "byline": "*",
-        "geojson-utils": "*"
+        "geojson-utils": "*",
+        "adm-zip": "*"
     }
 }

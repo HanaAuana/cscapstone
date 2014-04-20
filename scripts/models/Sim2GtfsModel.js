@@ -60,7 +60,7 @@ define(['backbone',
                             + '1' + delim + '1' + delim + '1' + delim //thu-sat
                             + '1' + delim //sun
                             + '19000101' + delim //start date (1/1/1900)
-                            + '99990101' + delim + lineBr; //end date (1/1/9999)
+                            + '99990101' + lineBr; //end date (1/1/9999)
             // append the entries to the file, which should already have headers
             var calendarFile = this.get('calendarTxt');
             this.set({'calendarTxt': calendarFile + calendarEntries});
