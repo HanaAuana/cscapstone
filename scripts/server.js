@@ -70,6 +70,10 @@ define(['http',
             console.log("got update ridership request");
         });
 
+        app.all(/^\/city_session_auth/, function(req, response){
+            router.routeAuth(req, response);
+        })
+
         app.listen(1337, '127.0.0.1');
     };
 

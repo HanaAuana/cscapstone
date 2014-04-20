@@ -25,8 +25,9 @@ define(['scripts/utils/censusAPI',
     'fs',
     'scripts/models/citytracts',
     'scripts/utils/SimulationGenerator',
-    'scripts/utils/drivingDirectionsAPI'
-], function(censusAPI, googleStaticAPI, fs, cityTracts, SimulationGenerator, drivingDirections) {
+    'scripts/utils/drivingDirectionsAPI',
+    'scripts/database/connect'
+], function(censusAPI, googleStaticAPI, fs, cityTracts, SimulationGenerator, drivingDirections, connect) {
 
     var completedSteps;
 
@@ -48,12 +49,11 @@ define(['scripts/utils/censusAPI',
         response.send(JSON.stringify(results));
         console.log('sent sim session response');
 
-//        SimulationGenerator.makeTrips(cityModel.censusTracts,
-//                                      cityModel.stateID + cityModel.placeID,
-//                                      function(result){
-//            console.log("Trip gen done, writing to db");
-//
-//        });
+        SimulationGenerator.makeTrips(cityModel.censusTracts,
+                                      cityModel.stateID + cityModel.placeID,
+                                      function(result){
+            // Trips have been generated
+        });
     }
 
     function onBoundaryResponse(cityModel, request, appResponse, geoObj, context) {
@@ -211,10 +211,54 @@ define(['scripts/utils/censusAPI',
         }, this);
     }
 
+    function authRoute(request, response){
+        var that = this;
+        var sessionID = request.query.session;
+        var isNew = request.query.isNew;
+        if(isNew){
+            connect.makeSessAuth(sessionID, function(result){
+                if(result === true){
+                    response.send({
+                        result: "duplicate_session",
+                        code: 0
+                    });
+                }
+                else{
+                    response.send({
+                        result: "no_session",
+                        code: 1
+                    });
+                }
+            });
+        }
+        else{
+            connect.makeSessAuth(sessionID, function(result){
+                if(result === false){
+                    response.send({
+                        result: "no_session",
+                        code: 1
+                    });
+                }
+                else{
+                    connect.makeSessQuery(sessionID, function(queryResult){
+                        if(queryResult === false){
+                            console.log("MAJOR ERROR");
+                            response.writeHead(500, {});
+                            response.send();
+                        } else{
+                           response.send(JSON.stringify(queryResult));
+                        }
+                    }, this);
+                }
+            });
+        }
+    }
+
     // These are the exports
     return {
         simSession: simSessionRoute,
-        routeSync: routeSyncRoute
+        routeSync: routeSyncRoute,
+        routeAuth: authRoute
     };
 
 });
