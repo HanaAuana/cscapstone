@@ -18,6 +18,7 @@ define(['leaflet',
         template: _.template(MapViewTemplate, {}),
         map: null,
         centroid: null,
+        guideLayers: null,
         visibleLayers: {
             routeLayers: {}
         },
@@ -42,56 +43,59 @@ define(['leaflet',
         initMap: function () {
             console.log('instantiating mapview');
             this.render();
+            //Create map, center on Tacoma
             this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
+            
+            // Add the OSM layer tiles
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
 
             this.routeFeatureGroup = L.featureGroup().addTo(this.map);
 
+			//Initialize layers to snap to
+			this.guideLayers = new Array();
+			
+			//Initialize draw controller, and pass it the feature group
             var drawControl = new L.Control.Draw({
+            	draw: {
+            		polyline: {guideLayers: this.guideLayers},
+            		marker: {guideLayers: this.guideLayers}
+            	},
                 edit : {
                     featureGroup : this.routeFeatureGroup
                 }
-            }).addTo(this.map);
-            
-            var guides = L.polyline([[48.505431207150885, 1.3999843597412107], [48.47600819398379, 1.388998031616211]],
-            		{
-            			weight: 5,
-            			color:'red',
-            			opacity: 1.0
-            		}).addTo(this.map);
-            		
-            var marker = L.marker([48.488, 1.395]).addTo(this.map);
-        	marker.snapediting = new L.Handler.MarkerSnap(this.map, marker);
-        	marker.snapediting.addGuideLayer(guides);
-        	marker.snapediting.enable();
-        	
-        	var guideLayers = [guides];
-        	
-        	drawControl.setDrawingOptions({
-            	polyline: { guideLayers: guideLayers },
-            	polygon: { guideLayers: guideLayers, snapDistance: 5 },
-            	marker: { guideLayers: guideLayers, snapVertices: false },
-            	rectangle: false,
-            	circle: false
-        	});
-        	
+            });
+            //Add draw control to the map
+            this.map.addControl(drawControl);
+                 		
+            var marker = L.marker([47.2622639, -122.5100545]).addTo(this.map);
+        	 marker.snapediting = new L.Handler.MarkerSnap(this.map, marker);
+        	// marker.snapediting.addGuideLayer(guides);
+        	 marker.snapediting.enable();
 
             var that = this;
+            
+            
             this.map.on('draw:created', function(e) {
                 // Route has been drawn, do any route initialization logic and
                 // draw the resulting geoJSON. The resulting geoJSON may be
                 // different than the one passed in. For example, bus routes must
                 // be snapped to the road
+                var type = e.layerType;
+                var layer = e.layer;
+                
                 if(e.layer.toGeoJSON().geometry.type === "LineString") {
                     that.handleRouteDraw(e);
-                    guideLayers.push(e.layer);
+                    for(var i = 0;i < that.guideLayers.length; i++) {
+         				layer.snapediting.addGuideLayer(that.guideLayers[i]);
+    				}
                 }
-                if(e.layerType === "Marker") {
-                    var marker = e.layer;
-        			marker.snapediting = new L.Handler.MarkerSnap(map, marker);
-        			marker.snapediting.addGuideLayer(guides);
-        			marker.snapediting.enable();
-        			this.routeFeatureGroup.addLayer(marker);
+                else if(type === "marker") {
+                	that.handleMarkerDraw(e);   
+
+                }
+                else{
+                	that.map.addLayer(e.layer);
+                	drawnItems.addLayer(e.layer);
                 }
                 
             });
@@ -235,6 +239,8 @@ define(['leaflet',
                 }
             });
             this.routeFeatureGroup.addLayer(geoJson);
+            this.guideLayers.push(geoJson);
+            console.log("!!! pushed: "+ geoJson);
             this.visibleLayers.routeLayers[route.get('id')] = geoJson;
         },
 
@@ -252,6 +258,18 @@ define(['leaflet',
             new NewRouteView({geoJson: event.layer.toGeoJSON(),
                               routes: this.model.get('transitRoutes')}
             ).render();
+        },
+        
+        handleMarkerDraw: function(event) {
+        	var type = event.layerType;
+           	var layer = event.layer;
+            layer.options.draggable = true;      	
+        	layer.snapediting = new L.Handler.MarkerSnap(this.map, layer);
+    		for(var i = 0;i < guideLayers.length; i++) {
+        		layer.snapediting.addGuideLayer(guideLayers[i]);
+    		}
+        	layer.snapediting.enable();
+        	drawnItems.addLayer(layer);
         }
     });
 
