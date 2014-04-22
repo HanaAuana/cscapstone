@@ -123,10 +123,12 @@ define(['fs',
                                 throw err;
 
                             callback.call(this);
+                            return;
                         }
                     );
                 }
             }
+            console.log("NO OSM DATA FOUND FOR STATE " + stateID);
         });
     }
 

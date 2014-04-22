@@ -17,7 +17,7 @@ define([], function(){
         'stateTractsDir': 'geo/state-tracts',
         'placeBoundaryDir': 'geo/place-boundaries',
         'osmDir': 'geo/osm',
-        'otpJarPath': 'C:/otp/otp-core/target/otp.jar',
+        'otpJarPath': '../OpenTripPlanner/otp-core/target/otp.jar',
         'sessionsDir': 'sessions'
     };
 });
