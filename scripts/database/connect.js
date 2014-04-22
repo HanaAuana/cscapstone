@@ -46,8 +46,8 @@ define(['mysql'
   }
 
 
-  function queryTrips(cityTract, callback, context){
-    connection.query('select tripBlob from ' + TABLE2 + ' where tractID = ' + cityTract,
+  function queryTrips(geoID, callback, context){
+    connection.query('select tripBlob from ' + TABLE2 + ' where tractID = "' + geoID + '"',
       function(err, result) {
         if (err){
            throw err;

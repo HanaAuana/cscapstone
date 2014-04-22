@@ -7,9 +7,9 @@ define(['scripts/utils/censusAPI',
     'fs',
     'path',
     'geojson-utils',
-    'clipper',
-    'scripts/database/connect'
-], function(censusAPI, globalvars, fs, path, geojsonUtils, clipper, connect) {
+    'scripts/database/connect',
+    'clipper'
+], function(censusAPI, globalvars, fs, path, geojsonUtils, connect, clipper) {
 
     /**
      * Gets the specified place's boundary, and every census tract within the

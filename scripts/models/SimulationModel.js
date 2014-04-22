@@ -131,20 +131,33 @@ define(['backbone',
         onCitySessionSelected: function(sessionName, isNew, callback, context) {
             var url = '/city_session_auth?new=' + isNew
                                 + '&session='  + sessionName;
-            // TODO implement all this
+
             var that = this;
             $.ajax({
                 url: url,
                 type: 'GET',
                 success: function(data, status, jqXHR) {
 
-                    callback.call(context||that, true);
-                    that.set({'sessionName': sessionName});
+                    var success = false;
+                    // User requests a new session name, and session name is
+                    // unique
+                    if(isNew && data.code === 1) {
+                        success = true;
+                    // User requests a load, and session exists on the server
+                    } else if(!isNew && data.code === 0) {
+                        success = true;
+                    }
+                    console.log(data);
+
+                    callback.call(context||that, success);
+
+                    // Set session name on success
+                    if(success)
+                        that.set({'sessionName': sessionName});
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     console.log("error: " + textStatus + '\r\n' + errorThrown);
-                    callback.call(context||that, true);
-                    that.set({'sessionName': sessionName});
+                    callback.call(context||that, false);
                 }
             });
         }

@@ -10,8 +10,8 @@ define(['http',
     'scripts/routers/gtfsRouter'
 ], function (http, url, fs, express, router, gtfsRouter) {
 
-    // Starts the server with a router instance
-    function start(route) {
+    // Starts the server
+    function start() {
         console.log("server : server has started");
 
         var app = express();

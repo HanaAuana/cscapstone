@@ -128,8 +128,6 @@ define(['scripts/utils/censusAPI',
             });
         }
 
-
-
         completedSteps.stateTracts = true;
         checkCallsFinished(request, appResponse, cityModel)
     }
