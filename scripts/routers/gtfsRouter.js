@@ -6,11 +6,13 @@ define(['fs',
     'url',
     'path',
     'child_process',
+    'http',
     'adm-zip',
-    'scripts/utils/globalvars'
-], function(fs, url, path, childProcess, AdmZip, globalvars) {
+    'scripts/utils/globalvars',
+    'scripts/database/connect'
+], function(fs, url, path, childProcess, http, AdmZip, globalvars, connect) {
 
-    function updateRidership(request, response) {
+    function updateRidershipRoute(request, response) {
 
         console.log(request.query);
 
@@ -18,17 +20,42 @@ define(['fs',
 
         });
 
-        updateGraphAndRidership(request);
+        // Update the graph with new GTFS
+        updateOTPGraph(request, function(sessionDir) {
 
+            // We also need to link the OTP graphs folder, because it's
+            // not letting us change the base path. Stupid!
+            var pathToOtpGraph = path.join(globalvars.otpGraphPath, request.query.session);
+            var pathToOSMGraph = path.join(sessionDir, 'Graph.obj');
+            var to = path.join(pathToOtpGraph, 'Graph.obj'); // To here
+
+            // So make a directory for this session and symlink the OSM graphh
+            fs.mkdir(pathToOtpGraph, 0777, function() {
+                console.log(pathToOSMGraph + " " + to);
+                childProcess.exec('ln ' + pathToOSMGraph + ' ' + to, {},
+                    function(err, stdout, stderr) {
+                        if(err)
+                            console.log(stderr);
+
+                        // Inform OTP server of new graph
+                        reloadGraph(request.query.session, function() {
+                            // Everything is ready! Do routing
+                            updateRidership(request.query);
+                        });
+                    }
+                );
+            });
+        });
 
         response.send();
     }
 
     function writeRiderDB(request, callback) {
+        // TODO
         callback.call(this, true);
     }
 
-    function updateGraphAndRidership(request) {
+    function updateOTPGraph(request, callback) {
 
         var dir = path.join(globalvars.sessionsDir, request.query.session);
 
@@ -39,32 +66,30 @@ define(['fs',
             writeAndZipGtfs(dir, request.body.gtfs);
 
             // Link the appropriate OSM map to this session's directory
-            linkOsmMap(request.query.state, dir, function() {
-                var child = childProcess.spawn('java', [
-                '-Xmx2g',
-                '-jar',
-                globalvars.otpJarPath,
-                '--build',
-                dir]);
+            linkOsmMap(request.query.state, request.query.session, dir,
+                function() {
+                    // Rebuild the graph with the new GTFS feed
+                    var child = childProcess.spawn('java', [
+                    '-Xmx2g',
+                    '-jar',
+                    globalvars.otpJarPath,
+                    '--build',
+                    dir]);
 
+                    child.stdout.on('data', function (data) {
+                        console.log('child: ' + data);
+                    });
 
-                child.stdout.on('data', function (data) {
-                    console.log('child: ' + data);
-                });
+                    child.stderr.on('data', function (data) {
+                        console.log('child: ' + data);
+                    });
 
-                child.stderr.on('data', function (data) {
-                    console.log('child: ' + data);
-                });
-
-                child.on('close', function(code) {
-                    console.log('child closed: ' + code);
-                });
+                    child.on('close', function(code) {
+                        console.log('child closed: ' + code);
+                        callback.call(this, dir);
+                    });
             });
         });
-
-//
-
-//         /path/to/downloads/pdx
     }
 
     function writeAndZipGtfs(dir, gtfsJson) {
@@ -104,7 +129,7 @@ define(['fs',
         zip.addFile(filename, new Buffer(fileString));
     }
 
-    function linkOsmMap(stateID, sessionDir, callback) {
+    function linkOsmMap(stateID, session, sessionDir, callback) {
         // Find the osm file corresponding to the state to the session directory
         fs.readdir(globalvars.osmDir, function(err, files) {
             if(err)
@@ -113,6 +138,8 @@ define(['fs',
             for(var i = 0; i < files.length; i++) {
                 if(RegExp('^' + stateID).test(files[i])) {
 
+                    // Create a link from the OSM file location to the session
+                    // folder. OTP needs the GTFS and OSM in the same folder
                     var from = path.join(globalvars.osmDir, files[i]); // Linking from here
                     var to = path.join(sessionDir, stateID + '.osm.pbf'); // To here
                     console.log(from + "   " + to);
@@ -120,9 +147,9 @@ define(['fs',
                     childProcess.exec('ln ' + from + ' ' + to, {},
                         function(err, stdout, stderr) {
                             if(err)
-                                throw err;
+                                console.log(stderr);
 
-                            callback.call(this);
+                            callback.call(this, to);
                         }
                     );
                 }
@@ -130,11 +157,47 @@ define(['fs',
         });
     }
 
-    function writeRiderDB(request, gtfsJson, callback){
-    	
+    /**
+     * Requests OTP to load/reload the graph for the specified session
+     * @param session Session to reload graph
+     * @param callback
+     */
+    function reloadGraph(session, callback) {
+
+        var options = {
+            hostname: 'localhost',
+            port: 8080,
+            path: '/otp-rest-servlet/ws/routers/' + session,
+            method: 'PUT'
+        };
+
+		console.log('Requesting OTP graph reload at: ' + options.path);
+        var req = http.request(options, function(res) {
+            console.log('HEADERS: ' + JSON.stringify(res.headers));
+            res.setEncoding('utf8');
+            res.on('data', function(data) {
+                console.log(data);
+            }).on('end', function() {
+                console.log('Graph registration complete, code ' + res.statusCode);
+                callback.call(this);
+            });
+        });
+		req.end();
+    }
+
+    function updateRidership(query) {
+        var geoID = query.state + query.place;
+        connect.makeTripQuery(geoID, function(result) {
+            if(result === false)
+                console.log('NO TRIPS FOUND FOR GEOID ' + geoID);
+            else {
+                // TODO update ridership
+                console.log("Updating ridership...");
+            }
+        }, this);
     }
 
     return {
-        updateRidershipRoute: updateRidership
+        updateRidershipRoute: updateRidershipRoute
     }
 });
