@@ -164,7 +164,13 @@ L.Handler.PolylineSnap = L.Edit.Poly.extend({
 
 L.Draw.Feature.SnapMixin = {
     _snap_initialize: function () {
-        this.on('enabled', this._snap_on_enabled, this);
+        var _this = this;
+        this.on('enabled', function () {
+            var args = arguments;
+            setTimeout(function () {
+                _this._snap_on_enabled.apply(_this, args);
+            }, 0);
+        });
         this.on('disabled', this._snap_on_disabled, this);
     },
 

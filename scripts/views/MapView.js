@@ -44,7 +44,8 @@ define(['leaflet',
             console.log('instantiating mapview');
             this.render();
             //Create map, center on Tacoma
-            this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
+            this.map = L.map(this.el , { drawControl: true })
+            this.map.setView([47.2622639, -122.5100545],  10);
             
             // Add the OSM layer tiles
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
@@ -52,28 +53,20 @@ define(['leaflet',
             this.routeFeatureGroup = L.featureGroup().addTo(this.map);
 
 			//Initialize layers to snap to
-			this.guideLayers = new Array();
-			
-			//Initialize draw controller, and pass it the feature group
-            var drawControl = new L.Control.Draw({
-            	draw: {
-            		polyline: {guideLayers: this.guideLayers},
-            		marker: {guideLayers: this.guideLayers}
-            	},
-                edit : {
-                    featureGroup : this.routeFeatureGroup
-                }
+            this.guideLayers = new Array();
+
+
+            //Initialize draw controller, and pass it the feature group
+            this.map.drawControl.setDrawingOptions({
+                polyline: { guideLayers: this.guideLayers },
+                polygon: { guideLayers: this.guideLayers, snapDistance: 5 },
+                marker: { guideLayers: this.guideLayers, snapVertices: false },
+                rectangle: false,
+                circle: false
             });
-            //Add draw control to the map
-            this.map.addControl(drawControl);
-                 		
-            var marker = L.marker([47.2622639, -122.5100545]).addTo(this.map);
-        	 marker.snapediting = new L.Handler.MarkerSnap(this.map, marker);
-        	// marker.snapediting.addGuideLayer(guides);
-        	 marker.snapediting.enable();
 
             var that = this;
-            
+
             
             this.map.on('draw:created', function(e) {
                 // Route has been drawn, do any route initialization logic and
@@ -84,19 +77,22 @@ define(['leaflet',
                 var layer = e.layer;
                 
                 if(e.layer.toGeoJSON().geometry.type === "LineString") {
+                    that.guideLayers.push(layer);
                     that.handleRouteDraw(e);
-                    for(var i = 0;i < that.guideLayers.length; i++) {
-         				layer.snapediting.addGuideLayer(that.guideLayers[i]);
-    				}
                 }
                 else if(type === "marker") {
-                	that.handleMarkerDraw(e);   
+                	var layer = e.layer;
+                    that.map.addLayer(layer);
+                    that.guideLayers.push(layer);
 
                 }
                 else{
-                	that.map.addLayer(e.layer);
-                	drawnItems.addLayer(e.layer);
+                	var layer = e.layer;
+                    that.map.addLayer(layer);
+                    that.guideLayers.push(layer);
                 }
+
+                
                 
             });
         },
