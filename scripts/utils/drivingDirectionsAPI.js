@@ -97,7 +97,7 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
         }).on('error', function(err) {
             console.log(err);
             callback.call(context||this, false);
-        })
+        });
     }
 
     /**

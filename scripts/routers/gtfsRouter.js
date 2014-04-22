@@ -9,8 +9,17 @@ define(['fs',
     'http',
     'adm-zip',
     'scripts/utils/globalvars',
-    'scripts/database/connect'
-], function(fs, url, path, childProcess, http, AdmZip, globalvars, connect) {
+    'scripts/database/connect',
+    'scripts/utils/multimodalRoutingAPI'
+], function(fs,
+            url,
+            path,
+            childProcess,
+            http,
+            AdmZip,
+            globalvars,
+            connect,
+            multimodalRoute) {
 
     function updateRidershipRoute(request, response) {
 
@@ -40,7 +49,7 @@ define(['fs',
                         // Inform OTP server of new graph
                         reloadGraph(request.query.session, function() {
                             // Everything is ready! Do routing
-                            updateRidership(request.query);
+                            prepareUpdateRidership(request.query);
                         });
                     }
                 );
@@ -185,15 +194,52 @@ define(['fs',
 		req.end();
     }
 
-    function updateRidership(query) {
+    /**
+     * Gets the data needed to update ridership for session of the specified
+     * query.
+     * @param query
+     */
+    function prepareUpdateRidership(query) {
+        var steps = 2;
         var geoID = query.state + query.place;
-        connect.makeTripQuery(geoID, function(result) {
-            if(result === false)
+        var trips = null;
+        var routeCollection = null;
+        // Get all the trips
+        connect.makeTripQuery(geoID, function(tripResult) {
+            if(tripResult === false)
                 console.log('NO TRIPS FOUND FOR GEOID ' + geoID);
-            else {
-                // TODO update ridership
-                console.log("Updating ridership...");
+
+            trips = tripResult;
+            if(--steps === 0) {
+                doUpdateRidership(query.session, trips, routeCollection);
             }
+        }, this);
+
+        connect.makeSessQuery(query.session, function(seshResult) {
+            if(seshResult === false)
+                console.log("NO SESSION DATA FOR " + query.session);
+
+            routeCollection = seshResult.routeCollection;
+            if(--steps === 0) {
+                doUpdateRidership(query.session, trips, routeCollection);
+            }
+        }, this)
+    }
+
+    function doUpdateRidership(session, trips, routeCollection) {
+        // TODO update ridership
+        console.log("Updating ridership...");
+        for(var i = 0; i < trips.length; i++) {
+            routeAPIWrapper(session, result[i], function(trip, result) {
+                // Handle result
+            });
+        }
+    }
+
+    function routeAPIWrapper(session, trip, callback) {
+        multimodalRoute.doRoute(session, trip.origin, trip.dest,
+            function(result) {
+                callback.call(this, trip, result);
         }, this);
     }
 

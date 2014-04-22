@@ -258,6 +258,7 @@ define(['backbone',
         },
 
         // Remove a route from routes.txt
+        // TODO array.splice()
         removeRouteEntry: function(routeId) {
 
             var csvHelper = this.get('csvHelper');
@@ -281,6 +282,7 @@ define(['backbone',
             this.set({'routesTxt': csvHelper.arrayToCsv(newRoutesArray)});
         },
 
+        // TODO array.splice()
         removeTripsEntry: function(routeId) {
             var csvHelper = this.get('csvHelper');
             var allTrips = csvHelper.csvToArray(this.get('tripsTxt'));
@@ -314,6 +316,7 @@ define(['backbone',
 
         // Removes all stop time entries corresponding to the specified trip ids,
         // and returns a list of the removed stop ids
+        // TODO array.splice()
         removeStopTimesEntry: function(tripIds) {
             var csvHelper = this.get('csvHelper');
             var stopTimesArray = csvHelper.csvToArray(this.get('stopTimesTxt'));
@@ -347,7 +350,8 @@ define(['backbone',
             return stopIds;
         },
 
-        // Removes all the specified stop ides
+        // Removes all the specified stop ids
+        // TODO just use array.splice()
         removeStopsEntry: function(stopIds) {
             var csvHelper = this.get('csvHelper');
             var stopsArray = csvHelper.csvToArray(this.get('stopsTxt'));

@@ -54,14 +54,17 @@ define(['backbone',
             var routeName = $('#inputRouteName').val();
             var routeMode = $('#inputRouteType').val();
 
-            // Ignore button click if the user hasn't entered anything
-            if(routeName.length > 0 && routeMode.length > 0) {
-
-                 new TransitRoute({'name': routeName,
+            // Ignore button click if the user hasn't entered anything, and
+            // ensure route name only contains alphanumeric characters
+            if(routeName.length > 0
+                && routeMode.length > 0
+                && /^[a-zA-Z0-9]+$/.test(routeName))
+            {
+                new TransitRoute({'name': routeName,
                                     'headway': $('#inputHeadways').val()},
-                                {mode: routeMode,
-                                rawRouteFeature: this.rawGeoJson,
-                                onRouteInitialized: function(route) {
+                                    {mode: routeMode,
+                                    rawRouteFeature: this.rawGeoJson,
+                                    onRouteInitialized: function(route) {
                     // Add the route to the collection after it's been initialized
                     $('#new-route-alert').modal('hide');
                     console.log(route);
@@ -78,5 +81,4 @@ define(['backbone',
     });
 
     return NewRouteView;
-
 });

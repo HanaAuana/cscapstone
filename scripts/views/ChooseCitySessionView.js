@@ -20,6 +20,13 @@ define(['backbone',
             this.$el.html(template);
             $('#dialog').append(this.$el);
 
+            $('#choose-city-session-modal').keypress(function(e) {
+                if (e.which == "13") {
+                    that.onCitySessionSelected();
+                    return false;
+                }
+            });
+
             var that = this;
             $('#choose-city-session-modal').on('hidden.bs.modal', function () {
                 $(that.$el).remove();
@@ -33,7 +40,7 @@ define(['backbone',
         },
 
         onCitySessionSelected: function() {
-            console.log('on city session selection');
+
             var loadSession = $('#inputCitySession').val();
             var newSession = $('#inputNewCitySession').val();
 
@@ -46,13 +53,17 @@ define(['backbone',
                     sessionName = loadSession;
                 }
 
-                this.model.onCitySessionSelected(sessionName,
-                                                 isNew,
-                                                 function(result)
-                {
-                    if(result)
-                        this.remove();
-                }, this);
+                // Ensure only alphanumeric strings
+                if(/^[a-zA-Z0-9]+$/.test(sessionName)) {
+                    this.model.onCitySessionSelected(sessionName,
+                        isNew,
+                        function (result) {
+                            if (result)
+                                this.remove();
+                        }, this);
+                } else {
+                    console.log("String fails regex check: " + sessionName);
+                }
             }
         }
     });

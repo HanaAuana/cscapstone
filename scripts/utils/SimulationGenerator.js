@@ -26,7 +26,7 @@ define(['scripts/database/connect',
 	function initTripGeneration(cityTracts, fips, callback, context){
 		checkTrips(fips, function(result){
 
-			if(result === false){
+			if(result === false) {
 
 				var popList = {};
 				var empList = {};
@@ -53,8 +53,7 @@ define(['scripts/database/connect',
                     });
                 }
 			} else {
-                console.log("trip gen completed: found in cache")
-                writeTripPoints(result);
+                console.log("trip gen completed: found in cache");
                 callback.call(context||this, result);
             }
 		});
