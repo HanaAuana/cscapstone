@@ -15,6 +15,7 @@
         "weighted": "0.2",
         "byline": "*",
         "geojson-utils": "*",
-        "adm-zip": "*"
+        "adm-zip": "*",
+        "xml2js": "*"
     }
 }

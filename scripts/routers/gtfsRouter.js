@@ -9,14 +9,30 @@ define(['fs',
     'http',
     'adm-zip',
     'scripts/utils/globalvars',
-    'scripts/database/connect'
-], function(fs, url, path, childProcess, http, AdmZip, globalvars, connect) {
-
+    'scripts/database/connect',
+    'scripts/utils/multimodalRoutingAPI'
+], function(fs,
+            url,
+            path,
+            childProcess,
+            http,
+            AdmZip,
+            globalvars,
+            connect,
+            multimodalRoute) 
+{
     function updateRidershipRoute(request, response) {
 
-        console.log(request.query);
+        var query = request.query;
+        var body = request.body;
+        var geoID = query.state + query.place;
 
-        writeRiderDB(request, function(result) {
+        connect.makeSessWrite(query.session, 
+                                body.routes, 
+                                geoID, 
+                                null, 
+                                body.gtfs, 
+                                function(result) {
 
         });
 
@@ -40,7 +56,7 @@ define(['fs',
                         // Inform OTP server of new graph
                         reloadGraph(request.query.session, function() {
                             // Everything is ready! Do routing
-                            updateRidership(request.query);
+                            doUpdateRidership(request.query, body.routes);
                         });
                     }
                 );
@@ -85,7 +101,7 @@ define(['fs',
                     });
 
                     child.on('close', function(code) {
-                        console.log('child closed: ' + code);
+                        console.log('Graph compliation finished with exit code: ' + code);
                         callback.call(this, dir);
                     });
             });
@@ -186,15 +202,38 @@ define(['fs',
 		req.end();
     }
 
-    function updateRidership(query) {
+    function doUpdateRidership(query, transitRoutes) {
+
         var geoID = query.state + query.place;
-        connect.makeTripQuery(geoID, function(result) {
-            if(result === false)
+
+        // Get all the trips
+        connect.makeTripQuery(geoID, function(trips) {
+            if(trips === false) {
                 console.log('NO TRIPS FOUND FOR GEOID ' + geoID);
-            else {
+            } else {
                 // TODO update ridership
                 console.log("Updating ridership...");
+                for(var i = 0; i < trips.length; i++) {
+                    routeAPIWrapper(query.session, trips[i], function(trip, result) {
+                        // Handle result
+                    });
+                }
             }
+        }, this);        
+    }
+
+    /**
+     * Wraps the multimodal routing API, so that we can hold on to
+     * refernces to the trip (otherwise we'd lose them in the async
+     * for loop of doUpdateRidership() )
+     */
+    function routeAPIWrapper(session, trip, callback) {
+        multimodalRoute.doRoute(session, 
+                                trip.origin.coordinates, 
+                                trip.dest.coordinates,
+                                function(result) 
+        {
+            callback.call(this, trip, result);
         }, this);
     }
 

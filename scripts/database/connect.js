@@ -92,7 +92,7 @@ define(['mysql'
 
   function querySession(sessionID, callback, context){
     var that = this;
-    connection.query('select routeCollection, cityFips, gtfs from ' + TABLE3 + 'where sessionName = ' + sessionID,
+    connection.query('select routeCollection, cityFips, gtfs from ' + TABLE3 + ' where sessionName = "' + sessionID + '"',
       function(err, result) {
           if (err) {
             throw err;
@@ -104,10 +104,10 @@ define(['mysql'
               queryTracts(fips, function(tractResult) {
                   if(tractResult === false) {
                       console.log("MAJOR ISSUE NO TRACTS FOR SESSION "+ geoID);
-                      callback.call(that, false);
+                      callback.call(context||that, false);
                   } else {
                       console.log("Hit for "+ geoID);
-                      callback.call(that, {
+                      callback.call(context||that, {
                             tracts: tractResult,
                             routeCollection: result[0].routeCollection,
                             gtfs: result[0].gtfs
@@ -134,7 +134,7 @@ define(['mysql'
             });
         } else {
           //Update route and gtfs...
-          var query = connection.query('UPDATE ' + TABLE3 + 'SET routeCollection = ' + jsonRoute + ', gtfs = ' + jsonGTFS + 'WHERE sessionName = ' +sessionID, 
+          var query = connection.query('UPDATE ' + TABLE3 + ' SET routeCollection = ' + jsonRoute + ', gtfs = ' + jsonGTFS + ' WHERE sessionName = ' +sessionID, 
             function(err, result){
               if(err){
                 console.log("An error occurred!", err);
