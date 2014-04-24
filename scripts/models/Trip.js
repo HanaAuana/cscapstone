@@ -4,10 +4,8 @@
 
 define(function() {
 
-    return function Trip(tripId, tract1, tract2){
+    return function Trip(tripId){
             this.tripId = tripId;
-            //this.tract1 = tract1;
-            //this.tract2 = tract2;
         };
 
 });

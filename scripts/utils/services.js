@@ -17,7 +17,7 @@ define(['child_process',
         console.log('Starting OTP service');
         var child = childProcess.exec('java -Xmx2g -jar '
                                     + globalvars.otpJarPath
-                                    + ' --server -p 8080',
+                                    + ' --server -p 8080 -v',
                                     function (error, stdout, stderr) {
             console.log('OTP ERROR: ' + stderr);
             if (error !== null) {

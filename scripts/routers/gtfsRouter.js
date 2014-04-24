@@ -54,7 +54,7 @@ define(['fs',
                             console.log(stderr);
 
                         // Inform OTP server of new graph
-                        reloadGraph(request.query.session, function() {
+                        multimodalRoute.reloadRoute(request.query.session, function() {
                             // Everything is ready! Do routing
                             doUpdateRidership(request.query, body.routes);
                         });
@@ -101,7 +101,7 @@ define(['fs',
                     });
 
                     child.on('close', function(code) {
-                        console.log('Graph compliation finished with exit code: ' + code);
+                        console.log('Graph compilation finished with exit code: ' + code);
                         callback.call(this, dir);
                     });
             });
@@ -174,57 +174,89 @@ define(['fs',
         });
     }
 
-    /**
-     * Requests OTP to load/reload the graph for the specified session
-     * @param session Session to reload graph
-     * @param callback
-     */
-    function reloadGraph(session, callback) {
-
-        var options = {
-            hostname: 'localhost',
-            port: 8080,
-            path: '/otp-rest-servlet/ws/routers/' + session,
-            method: 'PUT'
-        };
-
-		console.log('Requesting OTP graph reload at: ' + options.path);
-        var req = http.request(options, function(res) {
-            console.log('HEADERS: ' + JSON.stringify(res.headers));
-            res.setEncoding('utf8');
-            res.on('data', function(data) {
-                console.log(data);
-            }).on('end', function() {
-                console.log('Graph registration complete, code ' + res.statusCode);
-                callback.call(this);
-            });
-        });
-		req.end();
-    }
-
     function doUpdateRidership(query, transitRoutes) {
 
         var geoID = query.state + query.place;
+        var tripsCompleted = 0;
 
         // Get all the trips
         connect.makeTripQuery(geoID, function(trips) {
             if(trips === false) {
                 console.log('NO TRIPS FOUND FOR GEOID ' + geoID);
             } else {
-                // TODO update ridership
                 console.log("Updating ridership...");
+                resetRidership(transitRoutes);
                 for(var i = 0; i < trips.length; i++) {
                     routeAPIWrapper(query.session, trips[i], function(trip, result) {
-                        // Handle result
+
+                        handleRouteResponse(trip, result, transitRoutes);
+
+                        // Evict the graph when finished to reduce memory
+                        // footprint, and write the updated route collection to
+                        // the db
+                        if(++tripsCompleted === trips.length) {
+                            multimodalRoute.evictRoute(query.session);
+                            // TODO update routes in DB
+                        }
                     });
                 }
             }
         }, this);        
     }
 
+    function resetRidership(transitRoutes) {
+        // Reset global ridership numbers
+        transitRoutes.unsatisfied = 0;
+        transitRoutes.satisfied = 0;
+
+        // Reset ridership numbers for each route
+        var routes = transitRoutes.models;
+        for(var i = 0; i < routes.length; i++) {
+            routes[i].attributes.ridership = 0;
+        }
+    }
+
+    function handleRouteResponse(trip, result, transitRoutes) {
+        var itineraries = result.plan.itineraries;
+        var bestRoute = null;
+        // Get the quickest route
+        for(var i = 0; i < itineraries.length; i++) {
+            if(bestRoute === null
+                || bestRoute.duration > itineraries[i].duration)
+                bestRoute = itineraries[i];
+        }
+
+        // If there is no route, update total of unsatisfied trips
+        if(bestRoute === null) {
+            ++transitRoutes.unsatisfied;
+        // If there was a valid route, update total of satisfied trips
+        } else {
+            ++transitRoutes.satisfied;
+
+            // Loop through all trip legs, keeping track of which transit routes
+            // were used
+            var legs = bestRoute.legs;
+            for(var i = 0; i < legs.length; i++) {
+                var curLeg = legs[i];
+                if(curLeg.mode !== 'WALK') {
+                    // Increment ridership count for the route on which this
+                    // leg occurred
+                    var routeId = curLeg.routeId;
+                    var routes = transitRoutes.models;
+                    for(var i = 0; i < routes.length; i++) {
+                        if(routes[i].attributes.id == routeId) {
+                            ++routes[i].attributes.ridership;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Wraps the multimodal routing API, so that we can hold on to
-     * refernces to the trip (otherwise we'd lose them in the async
+     * references to the trip (otherwise we'd lose them in the async
      * for loop of doUpdateRidership() )
      */
     function routeAPIWrapper(session, trip, callback) {

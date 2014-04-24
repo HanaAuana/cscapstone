@@ -103,10 +103,10 @@ define(['mysql'
               var fips = result[0].cityFips;
               queryTracts(fips, function(tractResult) {
                   if(tractResult === false) {
-                      console.log("MAJOR ISSUE NO TRACTS FOR SESSION "+ geoID);
+                      console.log("MAJOR ISSUE NO TRACTS FOR SESSION "+ fips);
                       callback.call(context||that, false);
                   } else {
-                      console.log("Hit for "+ geoID);
+                      console.log("Hit for "+ fips);
                       callback.call(context||that, {
                             tracts: tractResult,
                             routeCollection: result[0].routeCollection,

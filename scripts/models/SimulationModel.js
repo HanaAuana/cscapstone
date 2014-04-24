@@ -54,6 +54,7 @@ define(['backbone',
             this.id = this.cid;
 
             var transitRoutes = new TransitRouteCollection();
+            console.log(transitRoutes);
             var city = new CityModel();
 
             this.set({'transitRoutes': transitRoutes,
@@ -97,6 +98,7 @@ define(['backbone',
             // But tell the server what needs changing. In particular, set the
             // city!
             var that = this;
+            console.log(this.get('city'));
             var response = this.save(['city', 'sessionID'], {
                 success: function() {
                     console.log('model persisted, id and city info updated');

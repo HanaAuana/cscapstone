@@ -74,7 +74,7 @@ define(['http',
             router.routeAuth(req, response);
         })
 
-        app.listen(80);
+        app.listen(1337);
     };
 
 
