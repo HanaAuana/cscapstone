@@ -242,17 +242,7 @@ define(['leaflet',
 
         onRouteAdded: function(route) {
             var geoJSON = route.get('geoJson');
-            var coords = geoJSON.features[0].geometry.coordinates;
-            var latlngs = new Array();
-            
-            for( var c in coords){
-            	var coordinate = coords[c];
-            	latlngs.push( L.latLng(coordinate[0], coordinate[1]));
-            	//console.log(coordinate);
-            }
-            
-
-            
+            var polyLine = this.geoJsonToPolyline(geoJSON);
 
             var color = geoJSON.properties.color;
             console.log("Route has been added, drawing");
@@ -265,9 +255,10 @@ define(['leaflet',
                 }
             });
             
-            var polyLine = L.polyline(latlngs, {color: 'red', fill: true, fillColor: "red"});
+            
             console.log(geoJson);
             console.log(polyLine);
+            
             this.routeFeatureGroup.addLayer(geoJson);
             this.guideLayers.push(geoJson);
             this.visibleLayers.routeLayers[route.get('id')] = geoJson;
@@ -298,9 +289,18 @@ define(['leaflet',
 	        
 		},
 		
-		geoJsonToPolyline: function(json){
-			console.log(json.feature);
-			var latlngs = new Array();
+		geoJsonToPolyline: function(geoJSON){
+			var coords = geoJSON.features[0].geometry.coordinates;
+            var latlngs = new Array();
+            
+            for( var c in coords){
+            	var coordinate = coords[c];
+            	latlngs.push( L.latLng(coordinate[0], coordinate[1]));
+            	//console.log(coordinate);
+            }
+            
+			var polyLine = L.polyline(latlngs);
+            return polyLine;
 
 		}
 
