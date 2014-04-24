@@ -63,6 +63,10 @@ define(['http',
             router.routeSync(req, response);
         });
 
+        app.all(/^\/new_stop/, function(req, response){
+            router.routeSync(req, response);
+        })
+
         app.listen(1337, '127.0.0.1');
     };
 

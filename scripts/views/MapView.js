@@ -77,22 +77,36 @@ define(['leaflet',
                 var layer = e.layer;
                 
                 if(e.layer.toGeoJSON().geometry.type === "LineString") {
-                    that.guideLayers.push(layer);
                     that.handleRouteDraw(e);
                 }
                 else if(type === "marker") {
                 	var layer = e.layer;
                     that.map.addLayer(layer);
-                    that.guideLayers.push(layer);
-
                 }
                 else{
                 	var layer = e.layer;
                     that.map.addLayer(layer);
-                    that.guideLayers.push(layer);
                 }
 
                 
+                
+            });
+
+            this.map.on('snap', function(layer, latlng) {
+
+
+
+                //Loop through layer.feature.features, look for feature with property = stops, 
+                //If found, append latlng to end, //Get drive times between new point and old last point, send from and to points, append result to end of one time list, front of the other
+                // /newstop?from=lat,lng&to=lat.lng
+                // If not, create feature, //If there's one stop, no need for drive times
+
+
+
+
+                //Remove old layer from routeFeatureGroup, add event layer to routeFeatureCollection
+                //this.routeFeatureGroup.removeLayer(layer);
+                //this.routeFeatureGroup.addLayer(layer);
                 
             });
         },
@@ -236,7 +250,6 @@ define(['leaflet',
             });
             this.routeFeatureGroup.addLayer(geoJson);
             this.guideLayers.push(geoJson);
-            console.log("!!! pushed: "+ geoJson);
             this.visibleLayers.routeLayers[route.get('id')] = geoJson;
         },
 
@@ -247,6 +260,7 @@ define(['leaflet',
             // Remove the route layer, and then remove reference from our list
             // of layers
             this.routeFeatureGroup.removeLayer(layer);
+            //this.guideLayers.remove(layer);
             delete this.visibleLayers.routeLayers[id];
         },
 
