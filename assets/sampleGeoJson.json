@@ -34,7 +34,7 @@
         "routeId": "500"
       },
       "geometry": {
-        "type": "LineString",
+        "type": "MultiPoint",
         "coordinates": [
           [
             44.384765625,

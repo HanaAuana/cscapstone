@@ -91,7 +91,7 @@ define(['backbone',
             // onto the features list
             rawRouteFeature.properties = {
                 geoType: "route"
-            }
+            };
             geoJSON.features.push(rawRouteFeature);
 
             // Build and push an outline for the stops feature
@@ -103,16 +103,15 @@ define(['backbone',
                     outboundDriveTimes: []
                 },
                 geometry: {
-                    type: "LineString",
+                    type: "MultiPoint",
                     coordinates: []
                 }
-            }
+            };
             geoJSON.features.push(stopsFeature);
 
             this.set({'geoJson': geoJSON});
             console.log('%j', this.get('geoJson'));
 
-            var that = this;
             // Some routes must be snapped to roads. Handle accordingly.
             var modeString = this.get('mode').get('typeString');
             switch(modeString) {
