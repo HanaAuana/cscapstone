@@ -83,19 +83,18 @@ define(['leaflet',
                 }
                 else if(type === "marker") {
                 	that.handleMarkerDraw(e);
-                	
                 }
                 else{
                     that.map.addLayer(layer);
                 }
 
-                
-                
             });
 
 
             this.map.on('snap', function(e) {
 				that.lastSnap = e;
+				//console.log("layerID snapped to");
+				//console.log(e.layer);
             });
         },
 
@@ -223,7 +222,8 @@ define(['leaflet',
 
         onRouteAdded: function(route) {
             var geoJSON = route.get('geoJson');
-
+			//console.log("geojson when added ");
+			//console.log(geoJSON);
             var color = geoJSON.properties.color;
             console.log("Route has been added, drawing");
             var geoJson = L.geoJson(geoJSON, {
@@ -234,6 +234,8 @@ define(['leaflet',
                     };
                 }
             });
+            //console.log("geojson from layer feature");
+            //console.log(geoJson);
 
             
             this.routeFeatureGroup.addLayer(geoJson);
@@ -259,59 +261,41 @@ define(['leaflet',
         },
         
         handleMarkerDraw: function(event){
-			if(event.layer.getLatLng() == this.lastSnap.latlng){
+			//if(event.layer.getLatLng() == this.lastSnap.latlng){
 				this.map.addLayer(event.layer);
 				//Loop through layer.feature.features, look for feature with property = stops, 
                 //If found, append latlng to end, //Get drive times between new point and old last point, send from and to points, append result to end of one time list, front of the other
                 // /newstop?from=lat,lng&to=lat.lng
                 // If not, create feature, //If there's one stop, no need for drive times
-                var layer = this.lastSnap.layer;
-				var hasStops = false;
-				console.log(layer);
-				console.log(layer.feature);
-				for(var f in layer.feature){
-					console.log("feature: "+f+": "+layer.feature[f]);
-					for(var p in layer.feature.properties){
-						if(layer.feature.properties[p] === "route"){
-							console.log("Route");
-						}
-						else if(layer.feature.properties[p] === "stops"){
-							console.log("Found Stops");
-							f["stops"].append([this.lastSnap.latlng.lat, this.lastSnap.latlng.lng]);
-							hasStops = true;
+                var layerID = this.lastSnap.layer._leaflet_id;
+                //console.log("layerID");
+				//console.log(layerID);
+
+				for(var l in this.routeFeatureGroup.getLayers()){
+					//console.log("layer: "+l);
+					//console.log(this.routeFeatureGroup.getLayers()[l])
+					var lLayers = this.routeFeatureGroup.getLayers()[l]._layers
+					if(_.has(lLayers, layerID)){
+						for(var f in lLayers){
+							var properties = lLayers[f].feature.properties;
+							for(var p in properties){
+								if(properties[p] === "stops"){
+									//console.log("Found Stops");
+									//console.log(lLayers[f].feature.geometry);
+									lLayers[f].feature.geometry.coordinates.push([event.layer.getLatLng().lat, event.layer.getLatLng().lng]);
+									//console.log(lLayers[f].feature.geometry.coordinates);
+									
+									//Still need to compute drive times
+								}
+							}
 						}
 					}
-					
 				}
-				if(hasStops === false){
-					console.log("No stops, creating")
-					$.extend({},layer.feature,{
-								"type":"Feature", 
-								properties:{
-									"geoType":"stops"
-							}
-					});
-					console.log(layer.feature.features);
+                for(var l in this.routeFeatureGroup.getLayers()){
+					console.log("new layers: "+l);
+					console.log(this.routeFeatureGroup.getLayers()[l])
 				}
-				//    {
-      // "type": "Feature",
-      // "properties": {
-        // "inboundDriveTimes": [5, 3, 7],
-        // "outboundDriveTimes": [7, 3, 5],
-        // "geoType": "stops",
-        // "routeId": "500"
-      // },
-      // "geometry": {
-        // "type": "LineString",
-        // "coordinates": [
-          // [this.lastSnap.latlng.lat, this.lastSnap.latlng.lng]
-        // ]
-      // }
-    // }
-                //Remove old layer from routeFeatureGroup, add event layer to routeFeatureCollection
-                //this.routeFeatureGroup.removeLayer(layer);
-                //this.routeFeatureGroup.addLayer(layer);
-			}
+			//}
 	        
 	        
 	        
