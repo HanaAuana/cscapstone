@@ -254,11 +254,28 @@ define(['scripts/utils/censusAPI',
         }
     }
 
+    function newStopRoute(request, response) {
+        // Grab origin and destination points
+        var from = request.query.from.split(',');
+        var to = request.query.to.split(',');
+
+        drivingDirections([from, to], function(result) {
+            if(result === false) {
+                console.log('Unable to route between ' + from + ' and ' + to);
+                response.writeHead(500, {});
+                response.send();
+            } else {
+                response.send({time: result.time});
+            }
+        }, this);
+    }
+
     // These are the exports
     return {
         simSession: simSessionRoute,
         routeSync: routeSyncRoute,
-        routeAuth: authRoute
+        routeAuth: authRoute,
+        newStop: newStopRoute
     };
 
 });

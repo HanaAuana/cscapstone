@@ -4,8 +4,7 @@
 
 define(['backbone',
     'underscore',
-    'jquery'
-], function(Backbone, _, $) {
+], function(Backbone, _) {
 
     var CityModel = Backbone.Model.extend({
 

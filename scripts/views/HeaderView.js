@@ -4,10 +4,9 @@
 
 define(['backbone',
     'underscore',
-    'jquery',
     'utils/globalvars',
     'text!HeaderViewTemplate.ejs'
-], function(backbone, _, $, globalvars, headerViewTemplate) {
+], function(backbone, _, globalvars, headerViewTemplate) {
 
     var HeaderView = Backbone.View.extend({
 

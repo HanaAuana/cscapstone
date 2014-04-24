@@ -1,21 +1,30 @@
 // Start the map
 define(['leaflet',
-    'jquery',
     'underscore',
     'backbone',
     'tinycolor',
     'leafletDraw',
+    'leafletGeometryUtil',
+    'leafletSnap',
     'text!MapViewTemplate.ejs',
     'views/NewRouteView'
-], function (L, $, _, Backbone,
-             tinycolor, leafletDraw, MapViewTemplate,
-             NewRouteView) {
-
+], function (L,
+             _,
+             Backbone,
+             tinycolor,
+             leafletDraw,
+             leafletGeometryUtil,
+             leafletSnap,
+             MapViewTemplate,
+             NewRouteView)
+{
     var MapView = Backbone.View.extend({
         id: "map-container",
         template: _.template(MapViewTemplate, {}),
         map: null,
         centroid: null,
+        guideLayers: null,
+        lastSnap: null,
         visibleLayers: {
             routeLayers: {}
         },
@@ -42,18 +51,40 @@ define(['leaflet',
         },
 
         initMap: function () {
-            console.log('instantiating mapview');
+
             this.render();
-            this.map = L.map(this.el).setView([47.2622639, -122.5100545], 10);
+            // Create map, center near the centroid of the contiguous US
+            this.map = L.map(this.el);
+            this.map.setView([39.809734, -98.555620],  4);
+            
+            // Add the OSM layer tiles
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
 
             this.routeFeatureGroup = L.featureGroup().addTo(this.map);
+			//Initialize layers to snap to
+            this.guideLayers = new Array();
+            this.polyLines = new Array();
+            this.geoJSONs = new Array();
 
-            var drawControl = new L.Control.Draw({
-                edit : {
-                    featureGroup : this.routeFeatureGroup
+            this.map.addControl(new L.Control.Draw({
+                polyline: { guideLayers: this.guideLayers },
+                polygon: { guideLayers: this.guideLayers, snapDistance: 5 },
+                marker: { guideLayers: this.guideLayers, snapVertices: false },
+                draw : {
+                    rectangle: false,
+                    circle: false,
+                    polygon: false
                 }
-            }).addTo(this.map);
+            }));
+
+            //Initialize draw controller, and pass it the feature group
+//            this.map.drawControl.setDrawingOptions({
+//                polyline: { guideLayers: this.guideLayers },
+//                polygon: { guideLayers: this.guideLayers, snapDistance: 5 },
+//                marker: { guideLayers: this.guideLayers, snapVertices: false },
+//                rectangle: false,
+//                circle: false
+//            });
 
             var that = this;
             this.map.on('draw:created', function(e) {
@@ -61,9 +92,22 @@ define(['leaflet',
                 // draw the resulting geoJSON. The resulting geoJSON may be
                 // different than the one passed in. For example, bus routes must
                 // be snapped to the road
-                if(e.layer.toGeoJSON().geometry.type === "LineString") {
+                var type = e.layerType;
+                var layer = e.layer;
+                
+                if(layer.toGeoJSON().geometry.type === "LineString") {
                     that.handleRouteDraw(e);
                 }
+                else if(type === "marker") {
+                	that.handleMarkerDraw(e);
+                }
+                else{
+                    that.map.addLayer(layer);
+                }
+            });
+
+            this.map.on('snap', function(e) {
+				that.lastSnap = e;
             });
         },
 
@@ -73,11 +117,13 @@ define(['leaflet',
             // Only pan if the centroid has changed
             if (this.centroid == null || this.centroid != newCentroid) {
                 console.log('panning to ' + newCentroid);
-                this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
+                this.map.setView(L.latLng(newCentroid[0], newCentroid[1]), 10, {
+                    animate: true
+                });
 				this.centroid = newCentroid;
 
                 // Draw the city boundary
-                var geoJson = L.geoJson(city.boundary, {
+                L.geoJson(city.boundary, {
                     style: function () {
                         return {
                             opacity: "0,7",
@@ -85,8 +131,7 @@ define(['leaflet',
                             fillOpacity: 0
                         }
                     }
-                });
-                geoJson.addTo(this.map);
+                }).addTo(this.map);
 			}
 		},
 
@@ -163,14 +208,12 @@ define(['leaflet',
 
         calcPopColor: function(bin, numBins) {
             var amount = Math.floor(bin * 100 / numBins);
-            var hex = tinycolor.darken('#92278f', amount).toHexString();
-            return hex;
+            return tinycolor.darken('#92278f', amount).toHexString();
         },
 
         calcEmpColor: function(bin, numBins) {
             var amount = Math.floor(bin * 100 / numBins);
-            var hex = tinycolor.darken('#f7941e', amount).toHexString();
-            return hex;
+            return tinycolor.darken('#f7941e', amount).toHexString();
         },
 
         // Invoked anytime the user changes which layers are viewable
@@ -192,8 +235,6 @@ define(['leaflet',
         onRouteAdded: function(route) {
             var geoJSON = route.get('geoJson');
 
-            console.log(geoJSON);
-
             var color = geoJSON.properties.color;
             console.log("Route has been added, drawing");
             var geoJson = L.geoJson(geoJSON, {
@@ -204,7 +245,9 @@ define(['leaflet',
                     };
                 }
             });
+            
             this.routeFeatureGroup.addLayer(geoJson);
+            this.guideLayers.push(geoJson);
             this.visibleLayers.routeLayers[route.get('id')] = geoJson;
         },
 
@@ -215,6 +258,7 @@ define(['leaflet',
             // Remove the route layer, and then remove reference from our list
             // of layers
             this.routeFeatureGroup.removeLayer(layer);
+            //this.guideLayers.remove(layer);
             delete this.visibleLayers.routeLayers[id];
         },
 
@@ -227,7 +271,82 @@ define(['leaflet',
         onResize: function() {
             var height = $(window).height() - $('#title').height();
             $(this.el).height(height);
-        }
+        },
+
+        handleMarkerDraw: function(event){
+			if(event.layer.getLatLng() == this.lastSnap.latlng){
+				this.map.addLayer(event.layer);
+				//Loop through layer.feature.features, look for feature with property = stops, 
+                //If found, append latlng to end, //Get drive times between new point and old last point, send from and to points, append result to end of one time list, front of the other
+                // /newstop?from=lat,lng&to=lat.lng
+                // If not, create feature, //If there's one stop, no need for drive times
+                var layer = this.lastSnap.layer;
+				var hasStops = false;
+				console.log(layer);
+				console.log(layer.feature);
+				for(var f in layer.feature){
+					console.log("feature: "+f+": "+layer.feature[f]);
+					for(var p in layer.feature.properties){
+						if(layer.feature.properties[p] === "route"){
+							console.log("Route");
+						}
+						else if(layer.feature.properties[p] === "stops"){
+							console.log("Found Stops");
+							f["stops"].append([this.lastSnap.latlng.lat, this.lastSnap.latlng.lng]);
+							hasStops = true;
+						}
+					}
+					
+				}
+				if(hasStops === false){
+					console.log("No stops, creating")
+					$.extend({},layer.feature,{
+								"type":"Feature", 
+								properties:{
+									"geoType":"stops"
+							}
+					});
+					console.log(layer.feature.features);
+				}
+				//    {
+      // "type": "Feature",
+      // "properties": {
+        // "inboundDriveTimes": [5, 3, 7],
+        // "outboundDriveTimes": [7, 3, 5],
+        // "geoType": "stops",
+        // "routeId": "500"
+      // },
+      // "geometry": {
+        // "type": "LineString",
+        // "coordinates": [
+          // [this.lastSnap.latlng.lat, this.lastSnap.latlng.lng]
+        // ]
+      // }
+    // }
+                //Remove old layer from routeFeatureGroup, add event layer to routeFeatureCollection
+                //this.routeFeatureGroup.removeLayer(layer);
+                //this.routeFeatureGroup.addLayer(layer);
+			}
+	        
+	        
+	        
+		},
+		
+		geoJsonToPolyline: function(geoJSON){
+			var coords = geoJSON.features[0].geometry.coordinates;
+            var latlngs = new Array();
+            
+            for( var c in coords){
+            	var coordinate = coords[c];
+            	latlngs.push( L.latLng(coordinate[0], coordinate[1]));
+            	//console.log(coordinate);
+            }
+            
+			var polyLine = L.polyline(latlngs);
+            return polyLine;
+
+		}
+
     });
 
     return MapView;

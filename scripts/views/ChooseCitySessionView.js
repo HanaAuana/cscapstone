@@ -3,9 +3,8 @@
  */
 define(['backbone',
     'underscore',
-    'jquery',
     'text!ChooseCitySessionTemplate.ejs'
-], function(backbone, _, $, citySessionTemplate) {
+], function(backbone, _, citySessionTemplate) {
 
     var ChooseCitySessionView = Backbone.View.extend({
 

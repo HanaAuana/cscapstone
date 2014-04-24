@@ -6,7 +6,6 @@
 
 define(['backbone',
     'underscore',
-    'jquery',
     'models/TransitRouteModel',
     'models/Sim2GtfsModel',
     'collections/TransitRouteCollection',
@@ -23,7 +22,6 @@ define(['backbone',
     'views/UpdateRidershipView'
 ], function(Backbone,
             _,
-            $,
             TransitRoute,
             Sim2Gtfs,
             TransitRouteCollection,

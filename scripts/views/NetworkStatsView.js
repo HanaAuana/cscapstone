@@ -3,9 +3,8 @@
  */
 define(['backbone',
     'underscore',
-    'jquery',
     'text!NetworkStatsTemplate.ejs'
-], function(backbone, _, $, networkStatsTemplate) {
+], function(backbone, _, networkStatsTemplate) {
 
     var NetworkStatsView = Backbone.View.extend({
 

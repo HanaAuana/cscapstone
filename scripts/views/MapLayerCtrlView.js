@@ -4,10 +4,9 @@
 
 define(['backbone',
     'underscore',
-    'jquery',
     // load in the template as raw text
     'text!MapLayerCtrlTemplate.ejs'
-], function(backbone, _, $, mapLayerCtrlTemplate) {
+], function(backbone, _, mapLayerCtrlTemplate) {
 
     var MapLayerCtrlView = Backbone.View.extend({
 

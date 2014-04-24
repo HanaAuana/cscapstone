@@ -7,11 +7,10 @@
  */
 define(['backbone',
     'underscore',
-    'jquery',
     'models/TransitRouteModel',
     'text!NewRouteTemplate.ejs',
     'text!LoadingDivTemplate.ejs'
-], function(backbone, _, $, TransitRoute, newRouteTemplate, loadingDivTemplate) {
+], function(backbone, _, TransitRoute, newRouteTemplate, loadingDivTemplate) {
 
     var NewRouteView = Backbone.View.extend({
 

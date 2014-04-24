@@ -6,12 +6,11 @@
 
 define(['backbone',
     'underscore',
-    'jquery',
     // load in the template as raw text
     'text!ChooseCityTemplate.ejs',
     // load the google maps api
     'gmaps'
-], function(backbone, _, $, chooseCityTemplate, gmaps) {
+], function(backbone, _, chooseCityTemplate, gmaps) {
 
     var ChooseCityView = Backbone.View.extend({
 

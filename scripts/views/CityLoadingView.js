@@ -4,11 +4,9 @@
 
 define(['backbone',
     'underscore',
-    'jquery',
     'utils/globalvars',
     'text!LoadingTemplate.ejs',
-    'bootstrap'
-], function(backbone, _, $, globalvars, loadingTemplate, bootstrap) {
+], function(backbone, _, globalvars, loadingTemplate) {
 
     var CityLoadingView = Backbone.View.extend({
 

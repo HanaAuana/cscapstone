@@ -39,10 +39,10 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
                     console.log("No encoded polyline data");
 
                 callback.call(context||this, parsedJson);
-            })
+            });
         }).on('error', function() {
             callback.call(context||this, false);
-        })
+        });
     }
 
     function routeMapquest(waypoints, callback, context) {

@@ -4,10 +4,9 @@
 
 define(['backbone',
     'underscore',
-    'jquery',
     'views/AlertModalView',
     'text!UpdateRidershipTemplate.ejs'
-], function(backbone, _, $, AlertView, updateRidershipTemplate) {
+], function(backbone, _, AlertView, updateRidershipTemplate) {
 
     var UpdateRidershipView = Backbone.View.extend({
 

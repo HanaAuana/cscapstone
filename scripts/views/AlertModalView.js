@@ -4,10 +4,9 @@
 
 define(['backbone',
     'underscore',
-    'jquery',
     // load in the template as raw text
     'text!AlertModalTemplate.ejs'
-], function(backbone, _, $, alertModalTemplate) {
+], function(backbone, _, alertModalTemplate) {
 
     var AlertModalView = Backbone.View.extend({
 
