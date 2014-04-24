@@ -45,7 +45,7 @@ define(['leaflet',
             console.log('instantiating mapview');
             this.render();
             //Create map, center on Tacoma
-            this.map = L.map(this.el , { drawControl: true })
+            this.map = L.map(this.el )
             this.map.setView([47.2622639, -122.5100545],  10);
             
             // Add the OSM layer tiles
@@ -57,15 +57,29 @@ define(['leaflet',
             this.polyLines = new Array();
             this.geoJSONs = new Array();
 
+            //Remove polygon, rectangle, circle
 
             //Initialize draw controller, and pass it the feature group
-            this.map.drawControl.setDrawingOptions({
-                polyline: { guideLayers: this.guideLayers },
-                polygon: { guideLayers: this.guideLayers, snapDistance: 5 },
-                marker: { guideLayers: this.guideLayers, snapVertices: false },
-                rectangle: false,
-                circle: false
-            });
+            // this.map.drawControl.setDrawingOptions({
+            //     polyline: { guideLayers: this.guideLayers },
+            //     polygon: { guideLayers: this.guideLayers, snapDistance: 5 },
+            //     marker: { guideLayers: this.guideLayers, snapVertices: false },
+            //     rectangle: false,
+            //     circle: false
+            // });
+
+            var options = {
+                draw: {
+                    polyline: { guideLayers: this.guideLayers },
+                    polygon: false,
+                    circle: false, // Turns off this drawing tool
+                    rectangle: false,
+                    marker: { guideLayers: this.guideLayers, snapVertices: false }
+                }
+            };
+
+            var drawControl = new L.Control.Draw(options);
+            drawControl.addTo(this.map);
 
             var that = this;
 
@@ -76,7 +90,8 @@ define(['leaflet',
                 // different than the one passed in. For example, bus routes must
                 // be snapped to the road
                 var type = e.layerType;
-                var layer = e.layer;
+                var layer =  e.layer;
+
                 
                 if(e.layer.toGeoJSON().geometry.type === "LineString") {
                     that.handleRouteDraw(e);

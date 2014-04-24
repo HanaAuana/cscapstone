@@ -37,10 +37,11 @@ requirejs.config({
         	exports: 'leafletDraw'
         },
         'leafletGeometryUtil':{
+            deps:['leafletDraw'],
         	exports: 'leafletGeometryUtil'
         },
         'leafletSnap':{
-        	deps: ['leafletDraw', 'leafletGeometryUtil'],
+        	deps: ['leafletGeometryUtil'],
         	exports: 'leafletSnap'
         },
         'bootstrap': {
