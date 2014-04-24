@@ -51,7 +51,6 @@ define(['leaflet',
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
 
             this.routeFeatureGroup = L.featureGroup().addTo(this.map);
-
 			//Initialize layers to snap to
             this.guideLayers = new Array();
 
@@ -80,11 +79,10 @@ define(['leaflet',
                     that.handleRouteDraw(e);
                 }
                 else if(type === "marker") {
-                	var layer = e.layer;
+                	//that.handleMarkerDraw(e);
                     that.map.addLayer(layer);
                 }
                 else{
-                	var layer = e.layer;
                     that.map.addLayer(layer);
                 }
 
@@ -93,14 +91,23 @@ define(['leaflet',
             });
 
             this.map.on('snap', function(layer, latlng) {
-
-
+				console.log("!!!!!!!!!Snap caught by map");
 
                 //Loop through layer.feature.features, look for feature with property = stops, 
                 //If found, append latlng to end, //Get drive times between new point and old last point, send from and to points, append result to end of one time list, front of the other
                 // /newstop?from=lat,lng&to=lat.lng
                 // If not, create feature, //If there's one stop, no need for drive times
-
+				for(var f in layer){
+					if(_.has(f,"stops")){
+						console.log("Found Stops");
+						f[stops].append([latlng.lat, latlng.lng]);
+					}
+					else{
+						console.log("No stops, creating")
+						f[stops] = [latlng.lat, latlng.lng];
+						console.log(f[stops]);
+					}
+				}
 
 
 
@@ -235,8 +242,17 @@ define(['leaflet',
 
         onRouteAdded: function(route) {
             var geoJSON = route.get('geoJson');
+            var coords = geoJSON.features[0].geometry.coordinates;
+            var latlngs = new Array();
+            
+            for( var c in coords){
+            	var coordinate = coords[c];
+            	latlngs.push( L.latLng(coordinate[0], coordinate[1]));
+            	//console.log(coordinate);
+            }
+            
 
-            console.log(geoJSON);
+            
 
             var color = geoJSON.properties.color;
             console.log("Route has been added, drawing");
@@ -248,6 +264,10 @@ define(['leaflet',
                     };
                 }
             });
+            
+            var polyLine = L.polyline(latlngs, {color: 'red', fill: true, fillColor: "red"});
+            console.log(geoJson);
+            console.log(polyLine);
             this.routeFeatureGroup.addLayer(geoJson);
             this.guideLayers.push(geoJson);
             this.visibleLayers.routeLayers[route.get('id')] = geoJson;
@@ -270,17 +290,20 @@ define(['leaflet',
             ).render();
         },
         
-        handleMarkerDraw: function(event) {
-        	var type = event.layerType;
-           	var layer = event.layer;
-            layer.options.draggable = true;      	
-        	layer.snapediting = new L.Handler.MarkerSnap(this.map, layer);
-    		for(var i = 0;i < guideLayers.length; i++) {
-        		layer.snapediting.addGuideLayer(guideLayers[i]);
-    		}
-        	layer.snapediting.enable();
-        	drawnItems.addLayer(layer);
-        }
+        handleMarkerDraw: function(event){
+        	
+        	//this.routeFeatureGroup
+
+	        var closestLayer = L.GeometryUtil.closestRouteLayer(this.map, this.guideLayers, event.layer.getLatLng());
+	        
+		},
+		
+		geoJsonToPolyline: function(json){
+			console.log(json.feature);
+			var latlngs = new Array();
+
+		}
+
     });
 
     return MapView;
