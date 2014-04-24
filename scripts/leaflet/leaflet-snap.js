@@ -1,6 +1,7 @@
 (function () {
 
 L.Handler.MarkerSnap = L.Handler.extend({
+	map: null,
     options: {
         snapDistance: 15, // in pixels
         snapVertices: true
@@ -8,6 +9,7 @@ L.Handler.MarkerSnap = L.Handler.extend({
 
     initialize: function (map, marker, options) {
         L.Handler.prototype.initialize.call(this, map);
+        this.map = map;
         this._markers = [];
         this._guides = [];
 
@@ -112,13 +114,13 @@ L.Handler.MarkerSnap = L.Handler.extend({
             if (marker.snap != layer) {
                 marker.snap = layer;
                 if (marker._icon) L.DomUtil.addClass(marker._icon, 'marker-snapped');
-                marker.fire('snap', {layer:layer, latlng: latlng});
+                this.map.fire('snap', {layer:layer, latlng: latlng});
             }
         }
         else {
             if (marker.snap) {
                 if (marker._icon) L.DomUtil.removeClass(marker._icon, 'marker-snapped');
-                marker.fire('unsnap', {layer:marker.snap});
+                this.map.fire('unsnap', {layer:marker.snap});
             }
             delete marker['snap'];
         }

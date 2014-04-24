@@ -19,6 +19,7 @@ define(['leaflet',
         map: null,
         centroid: null,
         guideLayers: null,
+        lastSnap: null,
         visibleLayers: {
             routeLayers: {}
         },
@@ -53,6 +54,8 @@ define(['leaflet',
             this.routeFeatureGroup = L.featureGroup().addTo(this.map);
 			//Initialize layers to snap to
             this.guideLayers = new Array();
+            this.polyLines = new Array();
+            this.geoJSONs = new Array();
 
 
             //Initialize draw controller, and pass it the feature group
@@ -79,8 +82,8 @@ define(['leaflet',
                     that.handleRouteDraw(e);
                 }
                 else if(type === "marker") {
-                	//that.handleMarkerDraw(e);
-                    that.map.addLayer(layer);
+                	that.handleMarkerDraw(e);
+                	
                 }
                 else{
                     that.map.addLayer(layer);
@@ -90,31 +93,9 @@ define(['leaflet',
                 
             });
 
-            this.map.on('snap', function(layer, latlng) {
-				console.log("!!!!!!!!!Snap caught by map");
 
-                //Loop through layer.feature.features, look for feature with property = stops, 
-                //If found, append latlng to end, //Get drive times between new point and old last point, send from and to points, append result to end of one time list, front of the other
-                // /newstop?from=lat,lng&to=lat.lng
-                // If not, create feature, //If there's one stop, no need for drive times
-				for(var f in layer){
-					if(_.has(f,"stops")){
-						console.log("Found Stops");
-						f[stops].append([latlng.lat, latlng.lng]);
-					}
-					else{
-						console.log("No stops, creating")
-						f[stops] = [latlng.lat, latlng.lng];
-						console.log(f[stops]);
-					}
-				}
-
-
-
-                //Remove old layer from routeFeatureGroup, add event layer to routeFeatureCollection
-                //this.routeFeatureGroup.removeLayer(layer);
-                //this.routeFeatureGroup.addLayer(layer);
-                
+            this.map.on('snap', function(e) {
+				that.lastSnap = e;
             });
         },
 
@@ -242,7 +223,6 @@ define(['leaflet',
 
         onRouteAdded: function(route) {
             var geoJSON = route.get('geoJson');
-            var polyLine = this.geoJsonToPolyline(geoJSON);
 
             var color = geoJSON.properties.color;
             console.log("Route has been added, drawing");
@@ -254,10 +234,7 @@ define(['leaflet',
                     };
                 }
             });
-            
-            
-            console.log(geoJson);
-            console.log(polyLine);
+
             
             this.routeFeatureGroup.addLayer(geoJson);
             this.guideLayers.push(geoJson);
@@ -282,10 +259,61 @@ define(['leaflet',
         },
         
         handleMarkerDraw: function(event){
-        	
-        	//this.routeFeatureGroup
-
-	        var closestLayer = L.GeometryUtil.closestRouteLayer(this.map, this.guideLayers, event.layer.getLatLng());
+			if(event.layer.getLatLng() == this.lastSnap.latlng){
+				this.map.addLayer(event.layer);
+				//Loop through layer.feature.features, look for feature with property = stops, 
+                //If found, append latlng to end, //Get drive times between new point and old last point, send from and to points, append result to end of one time list, front of the other
+                // /newstop?from=lat,lng&to=lat.lng
+                // If not, create feature, //If there's one stop, no need for drive times
+                var layer = this.lastSnap.layer;
+				var hasStops = false;
+				console.log(layer);
+				console.log(layer.feature);
+				for(var f in layer.feature){
+					console.log("feature: "+f+": "+layer.feature[f]);
+					for(var p in layer.feature.properties){
+						if(layer.feature.properties[p] === "route"){
+							console.log("Route");
+						}
+						else if(layer.feature.properties[p] === "stops"){
+							console.log("Found Stops");
+							f["stops"].append([this.lastSnap.latlng.lat, this.lastSnap.latlng.lng]);
+							hasStops = true;
+						}
+					}
+					
+				}
+				if(hasStops === false){
+					console.log("No stops, creating")
+					$.extend({},layer.feature,{
+								"type":"Feature", 
+								properties:{
+									"geoType":"stops"
+							}
+					});
+					console.log(layer.feature.features);
+				}
+				//    {
+      // "type": "Feature",
+      // "properties": {
+        // "inboundDriveTimes": [5, 3, 7],
+        // "outboundDriveTimes": [7, 3, 5],
+        // "geoType": "stops",
+        // "routeId": "500"
+      // },
+      // "geometry": {
+        // "type": "LineString",
+        // "coordinates": [
+          // [this.lastSnap.latlng.lat, this.lastSnap.latlng.lng]
+        // ]
+      // }
+    // }
+                //Remove old layer from routeFeatureGroup, add event layer to routeFeatureCollection
+                //this.routeFeatureGroup.removeLayer(layer);
+                //this.routeFeatureGroup.addLayer(layer);
+			}
+	        
+	        
 	        
 		},
 		

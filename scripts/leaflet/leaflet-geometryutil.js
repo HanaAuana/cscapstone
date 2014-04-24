@@ -210,6 +210,60 @@ L.GeometryUtil = L.extend(L.GeometryUtil || {}, {
         }
         return result;
     },
+    
+    closestRoute: function (map, layer, latlng, vertices) {
+        if (typeof layer.getLatLngs != 'function'){
+        	console.log("typeof is not function");
+            layer = L.polyline(layer);
+           }
+
+        var latlngs = layer.getLatLngs().slice(0),
+            mindist = Infinity,
+            result = null,
+            i, n, distance;
+
+        // Keep the closest point of all segments
+        for (i = 0, n = latlngs.length; i < n-1; i++) {
+            var latlngA = latlngs[i],
+                latlngB = latlngs[i+1];
+            distance = L.GeometryUtil.distanceSegment(map, latlng, latlngA, latlngB);
+            if (distance <= mindist) {
+                mindist = distance;
+                result = L.GeometryUtil.closestOnSegment(map, latlng, latlngA, latlngB);
+                result.distance = distance;
+            }
+        }
+        return result;
+    },
+    
+    closestRouteLayer: function (map, layers, latlng) {
+        var mindist = Infinity,
+            result = null,
+            ll = null,
+            distance = Infinity;
+
+        for (var i = 0, n = layers.length; i < n; i++) {
+        	var layerID = layers[i][0];
+            var layer = layers[i][1];
+            // Single dimension, snap on points, else snap on closest
+            if (typeof layer.getLatLng == 'function') {
+                ll = layer.getLatLng();
+                distance = L.GeometryUtil.distance(map, latlng, ll);
+            }
+            else {
+            	console.log("Using this one i hope");
+                ll = L.GeometryUtil.closestRoute(map, layer, latlng);
+                if (ll) distance = ll.distance;  // Can return null if layer has no points.
+                console.log("Distance from: "+layerID+" is: "+distance);
+            }
+            if (distance < mindist) {
+                mindist = distance;
+                console.log("mindistance is with "+layerID);
+                result = {id:layerID, layer: layer, latlng: ll, distance: distance};
+            }
+        }
+        return result;
+    },
 
     /**
         Returns the closest position from specified {LatLng} among specified layers,
