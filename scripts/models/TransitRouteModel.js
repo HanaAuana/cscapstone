@@ -103,7 +103,7 @@ define(['backbone',
                     outboundDriveTimes: []
                 },
                 geometry: {
-                    type: "LineString",
+                    type: "MultiPoint",
                     coordinates: []
                 }
             }

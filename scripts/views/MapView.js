@@ -72,7 +72,7 @@ define(['leaflet',
                 iconUrl: '/marker.png',
                 iconSize: new L.Point(35,35)
 
-            })
+            });
 
             var options = {
                 draw: {
@@ -118,6 +118,10 @@ define(['leaflet',
 
             this.map.on('snap', function(e) {
 				that.lastSnap = e;
+            });
+
+            this.map.on('unsnap', function(e) {
+                that.lastSnap = null;
             });
         },
 
@@ -246,6 +250,12 @@ define(['leaflet',
         onRouteAdded: function(route) {
             var geoJSON = route.get('geoJson');
 
+            var ourIcon = L.icon({
+                iconUrl: '/marker.png',
+                iconSize: new L.Point(35,35)
+
+            });
+
             var color = geoJSON.properties.color;
             console.log("Route has been added, drawing");
             var geoJson = L.geoJson(geoJSON, {
@@ -254,6 +264,9 @@ define(['leaflet',
                         color: color,
                         weight: 8
                     };
+                },
+                pointToLayer: function(feature, latlng) {
+                    return new L.marker(latlng, {icon: ourIcon});
                 }
             });
             
@@ -269,7 +282,7 @@ define(['leaflet',
             // Remove the route layer, and then remove reference from our list
             // of layers
             this.routeFeatureGroup.removeLayer(layer);
-            //this.guideLayers.remove(layer);
+            this.guideLayers.remove(layer);
             delete this.visibleLayers.routeLayers[id];
         },
 
@@ -280,8 +293,11 @@ define(['leaflet',
         },
         
         handleMarkerDraw: function(event){
+
+            if(this.lastSnap === null){
+                return;
+            }
 			//if(event.layer.getLatLng() == this.lastSnap.latlng){
-				this.map.addLayer(event.layer);
 				//Loop through layer.feature.features, look for feature with property = stops, 
                 //If found, append latlng to end, //Get drive times between new point and old last point, send from and to points, append result to end of one time list, front of the other
                 // /newstop?from=lat,lng&to=lat.lng
