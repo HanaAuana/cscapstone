@@ -22,7 +22,6 @@ define(['backbone',
         initialize: function() {
 
             this.set({'csvHelper': new CsvHelper()});
-            console.log("Sim2GtfsModel : initializing");
             this.buildFileHeaders();
             // We can build the agency and calendar files immediately, they
             // don't depend on user routes
@@ -35,6 +34,11 @@ define(['backbone',
             transitRoutes.on("change", this.onRouteChanged, this);
             transitRoutes.on("remove", this.onRouteRemoved, this);
             transitRoutes.on("add", this.onRouteAdded, this);
+
+            var that = this;
+            Backbone.pubSub.on('new-transit-stop', function(id) {
+                that.onRouteChanged(transitRoutes.get(id));
+            });
         },
 
         buildAgencyEntries: function() {
@@ -114,12 +118,13 @@ define(['backbone',
         },
 
         onRouteChanged: function(transitRoute) {
+            console.log("Route changed: updating gtfs");
             this.onRouteRemoved(transitRoute);
             this.onRouteAdded(transitRoute);
         },
 
         onRouteAdded: function(transitRoute) {
-            console.log("Sim2Gtfs : onRouteAdded triggered");
+            console.log("New route: updating gtfs");
             this.addRouteEntry(transitRoute);
             this.addTripsEntry(transitRoute);
             this.addStopsEntry(transitRoute);
@@ -128,7 +133,7 @@ define(['backbone',
 
         onRouteRemoved: function(transitRoute) {
             var routeId = transitRoute.get('id');
-            console.log('Sim2GtfsModel : removing route '+ routeId);
+            console.log('Route ' + routeId + ' removed: updating gtfs');
             this.removeRouteEntry(routeId);
             var tripIds = this.removeTripsEntry(routeId);
             var stopIds = this.removeStopTimesEntry(tripIds);
@@ -142,8 +147,8 @@ define(['backbone',
             var routeId = transitRoute.get('id');
 
             var routeLine = routeId + delim
+                + transitRoute.get('name') + delim
                 + '' + delim
-                + transitRoute.get('routeName') + delim
                 + transitRoute.get('mode').get('type') + lineBr;
             var routesTxt = this.get('routesTxt');
             this.set({'routesTxt': routesTxt + routeLine});
@@ -190,7 +195,7 @@ define(['backbone',
                 var stop = stopsGeo[i];
                 var stopEntry = this.calcStopId(routeId, stopCounter) + delim
                     + '' + delim
-                    + stop[0] + delim + stop[1] + lineBr;
+                    + stop[1] + delim + stop[0] + lineBr;
                 var stopsTxt = this.get('stopsTxt');
                 this.set({'stopsTxt': stopsTxt + stopEntry});
                 stopCounter++;
@@ -223,7 +228,7 @@ define(['backbone',
 
                 // Now we loop through all the stops, which are visited by the
                 // route on each trip
-                var numStops = inboundDriveTimes.length + 1;
+                var numStops = transitRoute.getStopsGeo().length;
                 var inboundTime = i;
                 var outboundTime = i;
                 for(var j = 0; j < numStops; j++) {
@@ -351,31 +356,21 @@ define(['backbone',
         },
 
         // Removes all the specified stop ids
-        // TODO just use array.splice()
         removeStopsEntry: function(stopIds) {
             var csvHelper = this.get('csvHelper');
             var stopsArray = csvHelper.csvToArray(this.get('stopsTxt'));
-            // Set all undesirable stops to null
+            // Remove all undesirable stops
             for(var i = 0; i < stopsArray.length; i++) {
                 // look at each specified stop id
                 for(var j = 0; j < stopIds.length; j++) {
                     if(stopsArray[i][0] == stopIds[j]) {
-                        stopsArray[i] = null;
+                        stopsArray.splice(i, 1);
                         break;
                     }
                 }
             }
-            // Rebuild list without stops set to null
-            var newStops = [];
-            var offset = 0;
-            for(var i = 0; i < stopsArray.length; i++) {
-                if(stopsArray[i] === null) {
-                    offset++
-                } else {
-                    newStops[i - offset] = stopsArray[i];
-                }
-            }
-            this.set({'stopsTxt': csvHelper.arrayToCsv(newStops)});
+            this.set({'stopsTxt': csvHelper.arrayToCsv(stopsArray)});
+            console.log(this.get('stopsTxt'));
         },
 
         // calculates trip id, which must be dataset unique. That is,

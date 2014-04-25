@@ -64,7 +64,7 @@ define(['http',
             }).on('end', function() {
                 console.log('Graph registration complete, code ' + res.statusCode);
                 if(callback)
-                    callback.call(context||this, rest.statusCode);
+                    callback.call(context||this, res.statusCode);
             });
         });
         req.end();

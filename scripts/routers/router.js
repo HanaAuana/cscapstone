@@ -259,13 +259,34 @@ define(['scripts/utils/censusAPI',
         var from = request.query.from.split(',');
         var to = request.query.to.split(',');
 
-        drivingDirections([from, to], function(result) {
+        var responseBody = {
+            inboundTime: null,
+            outboundTime: null
+        }
+
+        // Get the outbound time
+        drivingDirections.getRoute([from, to], function(result) {
             if(result === false) {
                 console.log('Unable to route between ' + from + ' and ' + to);
                 response.writeHead(500, {});
                 response.send();
             } else {
-                response.send({time: result.time});
+                responseBody.outboundTime = result.time;
+                if(responseBody.inboundTime !== null)
+                    response.send(JSON.stringify(responseBody));
+            }
+        }, this);
+
+        // And get the inbound time
+        drivingDirections.getRoute([to, from], function(result) {
+            if(result === false) {
+                console.log('Unable to route between ' + from + ' and ' + to);
+                response.writeHead(500, {});
+                response.send();
+            } else {
+                responseBody.inboundTime = result.time;
+                if(responseBody.outboundTime !== null)
+                    response.send(JSON.stringify(responseBody));
             }
         }, this);
     }

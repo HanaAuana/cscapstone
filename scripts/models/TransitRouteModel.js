@@ -13,7 +13,6 @@ define(['backbone',
         defaults: {
             'geoJson': null,
             'mode': null,
-            'routeName': null,
             'headway': 15,
             'serviceId': 1, // Specifies operation hours in GTFS. Don't change
             'startServiceMins': 360, // 6am
@@ -37,7 +36,14 @@ define(['backbone',
 
             // Persist route id change to the geoJson. The map will need this
             this.on('change:id', function() {
-                this.get('geoJson').properties.id = this.get('id');
+                var id = this.get('id');
+                var geoJson = this.get('geoJson');
+                // Add id to feature collection properties, and to properties
+                // of each feature
+                geoJson.properties.id = id;
+                for(var i = 0; i < geoJson.features.length; i++) {
+                    geoJson.features[i].properties.routeId = id;
+                }
             }, this);
 
             var that = this;

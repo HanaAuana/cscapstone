@@ -53,49 +53,31 @@ define(['leaflet',
         initMap: function () {
 
             this.render();
+
             // Create map, center near the centroid of the contiguous US
-            this.map = L.map(this.el, {drawControl: true});
+            this.map = L.map(this.el );
             this.map.setView([39.809734, -98.555620],  4);
+            
 
             // Add the OSM layer tiles
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
 
             this.routeFeatureGroup = L.featureGroup().addTo(this.map);
 			//Initialize layers to snap to
-            this.guideLayers = new Array();
-            this.polyLines = new Array();
-            this.geoJSONs = new Array();
+            this.guideLayers = [];
 
-//            this.map.addControl(new L.Control.Draw({
-//                polyline: { guideLayers: this.guideLayers },
-//                polygon: { guideLayers: this.guideLayers, snapDistance: 5 },
-//                marker: { guideLayers: this.guideLayers, snapVertices: false },
-//                draw : {
-//                    rectangle: false,
-//                    circle: false,
-//                    polygon: false
-//                }
-//            }));
-
-            //Initialize draw controller, and pass it the feature group
-            this.map.drawControl.setDrawingOptions({
-                polyline: { guideLayers: this.guideLayers },
-                polygon: { guideLayers: this.guideLayers, snapDistance: 5 },
-                marker: { guideLayers: this.guideLayers, snapVertices: false },
+            var options = {
                 draw: {
+                    polyline: { guideLayers: this.guideLayers },
+                    polygon: false,
+                    circle: false, // Turns off this drawing tool
                     rectangle: false,
-                    circle: false,
-                    marker: {
-                        icon: L.icon({
-                            iconUrl: 'icon.png',
-                            iconRetinaUrl: 'icon.png',
-                            iconSize: [38, 95],
-                            iconAnchor: [22, 94],
-                            popupAnchor: [-3, -76]
-                        })
-                    }
+                    marker: { guideLayers: this.guideLayers, snapVertices: false }
                 }
-            });
+            };
+
+            var drawControl = new L.Control.Draw(options);
+            drawControl.addTo(this.map);
 
             var that = this;
             this.map.on('draw:created', function(e) {
@@ -112,15 +94,13 @@ define(['leaflet',
                 else if(type === "marker") {
                 	that.handleMarkerDraw(e);
                 }
-                else{
-                    that.map.addLayer(layer);
-                }
             });
 
             this.map.on('snap', function(e) {
 				that.lastSnap = e;
-				//console.log("layerID snapped to");
-				//console.log(e.layer);
+            });
+            this.map.on('unsnap', function(e) {
+                that.lastSnap = null;
             });
         },
 
@@ -292,14 +272,10 @@ define(['leaflet',
 
         handleMarkerDraw: function(event){
 
-//				this.map.addLayer(event.layer);
-            //Loop through layer.feature.features, look for feature with property = stops,
-            //If found, append latlng to end, //Get drive times between new point and old last point, send from and to points, append result to end of one time list, front of the other
-            // /newstop?from=lat,lng&to=lat.lng
-            // If not, create feature, //If there's one stop, no need for drive times
+            if(this.lastSnap === null)
+                return;
+
             var layerID = this.lastSnap.layer._leaflet_id;
-            //console.log("layerID");
-            //console.log(layerID);
 
             for(var l in this.routeFeatureGroup.getLayers()){
                 //console.log("layer: "+l);
@@ -310,23 +286,49 @@ define(['leaflet',
                     for(var f in lLayers){
                         if (lLayers[f].feature.properties.geoType === 'stops') {
 
-                            //console.log("Found Stops");
-                            //console.log(lLayers[f].feature.geometry);
-                            lLayers[f].feature.geometry.coordinates.push(
-                                [event.layer.getLatLng().lng, event.layer.getLatLng().lat]);
-                            //console.log(lLayers[f].feature.geometry.coordinates);
-
-                            //Still need to compute drive times
-
                             var stopsFeature = lLayers[f].feature;
+
+                            var point = [event.layer.getLatLng().lng,
+                                            event.layer.getLatLng().lat];
+
+                            stopsFeature.geometry.coordinates.push(point);
+                            //console.log(lLayers[f].feature.geometry.coordinates);
 
                             groupLayer.removeLayer(lLayers[f]);
                             groupLayer.addData(stopsFeature);
-//                            for(var g in lLayers) {
-//                                console.log("adding back layer " + g);
-//
-//                            }
 
+                            // Compute driving time if there is more than one
+                            // stop on the route
+                            var numStops = stopsFeature.geometry.coordinates.length;
+                            if(numStops > 1) {
+                                var lastPoint = stopsFeature.geometry.coordinates[numStops-2];
+
+                                // Compute driving time, and add to the geoJSON
+                                var url = '/new_stop'
+                                        + '?from=' + lastPoint[0] + ',' + lastPoint[1]
+                                        + '&to=' + point[0] + ',' + point[1];
+                                $.ajax({
+                                    url: url,
+                                    type: 'GET',
+                                    success: function (data, status, jqXHR) {
+                                        data = JSON.parse(data);
+                                        // Round to 2 decimal points at most
+                                        var inboundMins = Math.round(100 * data.inboundTime / 60) /100;
+                                        var outboundMins = Math.round(100 * data.outboundTime / 60) /100;
+                                        // Add the driving times to the geoJSON
+                                        stopsFeature.properties.inboundDriveTimes.push(inboundMins);
+                                        stopsFeature.properties.outboundDriveTimes.push(outboundMins);
+
+                                        // Trigger an event so that the GTFS
+                                        // feed can update appropriately
+                                        Backbone.pubSub.trigger('new-transit-stop',
+                                               stopsFeature.properties.routeId);
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        console.log("error: " + textStatus + '\r\n' + errorThrown);
+                                    }
+                                });
+                            }
                         }
                     }
                 }
@@ -335,23 +337,7 @@ define(['leaflet',
                 console.log("new layers: "+l);
                 console.log(this.routeFeatureGroup.getLayers()[l])
             }
-		},
-
-		geoJsonToPolyline: function(geoJSON){
-			var coords = geoJSON.features[0].geometry.coordinates;
-            var latlngs = new Array();
-
-            for( var c in coords){
-            	var coordinate = coords[c];
-            	latlngs.push( L.latLng(coordinate[0], coordinate[1]));
-            	//console.log(coordinate);
-            }
-
-			var polyLine = L.polyline(latlngs);
-            return polyLine;
-
 		}
-
     });
 
     return MapView;
