@@ -68,28 +68,7 @@ define(['leaflet',
             //     circle: false
             // });
 
-            var ourIcon = L.icon({
-                iconUrl: '/marker.png',
-                iconSize: new L.Point(35,35)
-
-            });
-
-            var options = {
-                draw: {
-                    polyline: { guideLayers: this.guideLayers },
-                    polygon: false,
-                    circle: false, // Turns off this drawing tool
-                    rectangle: false,
-                    marker: { 
-                        guideLayers: this.guideLayers, 
-                        snapVertices: false,
-                        icon: ourIcon,
-                        repeatMode: true }
-                }
-            };
-
-            var drawControl = new L.Control.Draw(options);
-            drawControl.addTo(this.map);
+            
 
             var that = this;
 
@@ -133,6 +112,34 @@ define(['leaflet',
                 console.log('panning to ' + newCentroid);
                 this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
 				this.centroid = newCentroid;
+
+
+                //Lock map to the boundry of the city
+                this.map.setMaxBounds(this.map.getBounds());
+
+                //Initialize Draw Control
+                var ourIcon = L.icon({
+                    iconUrl: '/marker.png',
+                    iconSize: new L.Point(35,35)
+
+                });
+
+                var options = {
+                    draw: {
+                        polyline: { guideLayers: this.guideLayers },
+                        polygon: false,
+                        circle: false, // Turns off this drawing tool
+                        rectangle: false,
+                        marker: { 
+                            guideLayers: this.guideLayers, 
+                            snapVertices: false,
+                            icon: ourIcon,
+                            repeatMode: true }
+                    }
+                };
+
+                var drawControl = new L.Control.Draw(options);
+                drawControl.addTo(this.map);
 
                 // Draw the city boundary
                 var geoJson = L.geoJson(city.boundary, {
