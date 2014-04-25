@@ -26,15 +26,8 @@ define(['backbone',
 
             var sim2Gtfs = this.model.get('sim2Gtfs');
             var transitRoutes = this.model.get('transitRoutes');
-            // Build the gtfs json
-            var gtfs = {
-                agencyTxt: sim2Gtfs.get('agencyTxt'),
-                stopsTxt: sim2Gtfs.get('stopsTxt'),
-                calendarTxt: sim2Gtfs.get('calendarTxt'),
-                routesTxt: sim2Gtfs.get('routesTxt'),
-                tripsTxt: sim2Gtfs.get('tripsTxt'),
-                stopTimesTxt: sim2Gtfs.get('stopTimesTxt')
-            };
+            // Ask for the GTFS in csv format
+            var gtfs = sim2Gtfs.getGtfsCsv();
 
             var sessionName = this.model.get('sessionName');
             var stateID = this.model.get('city').stateID;

@@ -111,38 +111,13 @@ define(['fs',
     function writeAndZipGtfs(dir, gtfsJson) {
 
         var zip = new AdmZip();
-        // Add all files to the zip buffer
-        for(var key in gtfsJson)
-            addGtfsFileToZip(zip, key, gtfsJson[key]);
+        // Add all files to the zip buffer. The key is the correct file name
+        for (var key in gtfsJson)
+            zip.addFile(key, new Buffer(gtfsJson[key]));
 
         var gtfsZip = path.join(dir, 'gtfs.zip');
         console.log("Writing gtfs zip at " + gtfsZip);
         zip.writeZip(gtfsZip);
-    }
-
-    function addGtfsFileToZip(zip, key, fileString) {
-        var filename;
-        switch(key) {
-            case 'agencyTxt':
-                filename = 'agency.txt';
-                break;
-            case 'routesTxt':
-                filename = 'routes.txt';
-                break;
-            case 'stopsTxt':
-                filename = 'stops.txt';
-                break;
-            case 'calendarTxt':
-                filename = 'calendar.txt';
-                break;
-            case 'tripsTxt':
-                filename = 'trips.txt';
-                break;
-            case 'stopTimesTxt':
-                filename =  'stop_times.txt';
-                break;
-        }
-        zip.addFile(filename, new Buffer(fileString));
     }
 
     function linkOsmMap(stateID, session, sessionDir, callback) {

@@ -78,12 +78,15 @@ define(['backbone',
         arrayToCsv: function(array) {
             var csv = '';
             for(var i = 0; i < array.length; i++) {
+                // Add line break if this isn't the first entry
+                if(i !== 0)
+                    csv += '\r\n';
+
                 var line = array[i];
                 for(var j = 0; j < line.length; j++) {
                     if(j != 0) csv += ',';
                     csv += (line[j]);
                 }
-                csv += '\r\n';
             }
             return csv;
         }
