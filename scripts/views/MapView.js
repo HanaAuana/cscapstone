@@ -46,7 +46,7 @@ define(['leaflet',
             this.render();
             //Create map, center on Tacoma
             this.map = L.map(this.el )
-            this.map.setView([47.2622639, -122.5100545],  10);
+            this.map.setView([39.809734, -98.555620],  4);
             
             // Add the OSM layer tiles
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
@@ -68,13 +68,23 @@ define(['leaflet',
             //     circle: false
             // });
 
+            var ourIcon = L.icon({
+                iconUrl: '/marker.png',
+                iconSize: new L.Point(35,35)
+
+            })
+
             var options = {
                 draw: {
                     polyline: { guideLayers: this.guideLayers },
                     polygon: false,
                     circle: false, // Turns off this drawing tool
                     rectangle: false,
-                    marker: { guideLayers: this.guideLayers, snapVertices: false }
+                    marker: { 
+                        guideLayers: this.guideLayers, 
+                        snapVertices: false,
+                        icon: ourIcon,
+                        repeatMode: true }
                 }
             };
 
@@ -93,7 +103,7 @@ define(['leaflet',
                 var layer =  e.layer;
 
                 
-                if(e.layer.toGeoJSON().geometry.type === "LineString") {
+                if(type === "polyline") {
                     that.handleRouteDraw(e);
                 }
                 else if(type === "marker") {
@@ -108,8 +118,6 @@ define(['leaflet',
 
             this.map.on('snap', function(e) {
 				that.lastSnap = e;
-				//console.log("layerID snapped to");
-				//console.log(e.layer);
             });
         },
 
@@ -237,8 +245,7 @@ define(['leaflet',
 
         onRouteAdded: function(route) {
             var geoJSON = route.get('geoJson');
-			//console.log("geojson when added ");
-			//console.log(geoJSON);
+
             var color = geoJSON.properties.color;
             console.log("Route has been added, drawing");
             var geoJson = L.geoJson(geoJSON, {
@@ -249,9 +256,6 @@ define(['leaflet',
                     };
                 }
             });
-            //console.log("geojson from layer feature");
-            //console.log(geoJson);
-
             
             this.routeFeatureGroup.addLayer(geoJson);
             this.guideLayers.push(geoJson);
@@ -287,48 +291,29 @@ define(['leaflet',
 				//console.log(layerID);
 
 				for(var l in this.routeFeatureGroup.getLayers()){
-					//console.log("layer: "+l);
-					//console.log(this.routeFeatureGroup.getLayers()[l])
-					var lLayers = this.routeFeatureGroup.getLayers()[l]._layers
+					var groupLayer = this.routeFeatureGroup.getLayers()[l];
+                    var lLayers = groupLayer._layers;
 					if(_.has(lLayers, layerID)){
 						for(var f in lLayers){
-							var properties = lLayers[f].feature.properties;
-							for(var p in properties){
-								if(properties[p] === "stops"){
-									//console.log("Found Stops");
-									//console.log(lLayers[f].feature.geometry);
-									lLayers[f].feature.geometry.coordinates.push([event.layer.getLatLng().lat, event.layer.getLatLng().lng]);
-									//console.log(lLayers[f].feature.geometry.coordinates);
-									
-									//Still need to compute drive times
-								}
-							}
+                            if (lLayers[f].feature.properties.geoType === 'stops') {
+
+                                lLayers[f].feature.geometry.coordinates.push(
+                                        [event.layer.getLatLng().lng, event.layer.getLatLng().lat]
+                                );
+
+ 
+                                var stopsFeature = lLayers[f].feature;
+ 
+                                groupLayer.removeLayer(lLayers[f]);
+                                groupLayer.addData(stopsFeature);
+                            }
 						}
 					}
 				}
-                for(var l in this.routeFeatureGroup.getLayers()){
-					console.log("new layers: "+l);
-					console.log(this.routeFeatureGroup.getLayers()[l])
-				}
-			//}
+     
 	        
 	        
 	        
-		},
-		
-		geoJsonToPolyline: function(geoJSON){
-			var coords = geoJSON.features[0].geometry.coordinates;
-            var latlngs = new Array();
-            
-            for( var c in coords){
-            	var coordinate = coords[c];
-            	latlngs.push( L.latLng(coordinate[0], coordinate[1]));
-            	//console.log(coordinate);
-            }
-            
-			var polyLine = L.polyline(latlngs);
-            return polyLine;
-
 		}
 
     });
