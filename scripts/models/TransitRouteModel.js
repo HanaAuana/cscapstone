@@ -16,7 +16,7 @@ define(['backbone',
             'headway': 15,
             'serviceId': 1, // Specifies operation hours in GTFS. Don't change
             'startServiceMins': 360, // 6am
-            'endServiceMins': 480, // 1260 mins = 9pm = 21hrs
+            'endServiceMins': 1260, // = 9pm = 21hrs (480 for simplicity)
             'ridership': 0
         },
 

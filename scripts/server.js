@@ -64,7 +64,7 @@ define(['http',
             router.newStop(req, response);
         });
 
-        app.listen(1337, '127.0.0.1');
+        app.listen(80);
     }
 
 

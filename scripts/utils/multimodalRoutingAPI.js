@@ -6,7 +6,7 @@ define(['http',
     'xml2js'
 ], function(http, xml2js) {
 
-    var baseUrl = 'localhost'
+    var baseUrl = 'transit.pugetsound.edu'
     var date = '2014-02-21';
     var time = '9%3A20%20am';
 

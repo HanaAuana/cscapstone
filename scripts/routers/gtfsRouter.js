@@ -160,11 +160,15 @@ define(['fs',
                 console.log('NO TRIPS FOUND FOR GEOID ' + geoID);
             } else {
                 console.log("Updating ridership...");
-                resetRidership(transitRoutes);
+                var globalStats = resetRidership(transitRoutes);
+
                 for(var i = 0; i < trips.length; i++) {
                     routeAPIWrapper(query.session, trips[i], function(trip, result) {
 
-                        handleRouteResponse(trip, result, transitRoutes);
+                        if(handleRouteResponse(trip, result, transitRoutes))
+                            ++globalStats.totalSatisfied;
+                        else
+                            ++globalStats.totalUnsatisfied;
 
                         // Evict the graph when finished to reduce memory
                         // footprint, and write the updated route collection to
@@ -180,15 +184,16 @@ define(['fs',
     }
 
     function resetRidership(transitRoutes) {
-        // Reset global ridership numbers
-        transitRoutes.unsatisfied = 0;
-        transitRoutes.satisfied = 0;
-
         // Reset ridership numbers for each route
-        var routes = transitRoutes.models;
-        for(var i = 0; i < routes.length; i++) {
-            routes[i].attributes.ridership = 0;
+        for(var i = 0; i < transitRoutes; i++) {
+            transitRoutes[i].ridership = 0;
         }
+
+        // Return empty global statistics
+        return {
+            totalSatisfied: 0,
+            totalUnsatisfied: 0
+        };   
     }
 
     function handleRouteResponse(trip, result, transitRoutes) {
@@ -196,37 +201,40 @@ define(['fs',
         var bestRoute = null;
         // Get the quickest route
         for(var i = 0; i < itineraries.length; i++) {
+            console.log(itineraries[i]);
             if(bestRoute === null
                 || bestRoute.duration > itineraries[i].duration)
                 bestRoute = itineraries[i];
         }
 
-        // If there is no route, update total of unsatisfied trips
-        if(bestRoute === null) {
-            ++transitRoutes.unsatisfied;
-        // If there was a valid route, update total of satisfied trips
-        } else {
-            ++transitRoutes.satisfied;
-
+        var satisfied = false;
+        // If there is no route, trip was not satisfed
+        if(bestRoute !== null) {          
             // Loop through all trip legs, keeping track of which transit routes
             // were used
             var legs = bestRoute.legs;
             for(var i = 0; i < legs.length; i++) {
                 var curLeg = legs[i];
-                if(curLeg.mode !== 'WALK') {
+                if(curLeg.transitLeg) {
+                    // If this leg used transit, we consider the trip "satisifed"
+                    // This satisfied/not satisfied boolean is a bit weak. It 
+                    // might be better for each trip get a satisfied rating, based
+                    // on how much of the route is walking and how much is transit
+                    satisfied = true;
+
                     // Increment ridership count for the route on which this
                     // leg occurred
                     var routeId = curLeg.routeId;
-                    var routes = transitRoutes.models;
-                    for(var i = 0; i < routes.length; i++) {
-                        if(routes[i].attributes.id == routeId) {
-                            ++routes[i].attributes.ridership;
+                    for(var i = 0; i < transitRoutes.length; i++) {
+                        if(routes[i].id == routeId) {
+                            ++routes[i].ridership;
                             break;
                         }
                     }
                 }
             }
         }
+        return satisfied;
     }
 
     /**

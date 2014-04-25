@@ -43,7 +43,7 @@ define(['backbone',
 
         buildAgencyEntries: function() {
             var agencyTxt = [globalVars.gtfsAgencyName,
-                            globalVars.url,
+                            'http://' + globalVars.url,
                             this.get('timezone')];
             // append the entries to the file, which should already have headers
             var agencyFile = this.get('agencyTxt');
@@ -58,7 +58,7 @@ define(['backbone',
                                     '1', '1', '1', //thu-sat
                                     '1', //sun
                                     '19000101', //start date (1/1/1900)
-                                    '99990101']; //end date (1/1/9999)
+                                    '20990101']; //end date (1/1/9999)
             // append the entries to the file, which should already have headers
             var calendarFile = this.get('calendarTxt');
             calendarFile.push(calendarEntries);
@@ -158,14 +158,17 @@ define(['backbone',
         addTripsEntry: function(transitRoute) {
 
             var routeId = transitRoute.get('id');
-            var headway = transitRoute.get('headway');
-            var startMins = transitRoute.get('startServiceMins');
-            var endMins = transitRoute.get('endServiceMins');
+            var headway = parseInt(transitRoute.get('headway'));
+            var startMins = parseInt(transitRoute.get('startServiceMins'));
+            var endMins = parseInt(transitRoute.get('endServiceMins'));
             var serviceId = transitRoute.get('serviceId');
             var tripsTxt = this.get('tripsTxt');
 
-            for(var i = startMins; i < endMins; i += headway) {
-                var inboundSeqNum = 2*((i - startMins)/headway);
+            console.log(startMins + " " + endMins + " " + headway);
+
+            var curHeadway = startMins;
+            while(curHeadway < endMins) {
+                var inboundSeqNum = 2*((curHeadway - startMins)/headway);
                 var outboundSeqNum = inboundSeqNum + 1;
                 var inboundTrip = [routeId,
                                     serviceId,
@@ -176,6 +179,7 @@ define(['backbone',
 
                 tripsTxt.push(inboundTrip);
                 tripsTxt.push(outboundTrip);
+                curHeadway += headway;
             }
         },
 
@@ -330,11 +334,11 @@ define(['backbone',
         // calculates trip id, which must be dataset unique. That is,
         // no 2 trips (even between different routes) can have the same id.
         calcTripId: function(routeId, seqNum) {
-            return (routeId * 200) + seqNum;
+            return (routeId * 1000) + seqNum;
         },
 
         calcStopId: function(routeId, seqNum) {
-            return (routeId * 200) + seqNum;
+            return (routeId * 1000) + seqNum;
         },
 
         // Converts minutes to the format MM:HH:SS
