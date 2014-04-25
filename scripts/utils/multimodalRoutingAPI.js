@@ -29,7 +29,7 @@ define(['http',
 
                 xml2js.parseString(body, function(err, result) {
                     if(err)
-                        throw err
+                        console.log("XML Parsing error: " + err);
 
                     console.log(result);
                     callback.call(context||this, result);

@@ -209,9 +209,9 @@ define(['backbone',
 
             // Get a bunch of shit
             var routeId = transitRoute.get('id');
-            var headway = transitRoute.get('headway');
-            var startMins = transitRoute.get('startServiceMins');
-            var endMins = transitRoute.get('endServiceMins');
+            var headway = parseInt(transitRoute.get('headway'));
+            var startMins = parseInt(transitRoute.get('startServiceMins'));
+            var endMins = parseInt(transitRoute.get('endServiceMins'));
             var dwellTime = transitRoute.get('mode').get('dwellTime');
             var inboundDriveTimes = transitRoute.getDriveTimes('inbound');
             var outboundDriveTimes = transitRoute.getDriveTimes('outbound');

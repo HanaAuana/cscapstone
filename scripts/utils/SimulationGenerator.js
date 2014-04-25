@@ -8,7 +8,7 @@ define(['scripts/database/connect',
 		'fs'
 ], function(connect, weighted, clipper, Trip, citytracts, geojsonUtils, drivingDirections, fs) {
 	var MIN_TRIP_TIME = 360;
-    var NUM_TRIPS = 2;
+    var NUM_TRIPS = 1;
 
 	//Check to see if there are trips already generated...
 	function checkTrips(cityTract, callback){
