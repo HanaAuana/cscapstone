@@ -57,7 +57,6 @@ define(['leaflet',
             // Create map, center near the centroid of the contiguous US
             this.map = L.map(this.el );
             this.map.setView([39.809734, -98.555620],  4);
-            
 
             // Add the OSM layer tiles
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
@@ -66,18 +65,7 @@ define(['leaflet',
 			//Initialize layers to snap to
             this.guideLayers = [];
 
-            var options = {
-                draw: {
-                    polyline: { guideLayers: this.guideLayers },
-                    polygon: false,
-                    circle: false, // Turns off this drawing tool
-                    rectangle: false,
-                    marker: { guideLayers: this.guideLayers, snapVertices: false }
-                }
-            };
-
-            var drawControl = new L.Control.Draw(options);
-            drawControl.addTo(this.map);
+            
 
             var that = this;
             this.map.on('draw:created', function(e) {
@@ -99,6 +87,7 @@ define(['leaflet',
             this.map.on('snap', function(e) {
 				that.lastSnap = e;
             });
+
             this.map.on('unsnap', function(e) {
                 that.lastSnap = null;
             });
@@ -114,6 +103,34 @@ define(['leaflet',
                     animate: true
                 });
 				this.centroid = newCentroid;
+
+
+                //Lock map to the boundry of the city
+                this.map.setMaxBounds(this.map.getBounds());
+
+                //Initialize Draw Control
+                var ourIcon = L.icon({
+                    iconUrl: '/marker.png',
+                    iconSize: new L.Point(35,35)
+
+                });
+
+                var options = {
+                    draw: {
+                        polyline: { guideLayers: this.guideLayers },
+                        polygon: false,
+                        circle: false, // Turns off this drawing tool
+                        rectangle: false,
+                        marker: { 
+                            guideLayers: this.guideLayers, 
+                            snapVertices: false,
+                            icon: ourIcon,
+                            repeatMode: true }
+                    }
+                };
+
+                var drawControl = new L.Control.Draw(options);
+                drawControl.addTo(this.map);
 
                 // Draw the city boundary
                 L.geoJson(city.boundary, {
@@ -227,8 +244,13 @@ define(['leaflet',
 
         onRouteAdded: function(route) {
             var geoJSON = route.get('geoJson');
-			//console.log("geojson when added ");
-			//console.log(geoJSON);
+
+            var ourIcon = L.icon({
+                iconUrl: '/marker.png',
+                iconSize: new L.Point(35,35)
+
+            });
+
             var color = geoJSON.properties.color;
             console.log("Route has been added, drawing");
             var geoJson = L.geoJson(geoJSON, {
@@ -237,11 +259,11 @@ define(['leaflet',
                         color: color,
                         weight: 8
                     };
+                },
+                pointToLayer: function(feature, latlng) {
+                    return new L.marker(latlng, {icon: ourIcon});
                 }
             });
-
-            //console.log("geojson from layer feature");
-            //console.log(geoJson);
 
             this.routeFeatureGroup.addLayer(geoJson);
             this.guideLayers.push(geoJson);
@@ -255,7 +277,7 @@ define(['leaflet',
             // Remove the route layer, and then remove reference from our list
             // of layers
             this.routeFeatureGroup.removeLayer(layer);
-            //this.guideLayers.remove(layer);
+            this.guideLayers.remove(layer);
             delete this.visibleLayers.routeLayers[id];
         },
 
@@ -332,10 +354,6 @@ define(['leaflet',
                         }
                     }
                 }
-            }
-            for(var l in this.routeFeatureGroup.getLayers()){
-                console.log("new layers: "+l);
-                console.log(this.routeFeatureGroup.getLayers()[l])
             }
 		}
     });
