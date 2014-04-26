@@ -158,9 +158,9 @@ define(['backbone',
         addTripsEntry: function(transitRoute) {
 
             var routeId = transitRoute.get('id');
-            var headway = parseInt(transitRoute.get('headway'));
-            var startMins = parseInt(transitRoute.get('startServiceMins'));
-            var endMins = parseInt(transitRoute.get('endServiceMins'));
+            var headway = parseInt(transitRoute.get('headway'), 10);
+            var startMins = parseInt(transitRoute.get('startServiceMins'), 10);
+            var endMins = parseInt(transitRoute.get('endServiceMins'), 10);
             var serviceId = transitRoute.get('serviceId');
             var tripsTxt = this.get('tripsTxt');
 
@@ -209,9 +209,9 @@ define(['backbone',
 
             // Get a bunch of shit
             var routeId = transitRoute.get('id');
-            var headway = parseInt(transitRoute.get('headway'));
-            var startMins = parseInt(transitRoute.get('startServiceMins'));
-            var endMins = parseInt(transitRoute.get('endServiceMins'));
+            var headway = parseInt(transitRoute.get('headway'), 10);
+            var startMins = parseInt(transitRoute.get('startServiceMins'), 10);
+            var endMins = parseInt(transitRoute.get('endServiceMins'), 10);
             var dwellTime = transitRoute.get('mode').get('dwellTime');
             var inboundDriveTimes = transitRoute.getDriveTimes('inbound');
             var outboundDriveTimes = transitRoute.getDriveTimes('outbound');

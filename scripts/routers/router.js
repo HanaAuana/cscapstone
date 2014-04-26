@@ -50,8 +50,9 @@ define(['scripts/utils/censusAPI',
         console.log('sent sim session response');
 
         SimulationGenerator.makeTrips(cityModel.censusTracts,
-                                      cityModel.stateID + cityModel.placeID,
-                                      function(result){
+                                      cityModel.stateID,
+                                      cityModel.placeID,
+                                      function(result) {
             // Trips have been generated
         });
     }
@@ -80,22 +81,6 @@ define(['scripts/utils/censusAPI',
                 checkCallsFinished(request, appResponse, cityModel)
             }, this);
     }
-
-//    function onTzResponse(cityModel, request, appResponse, res, context) {
-//        if(cityModel === false) {
-//            console.log("tz fails");
-//            appResponse.writeHead(404);
-//            appResponse.send();
-//            return;
-//        }
-//
-//        // If successful, grab the timezone
-//        cityModel.timezone = res.timeZoneId;
-//        console.log('setting tz: ' + cityModel.timezone);
-//
-//        completedSteps.timezone = true;
-//        checkCallsFinished(request, appResponse, cityModel);
-//    }
 
     function onCensusTractPopResponse(cityModel, request,
                                       appResponse, cityPops, context) {

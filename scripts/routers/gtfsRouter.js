@@ -141,6 +141,7 @@ define(['fs',
                                 console.log(stderr);
 
                             callback.call(this, to);
+                            return;
                         }
                     );
                 }
@@ -163,6 +164,7 @@ define(['fs',
                 var globalStats = resetRidership(transitRoutes);
 
                 for(var i = 0; i < trips.length; i++) {
+                    console.log("Routing trip " + i);
                     routeAPIWrapper(query.session, trips[i], function(trip, result) {
 
                         if(handleRouteResponse(trip, result, transitRoutes))
@@ -175,8 +177,11 @@ define(['fs',
                         // the db
                         if(++tripsCompleted === trips.length) {
                             multimodalRoute.evictRoute(query.session);
+                            console.log(globalStats);
+                            console.log(transitRoutes);
                             // TODO update routes in DB
-                        }
+                        } else if(tripsCompleted % 100 == 0)
+                            console.log('On trip ' + tripsCompleted);
                     });
                 }
             }
@@ -201,7 +206,6 @@ define(['fs',
         var bestRoute = null;
         // Get the quickest route
         for(var i = 0; i < itineraries.length; i++) {
-            console.log(itineraries[i]);
             if(bestRoute === null
                 || bestRoute.duration > itineraries[i].duration)
                 bestRoute = itineraries[i];
@@ -226,8 +230,8 @@ define(['fs',
                     // leg occurred
                     var routeId = curLeg.routeId;
                     for(var i = 0; i < transitRoutes.length; i++) {
-                        if(routes[i].id == routeId) {
-                            ++routes[i].ridership;
+                        if(transitRoutes[i].id == routeId) {
+                            ++transitRoutes[i].ridership;
                             break;
                         }
                     }
@@ -248,6 +252,7 @@ define(['fs',
                                 trip.dest.coordinates,
                                 function(result) 
         {
+            console.log("RouteAPIWrapper: Calling back, response for trip " + trip.tripId);
             callback.call(this, trip, result);
         }, this);
     }

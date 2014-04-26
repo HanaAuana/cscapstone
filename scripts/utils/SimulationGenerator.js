@@ -7,8 +7,8 @@ define(['scripts/database/connect',
 		'scripts/utils/drivingDirectionsAPI',
 		'fs'
 ], function(connect, weighted, clipper, Trip, citytracts, geojsonUtils, drivingDirections, fs) {
-	var MIN_TRIP_TIME = 360;
-    var NUM_TRIPS = 1;
+	var MIN_TRIP_TIME = 420; // 7 mins
+    var NUM_TRIPS = 1000;
 
 	//Check to see if there are trips already generated...
 	function checkTrips(cityTract, callback){
@@ -23,7 +23,8 @@ define(['scripts/database/connect',
 	    }, this);
 	}
 
-	function initTripGeneration(cityTracts, fips, callback, context){
+	function initTripGeneration(cityTracts, stateID, placeID, callback, context){
+        var fips = stateID + '' + placeID;
 		checkTrips(fips, function(result){
 
 			if(result === false) {
@@ -34,24 +35,31 @@ define(['scripts/database/connect',
 				for(var ii = 0; ii < features.length; ii++){
 					var feature = features[ii];
 					var tractID = feature.properties.COUNTYFP + feature.properties.TRACTCE;
-					popList[tractID] =  parseInt(feature.properties.population);
-					empList[tractID] =  parseInt(feature.properties.employment);
+					popList[tractID] =  parseInt(feature.properties.population, 10);
+					empList[tractID] =  parseInt(feature.properties.employment, 10);
 				}
 
                 var trips = [];
                 var numTripsCompleted = 0;
-                for(var j = 0; j < NUM_TRIPS; j++){
-                    var curTrip = new Trip(j);
-                    trips.push(curTrip);
-                    generateEndpoints(curTrip, features, popList, empList, function() {
-                        console.log("FOUND A VALID ROUTE");
-                        if(++numTripsCompleted === NUM_TRIPS) {
-                            console.log("trip gen complete");
-                            callback.call(context||this, trips);
-                			connect.makeTripWrite(fips, trips);
-                        }
-                    });
-                }
+
+                // Load the state OSM graph into memory for OTP and begin routing
+            	drivingDirections.requestGraphLoad(stateID, function() {
+	                for(var j = 0; j < NUM_TRIPS; j++){
+	                    var curTrip = new Trip(j);
+	                    trips.push(curTrip);
+	                    generateEndpoints(stateID, curTrip, features, popList, empList, function() {
+	                        if(++numTripsCompleted === NUM_TRIPS) {
+	                            console.log('Trip generation complete');
+	                            callback.call(context||this, trips);
+	                			connect.makeTripWrite(fips, trips);
+
+	                			// Evict graph to reduce memory usage
+	            				drivingDirections.requestGraphEviction(stateID);
+	                        } else if(numTripsCompleted % 100 === 0)
+	                        	console.log("Routing trip " + numTripsCompleted);
+	                    });
+	                }
+                });
 			} else {
                 console.log("trip gen completed: found in cache");
                 callback.call(context||this, result);
@@ -87,7 +95,7 @@ define(['scripts/database/connect',
 		}
 	}
 
-    function generateEndpoints(curTrip, features, popList, empList, callback) {
+    function generateEndpoints(stateID, curTrip, features, popList, empList, callback) {
 
         curTrip.tract1 =  weighted.select(popList);
         curTrip.tract2 =  weighted.select(empList);
@@ -110,39 +118,18 @@ define(['scripts/database/connect',
         }
         curTrip.origin = randomPointInPolygon(tract1Bound);
         curTrip.dest = randomPointInPolygon(tract2Bound);
-        drivingDirections.getRoute([curTrip.origin.coordinates, curTrip.dest.coordinates], function(result){
+        drivingDirections.getRouteLimited(stateID, 
+                                          [curTrip.origin.coordinates,    
+                                            curTrip.dest.coordinates], 
+                                          function(result) {
+          	// console.log(result);
             if(result !== false && result.time >= MIN_TRIP_TIME){
-                console.log(result.time);
                 callback.call(this, curTrip);
             } else {
-                console.log("error or trip time too short");
-                generateEndpoints(curTrip, features, popList, empList, callback);
+                generateEndpoints(stateID, curTrip, features, popList, empList, callback);
             }
         }, this);
     }
-
-    function writeTripPoints(trips) {
-        var points = {
-            type: 'FeatureCollection',
-            features: []
-        };
-        for(var i = 0; i < trips.length; i++) {
-            var feature1 = {
-                type: "Feature",
-                geometry: trips[i].origin,
-                properties: {}
-            };
-
-            var feature2 = {
-                type: "Feature",
-                geometry: trips[i].dest,
-                properties: {}
-            };
-            points.features.push(feature1);
-            points.features.push(feature2);
-        }
-    }
-
 
 	return {
 		makeTrips : initTripGeneration

@@ -2,8 +2,15 @@
  * Created by Nathan P on 4/9/2014.
  */
 
-define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
+define(['http',
+        'xml2js',
+        'scripts/utils/globalvars',
+        'scripts/utils/multimodalRoutingAPI'
+], function(http, xml2js, globalvars, multimodalRoute) {
+
     
+    var loadedGraphs = {};
+
     function routeGraphhopper(waypoints, callback, context) {
         var url = "http://transit.pugetsound.edu:8080/route?"
             + "instructions=false&type=json&points_encoded=true";
@@ -100,6 +107,75 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
         });
     }
 
+    function routeOTPCar(stateFIPS, waypoints, callback, context) {
+
+        if(waypoints.length > 2 )
+            throw "OTP routing doesn't support waypoints";
+
+        var url = 'http://transit.pugetsound.edu:8080/otp-rest-servlet/ws/plan'
+                + '?routerId=' + stateFIPS
+                + '&fromPlace=' + waypoints[0][1] + ',' + waypoints[0][0]
+                + '&toPlace=' + waypoints[1][1] + ',' + waypoints[1][0]
+                + '&date=2050-02-21'
+                + '&time=9%3A20%20am'
+                + '&mode=CAR';
+
+        var body = '';
+        http.get(url, function(res) {
+            // concatenate data chunks
+            res.on('data', function(chunk) {
+                body += chunk;
+            // do callback when transmission has finished
+            }).on('end', function() {
+
+                body = JSON.parse(body);
+
+                // Ensure a valid route
+                if(body.error == null) {
+
+                    // Get the best (i.e. quickest) itinerary
+                    var bestRoute = null;
+
+                    var itineraries = body.plan.itineraries;
+                    for(var i = 0; i < itineraries.length; i++) {
+                        if(bestRoute === null 
+                            || itineraries[i].duration < bestRoute.duration)
+                            bestRoute = itineraries[i];
+                    }
+
+                    // Sum distance of all the route's legs to get the total
+                    var distance = 0;
+                    for(var i = 0; i < bestRoute.legs.length; i++) 
+                        distance += bestRoute.legs[i].distance;
+
+                    // Make callback with distance and time of route
+                    callback.call(context||this, {
+                        time: bestRoute.duration,
+                        distance: distance
+                    });
+                } else {
+                    callback.call(context||this, false);
+                }
+            });
+        }).on('error', function(err) {
+            console.log(err);
+            callback.call(context||this, false);   
+        });    
+    }
+
+    function ensureGraphLoad(routerID, callback, context) {
+        multimodalRoute.reloadRoute(routerID, function() {
+            callback.call(context||this);
+        });
+    }
+
+    function requestGraphEviction(routerID) {
+        if(loadedGraphs[routerID] !== undefined) {
+            delete loadedGraphs[routerID];
+            multimodalRoute.evictRoute(routerID);
+        }
+    }
+
     /**
      * From Graphhopper, for decoding paths into GeoJSON
      * @param encoded The encoded string
@@ -149,7 +225,10 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
 
     return {
 //        getRoute: routeGraphhopper
-        getRoute: routeMapquest
+        getRoute: routeMapquest,
+        getRouteLimited: routeOTPCar,
+        requestGraphLoad: ensureGraphLoad,
+        requestGraphEviction: requestGraphEviction
     };
 
 });

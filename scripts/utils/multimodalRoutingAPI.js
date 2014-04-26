@@ -7,7 +7,7 @@ define(['http',
 ], function(http, xml2js) {
 
     var baseUrl = 'transit.pugetsound.edu'
-    var date = '2014-02-21';
+    var date = '2050-02-21';
     var time = '9%3A20%20am';
 
     function doRoute(session, origin, dest, callback, context) {
@@ -17,23 +17,14 @@ define(['http',
                     + '&toPlace=' + dest[1] + ',' + dest[0]
                     + '&date=' + date
                     + '&time=' + time;
-        console.log(url);    
+        // console.log(url);    
         var body = '';
         http.get(url, function(res) {
             // concatenate data chunks
             res.on('data', function(chunk) {
                 body += chunk;
             }).on('end', function() {
-
-                console.log(body);
-
-                xml2js.parseString(body, function(err, result) {
-                    if(err)
-                        console.log("XML Parsing error: " + err);
-
-                    console.log(result);
-                    callback.call(context||this, result);
-                });
+                callback.call(context||this, JSON.parse(body));
             });
         }).on('error', function(err) {
             console.log(err);

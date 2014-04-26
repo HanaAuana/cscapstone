@@ -54,16 +54,29 @@ define(['backbone',
 
                 // Ensure only alphanumeric strings
                 if(/^[a-zA-Z0-9]+$/.test(sessionName)) {
-                    this.model.onCitySessionSelected(sessionName,
-                        isNew,
-                        function (result) {
+                    // Also ensure city session isn't a state FIPS code
+                    if(this.isStateFIPS(sessionName)) {
+                        console.log("String fails FIPS code check");
+                    } else {
+                        this.model.onCitySessionSelected(sessionName,
+                                                        isNew,
+                                                        function (result) {
                             if (result)
                                 this.remove();
                         }, this);
+                    }
+                    
                 } else {
                     console.log("String fails regex check: " + sessionName);
                 }
             }
+        },
+
+        isStateFIPS: function(str) {
+            if(/^[0-9]+$/.test(str) && parseInt(str, 10) < 60)
+                return true;
+
+            return false;
         }
     });
 
