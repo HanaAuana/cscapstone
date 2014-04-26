@@ -27,7 +27,13 @@ define(['scripts/utils/censusAPI',
     'scripts/utils/SimulationGenerator',
     'scripts/utils/drivingDirectionsAPI',
     'scripts/database/connect'
-], function(censusAPI, googleStaticAPI, fs, cityTracts, SimulationGenerator, drivingDirections, connect) {
+], function(censusAPI, 
+            googleStaticAPI, 
+            fs, 
+            cityTracts, 
+            SimulationGenerator, 
+            drivingDirections, 
+            connect) {
 
     var completedSteps;
 
@@ -215,28 +221,46 @@ define(['scripts/utils/censusAPI',
                     });
                 }
             });
-        }
-        else{
+        } else {
             connect.makeSessAuth(sessionID, function(result){
                 if(result === false){
                     response.send({
                         result: "no_session",
                         code: 1
                     });
-                }
-                else{
-                    connect.makeSessQuery(sessionID, function(queryResult){
-                        if(queryResult === false){
-                            console.log("MAJOR ERROR");
-                            response.writeHead(500, {});
-                            response.send();
-                        } else{
-                           response.send(JSON.stringify(queryResult));
-                        }
-                    }, this);
+                } else {
+                    handleSessionRestore(request, response, sessionID);
                 }
             });
         }
+    }
+
+    function handleSessionRestore(request, response, sessionID) {
+
+        var sessionData = {};
+
+        connect.makeSessQuery(sessionID, function(queryResult) {
+
+            if(queryResult === false){
+                console.log("MAJOR ERROR");
+                response.writeHead(500, {});
+                response.send();
+            } else {
+                fs.writeFileSync('./tmp/sess.json', JSON.stringify(queryResult));
+
+                sessionData = queryResult;
+                var geoID = sessionData.fips;
+
+                // Get city tract and boundary data
+                var stateID = geoID.substring(0, 2);
+                var placeID = geoID.substring(2, geoID.length);
+                cityTracts.getCityTractsGeo(stateID, placeID, function(cityResult) {
+                    sessionData.city.censusTracts = cityResult.cityTracts;
+                    sessionData.city.cityBoundary = cityResult.cityBoundary;
+                    response.send(JSON.stringify(sessionData));
+                }, this);                
+            }
+        }, this);
     }
 
     function newStopRoute(request, response) {

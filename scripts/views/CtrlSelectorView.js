@@ -19,9 +19,6 @@ define(['underscore',
         initialize: function() {
             this.template = _.template(ctrlSelectorTemplate, {});
             this.$el.html(this.template);
-
-
-            Backbone.pubSub = _.extend({}, Backbone.Events);
         },
 
         render: function() {

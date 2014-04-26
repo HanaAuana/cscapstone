@@ -30,8 +30,10 @@ define(['backbone',
             var gtfs = sim2Gtfs.getGtfsCsv();
 
             var sessionName = this.model.get('sessionName');
-            var stateID = this.model.get('city').stateID;
-            var placeID = this.model.get('city').placeID;
+            var city = this.model.get('city');
+            console.log(city);
+            var stateID = city.get('stateID');
+            var placeID = city.get('placeID');
             var url = '/update_ridership?session=' + sessionName
                             + '&state=' + stateID
                             + '&place=' + placeID;
@@ -44,7 +46,11 @@ define(['backbone',
                 contentType: "application/json",
                 data: JSON.stringify({
                     gtfs: gtfs,
-                    routes: transitRoutes
+                    routes: {
+                        routes: transitRoutes.toJSON(),
+                        globalStats: transitRoutes.getGlobalRidership()
+                    },
+                    city: city.toJSON()
                 }),
                 success: function(data, status, jqXHR) {
                     var alertString = 'We are informing the residents of your '

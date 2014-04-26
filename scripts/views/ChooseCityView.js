@@ -32,6 +32,11 @@ define(['backbone',
             this.model.on('sync', function() {
                 this.remove();
             }, this);
+
+            var that = this;
+            Backbone.pubSub.on('session-restore', function() {
+                that.remove();
+            });
         },
 
         render: function() {

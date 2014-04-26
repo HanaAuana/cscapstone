@@ -11,6 +11,7 @@ define(['http',
     var time = '9%3A20%20am';
 
     function doRoute(session, origin, dest, callback, context) {
+        var finished = false;
         var url = 'http://' + baseUrl + ':8080/otp-rest-servlet/ws/plan'
                     + '?routerId=' + session
                     + '&fromPlace=' + origin[1] + ',' + origin[0]
@@ -19,17 +20,29 @@ define(['http',
                     + '&time=' + time;
         // console.log(url);    
         var body = '';
-        http.get(url, function(res) {
+        console.log("Doing route: " + origin + ',' + dest);
+        var request = http.get(url, function(res) {
             // concatenate data chunks
             res.on('data', function(chunk) {
                 body += chunk;
             }).on('end', function() {
+                finished = true;
                 callback.call(context||this, JSON.parse(body));
             });
         }).on('error', function(err) {
             console.log(err);
+            finished = true;
             callback.call(context||this, false);
         });
+
+        // Ensure a callback occurs
+        setTimeout(function() {
+            if(!finished) {
+                console.log("Multimodal route request timeout");
+                request.abort();
+                callback.call(context||this, false);
+            }
+        }, 2000);
     }
 
     /**

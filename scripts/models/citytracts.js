@@ -379,6 +379,7 @@ define(['scripts/utils/censusAPI',
 
     return {
         getCityTractsGeo: getCityTractsGeo,
-        json2clipper: geoJsonFeature2Paths
+        json2clipper: geoJsonFeature2Paths,
+        
     }
 });

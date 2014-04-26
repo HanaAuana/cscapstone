@@ -22,17 +22,6 @@ define(['backbone',
 
         initialize: function(attrs, options) {
 
-            this.id = this.cid;
-            this.urlRoot = '/route_sync';
-            switch (options.mode) {
-                // Based on GTFS constants TODO other modes
-                case 'subway':
-                    this.set({'mode': new SubwayMode()});
-                    break;
-                case 'bus':
-                    this.set({'mode': new BusMode()});
-                    break;
-            }
 
             // Persist route id change to the geoJson. The map will need this
             this.on('change:id', function() {
@@ -46,11 +35,27 @@ define(['backbone',
                 }
             }, this);
 
-            var that = this;
-            this.initializeGeoJSON(options.rawRouteFeature, function(model) {
-                if(options.onRouteInitialized)
-                    options.onRouteInitialized.call(that, model);
-            });
+            if(options !== undefined) {
+                this.id = this.cid;
+                this.urlRoot = '/route_sync';
+                switch (options.mode) {
+                    // Based on GTFS constants TODO other modes
+                    case 'subway':
+                        this.set({'mode': new SubwayMode()});
+                        break;
+                    case 'bus':
+                        this.set({'mode': new BusMode()});
+                        break;
+                }
+
+
+
+                var that = this;
+                this.initializeGeoJSON(options.rawRouteFeature, function(model) {
+                    if(options.onRouteInitialized)
+                        options.onRouteInitialized.call(that, model);
+                });
+            }
         },
 
         // Gets the stops geometry object from the GeoJson

@@ -367,6 +367,18 @@ define(['backbone',
                 'stop_times.txt': csvHelper.arrayToCsv(this.get('stopTimesTxt')),
                 'calendar.txt': csvHelper.arrayToCsv(this.get('calendarTxt'))
             }
+        },
+
+        handleGtfsRestore: function(gtfsJson) {
+            var csvHelper = this.get('csvHelper');
+            this.set({
+                'agencyTxt': csvHelper.csvToArray(gtfsJson['agency.txt']),
+                'stopsTxt': csvHelper.csvToArray(gtfsJson['stops.txt']),
+                'routesTxt': csvHelper.csvToArray(gtfsJson['routes.txt']),
+                'tripsTxt': csvHelper.csvToArray(gtfsJson['trips.txt']),
+                'stopTimesTxt': csvHelper.csvToArray(gtfsJson['stop_times.txt']),
+                'calendarTxt': csvHelper.csvToArray(gtfsJson['calendar.txt'])
+            });
         }
 
     });

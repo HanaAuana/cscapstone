@@ -25,13 +25,15 @@ define(['fs',
 
         var query = request.query;
         var body = request.body;
+        delete body.city.cityBoundary;
+        delete body.city.tracts;
         var geoID = query.state + query.place;
 
         connect.makeSessWrite(query.session, 
                                 body.routes, 
                                 geoID, 
-                                null, 
                                 body.gtfs, 
+                                body.city,
                                 function(result) {
 
         });
@@ -163,29 +165,44 @@ define(['fs',
                 console.log("Updating ridership...");
                 var globalStats = resetRidership(transitRoutes);
 
-                for(var i = 0; i < trips.length; i++) {
-                    console.log("Routing trip " + i);
-                    routeAPIWrapper(query.session, trips[i], function(trip, result) {
-
-                        if(handleRouteResponse(trip, result, transitRoutes))
-                            ++globalStats.totalSatisfied;
-                        else
-                            ++globalStats.totalUnsatisfied;
-
-                        // Evict the graph when finished to reduce memory
-                        // footprint, and write the updated route collection to
-                        // the db
-                        if(++tripsCompleted === trips.length) {
-                            multimodalRoute.evictRoute(query.session);
-                            console.log(globalStats);
-                            console.log(transitRoutes);
-                            // TODO update routes in DB
-                        } else if(tripsCompleted % 100 == 0)
-                            console.log('On trip ' + tripsCompleted);
-                    });
-                }
+                updateRidershipSeq(query, transitRoutes, trips, 0, globalStats);
             }
         }, this);        
+    }
+
+    var tripsCompleted = 0;
+    function updateRidershipSeq(query, transitRoutes, trips, seqNum, globalStats) {
+
+        if(seqNum == 0) tripsCompleted = 0;
+        console.log("updateRidershipSeq: " + seqNum);
+
+        routeAPIWrapper(query.session, trips[seqNum], function(trip, result) {
+
+            console.log("Got wrapper response for " + seqNum);
+
+            if(handleRouteResponse(trip, result, transitRoutes))
+                ++globalStats.totalSatisfied;
+            else
+                ++globalStats.totalUnsatisfied;
+
+            // Evict the graph when finished to reduce memory
+            // footprint, and write the updated route collection to
+            // the db
+            if(++tripsCompleted === trips.length) {
+                multimodalRoute.evictRoute(query.session);
+                console.log(globalStats);
+                console.log(transitRoutes);
+                
+                connect.makeRouteUpdate(query.session, {
+                    routes: transitRoutes,
+                    globalStats: globalStats
+                });
+            } else if(tripsCompleted % 100 == 0)
+                console.log('On trip ' + tripsCompleted);
+
+            if(++seqNum !== trips.length)
+                updateRidershipSeq(query, transitRoutes, trips, seqNum, globalStats);
+        });
     }
 
     function resetRidership(transitRoutes) {
@@ -247,13 +264,19 @@ define(['fs',
      * for loop of doUpdateRidership() )
      */
     function routeAPIWrapper(session, trip, callback) {
+        console.log("Routing trip " + trip.tripId);
         multimodalRoute.doRoute(session, 
                                 trip.origin.coordinates, 
                                 trip.dest.coordinates,
                                 function(result) 
         {
-            console.log("RouteAPIWrapper: Calling back, response for trip " + trip.tripId);
-            callback.call(this, trip, result);
+            if(result.error == null) {
+                console.log("RouteAPIWrapper: Calling back, response for trip " + trip.tripId);
+                callback.call(this, trip, result);
+            } else {
+                console.log("Recursing on trip " + trip.tripId);
+                routeAPIWrapper(session, trip, callback);
+            }
         }, this);
     }
 

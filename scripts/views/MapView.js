@@ -30,8 +30,13 @@ define(['leaflet',
         },
 
         initialize: function () {
+
+            var that = this;
             // Register listeners
             this.model.on('sync', this.handleModelSync, this);
+            Backbone.pubSub.on('session-restore', function() {
+                that.handleModelSync();
+            });
             this.model.on('change:layers', this.toggleLayers, this);
             var transitRoutes = this.model.get('transitRoutes');
             transitRoutes.on('add', this.onRouteAdded, this);
@@ -95,10 +100,10 @@ define(['leaflet',
 
         handleModelSync: function () {
             var city = this.model.get('city');
-            var newCentroid = city.centroid;
+            var newCentroid = city.get('centroid');
+
             // Only pan if the centroid has changed
             if (this.centroid == null || this.centroid != newCentroid) {
-                console.log('panning to ' + newCentroid);
                 this.map.setView(L.latLng(newCentroid[0], newCentroid[1]), 10, {
                     animate: true
                 });
@@ -112,7 +117,6 @@ define(['leaflet',
                 var ourIcon = L.icon({
                     iconUrl: '/marker.png',
                     iconSize: new L.Point(35,35)
-
                 });
 
                 var options = {
@@ -133,7 +137,7 @@ define(['leaflet',
                 drawControl.addTo(this.map);
 
                 // Draw the city boundary
-                L.geoJson(city.boundary, {
+                L.geoJson(city.get('boundary'), {
                     style: function () {
                         return {
                             opacity: "0,7",
@@ -149,7 +153,7 @@ define(['leaflet',
             console.log("toggling pop levels");
             if(toggle) {
                 var that = this;
-                var censusTracts = this.model.get('city').censusTracts;
+                var censusTracts = this.model.get('city').get('censusTracts');
                 // Add shapes, and style according to the population density
                 var geoJson = L.geoJson(censusTracts, {
                     style: function (feature) {
@@ -179,7 +183,7 @@ define(['leaflet',
             console.log("toggling employment levels");
             if(toggle) {
                 var that = this;
-                var censusTracts = this.model.get('city').censusTracts;
+                var censusTracts = this.model.get('city').get('censusTracts');
                 // Add shapes, and style according to the population density
                 var geoJson = L.geoJson(censusTracts, {
                     style: function (feature) {

@@ -48,6 +48,8 @@ define(['backbone',
 
         initialize: function() {
 
+            Backbone.pubSub = _.extend({}, Backbone.Events);
+
             this.urlRoot = '/sim_session';
             this.id = this.cid;
 
@@ -100,24 +102,32 @@ define(['backbone',
             var response = this.save(['city', 'sessionID'], {
                 success: function() {
                     console.log('model persisted, id and city info updated');
-                    // add the control selector
-                    new CtrlSelectorView().render();
-
-                    // and the map layer selector and render it by default
-                    new MapLayerCtrlView({'model': that}).render();
-
-                    // and the network stats
-                    new NetworkStatsView({'collection': that.get('transitRoutes')});
-
-                    // and the ridership update view
-                    new UpdateRidershipView({'model': that}).render();
-
-                    that.initSim2Gtfs();
+                    
+                    var cityJSON = that.get('city');
+                    that.set({'city': new CityModel(cityJSON)});
+                    that.onSessionStart(true);
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');
                 }});
             console.log(response);
+        },
+
+        onSessionStart: function(isNew) {
+            // add the control selector
+            new CtrlSelectorView().render();
+
+            // and the map layer selector and render it by default
+            new MapLayerCtrlView({'model': this}).render();
+
+            // and the network stats
+            new NetworkStatsView({'collection': this.get('transitRoutes')});
+
+            // and the ridership update view
+            new UpdateRidershipView({'model': this}).render();
+
+            if(isNew)
+                this.initSim2Gtfs();
         },
 
         initSim2Gtfs: function() {
@@ -144,10 +154,10 @@ define(['backbone',
                     if(isNew && data.code === 1) {
                         success = true;
                     // User requests a load, and session exists on the server
-                    } else if(!isNew && data.code === 0) {
+                    } else if(!isNew && data.code !== 1) {
                         success = true;
+                        that.handleSessionRestore(JSON.parse(data));
                     }
-                    console.log(data);
 
                     callback.call(context||that, success);
 
@@ -160,7 +170,26 @@ define(['backbone',
                     callback.call(context||that, false);
                 }
             });
-        }
+        },
+
+        handleSessionRestore: function(restoredData) {
+            console.log("handling session restore");
+
+            // Add city data to the city model
+            var cityModel = this.get('city');
+            cityModel.set(restoredData.city);
+
+            // Instantiate transit routes and add to the route collection
+            this.get('transitRoutes').handleRoutesRestore(restoredData.routeCollection);
+
+            var sim2Gtfs = new Sim2Gtfs({'transitRoutes': this.get('transitRoutes'),
+                                        'timezone': cityModel.get('timezone')});
+            this.set({'sim2Gtfs': sim2Gtfs});
+            sim2Gtfs.handleGtfsRestore(restoredData.gtfs);
+
+            Backbone.pubSub.trigger('session-restore');
+            this.onSessionStart(false);
+        } 
     });
 
     return SimulationModel;

@@ -92,7 +92,7 @@ define(['mysql'
 
   function querySession(sessionID, callback, context){
     var that = this;
-    connection.query('select routeCollection, cityFips, gtfs from ' + TABLE3 + ' where sessionName = "' + sessionID + '"',
+    connection.query('select routeCollection, cityFips, gtfs, city from ' + TABLE3 + ' where sessionName = "' + sessionID + '"',
       function(err, result) {
           if (err) {
             throw err;
@@ -100,32 +100,34 @@ define(['mysql'
             if(result.length === 0){
               callback.call(context||that, false);
             } else {
-              var fips = result[0].cityFips;
-              queryTracts(fips, function(tractResult) {
-                  if(tractResult === false) {
-                      console.log("MAJOR ISSUE NO TRACTS FOR SESSION "+ fips);
-                      callback.call(context||that, false);
-                  } else {
-                      console.log("Hit for "+ fips);
-                      callback.call(context||that, {
-                            tracts: tractResult,
-                            routeCollection: result[0].routeCollection,
-                            gtfs: result[0].gtfs
-                      });
-                    }
-              }, this);
+              console.log("Hit for session " + sessionID);
+              var fips = result[0].cityFips; 
+              
+              var strRC = result[0].routeCollection;
+              var finRoute = strRC.substring(1, strRC.length-1);
+              var strGTFS = result[0].gtfs;
+              var finGTFS = strGTFS.substring(1, strGTFS.length-1);
+              var strCity = result[0].city;
+              var finCity = strCity.substring(1, strCity.length-1);
+              callback.call(context||that, {
+                    routeCollection: JSON.parse(finRoute),
+                    gtfs: JSON.parse(finGTFS),
+                    fips: fips,
+                    city: JSON.parse(finCity)
+              });
             }
           }
       });
   }
 
-  function writeSession(sessionID, routeCol, fips, graph, gtfs){
+  function writeSession(sessionID, routeCol, fips, gtfs, city){
     var jsonRoute = stringifyJSON(routeCol);
     var jsonGTFS = stringifyJSON(gtfs);
+    var jsonCity = stringifyJSON(city);
     authSession(sessionID, function(result){
         if(result === false) {
-            var query = connection.query('INSERT INTO ' + TABLE3 + ' (sessionName, routeCollection, cityFips, simGraph, gtfs) VALUES ("' 
-            + sessionID + '", "' + connection.escape(jsonRoute) + '", "' + fips + '", "' + graph + '" ,"' + connection.escape(jsonGTFS) +'")', 
+            var query = connection.query('INSERT INTO ' + TABLE3 + ' (sessionName, routeCollection, cityFips, gtfs, city) VALUES ("' 
+            + sessionID + '", "' + connection.escape(jsonRoute) + '", "' + fips + '" ,"' + connection.escape(jsonGTFS) +'" ,"' + connection.escape(jsonCity) +'")', 
               function(err, result) {
                 if (err) {
                   console.log("An error occurred!", err);
@@ -151,6 +153,24 @@ define(['mysql'
     return safeObj;
   }
 
+  function updateRoutes(sessionID, routeCol){
+    var jsonRoute = stringifyJSON(routeCol);
+    authSession(sessionID, function(result){
+      if(result === false){
+        console.log("No session found for this user..");
+      }
+      else{
+        var query = connection.query('UPDATE ' + TABLE3 + ' SET routeCollection = ' + jsonRoute + ' WHERE sessionName = ' + sessionID,
+          function(err, result){
+            if(err){
+                console.log("An error occurred!", err);
+                process.exit(1);
+              }
+          });
+      }
+    });
+  }
+
 
   return {
     makeQuery: queryTracts,
@@ -159,6 +179,7 @@ define(['mysql'
     makeTripWrite: writeTrips,
     makeSessAuth: authSession,
     makeSessWrite: writeSession,
-    makeSessQuery: querySession
+    makeSessQuery: querySession,
+    makeRouteUpdate: updateRoutes
   }
 });
