@@ -281,8 +281,20 @@ define(['leaflet',
             // Remove the route layer, and then remove reference from our list
             // of layers
             this.routeFeatureGroup.removeLayer(layer);
-            this.guideLayers.remove(layer);
             delete this.visibleLayers.routeLayers[id];
+
+            console.log(this.guideLayers);
+            for(var i = 0; i < this.guideLayers.length; i++) {
+                var featureLayers = this.guideLayers[i]._layers;
+                for(var key in featureLayers) {
+                    if(featureLayers[key].feature.properties.routeId == id) {
+                        this.guideLayers.splice(i, 1);
+                        break;                       
+                    }
+                }
+            }
+            
+            
         },
 
         handleRouteDraw: function(event) {

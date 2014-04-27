@@ -54,7 +54,6 @@ define(['backbone',
             this.id = this.cid;
 
             var transitRoutes = new TransitRouteCollection();
-            console.log(transitRoutes);
             var city = new CityModel();
 
             this.set({'transitRoutes': transitRoutes,
@@ -131,7 +130,7 @@ define(['backbone',
         },
 
         initSim2Gtfs: function() {
-            var timezone = this.get('city').timezone;
+            var timezone = this.get('city').get('timezone');
             var routes = this.get('transitRoutes');
             var sim2Gtfs = new Sim2Gtfs({'transitRoutes': routes,
                                          'timezone': timezone});
