@@ -151,18 +151,16 @@ define(['backbone',
                     // User requests a new session name, and session name is
                     // unique
                     if(isNew && data.code === 1) {
-                        success = true;
+                        success = true;	
+                        that.set({'sessionName': sessionName}); 
                     // User requests a load, and session exists on the server
                     } else if(!isNew && data.code !== 1) {
                         success = true;
+                        that.set({'sessionName': sessionName}); 
                         that.handleSessionRestore(JSON.parse(data));
                     }
 
                     callback.call(context||that, success);
-
-                    // Set session name on success
-                    if(success)
-                        that.set({'sessionName': sessionName});
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     console.log("error: " + textStatus + '\r\n' + errorThrown);
