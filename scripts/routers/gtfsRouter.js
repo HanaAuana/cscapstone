@@ -148,7 +148,7 @@ define(['fs',
                     );
                 }
             }
-            console.log("NO OSM DATA FOUND FOR STATE " + stateID);
+            console.log("Error: No OSM data for state " + stateID);
         });
     }
 
@@ -176,32 +176,34 @@ define(['fs',
         if(seqNum == 0) tripsCompleted = 0;
         console.log("updateRidershipSeq: " + seqNum);
 
-        routeAPIWrapper(query.session, trips[seqNum], function(trip, result) {
+        routeAPIWrapper(query.session, trips[seqNum], 
+            function(trip, result) 
+        {
 
             console.log("Got wrapper response for " + seqNum);
 
-            if(handleRouteResponse(trip, result, transitRoutes))
+            if(handleRouteResponse(trip, result, transitRoutes.routes))
                 ++globalStats.totalSatisfied;
             else
                 ++globalStats.totalUnsatisfied;
+
+            console.log("Through route response");
 
             // Evict the graph when finished to reduce memory
             // footprint, and write the updated route collection to
             // the db
             if(++tripsCompleted === trips.length) {
                 multimodalRoute.evictRoute(query.session);
-                console.log(globalStats);
-                console.log(transitRoutes);
                 
-                connect.makeRouteUpdate(query.session, {
-                    routes: transitRoutes,
-                    globalStats: globalStats
-                });
+                transitRoutes.globalStats = globalStats;
+                console.log(transitRoutes);
+
+                connect.makeRouteUpdate(query.session, transitRoutes);
             } else if(tripsCompleted % 100 == 0)
                 console.log('On trip ' + tripsCompleted);
 
             if(++seqNum !== trips.length)
-                updateRidershipSeq(query, transitRoutes, trips, seqNum, globalStats);
+                updateRidershipSeq(query, transitRoutes, trips, seqNum, globalStats);                
         });
     }
 
@@ -246,9 +248,9 @@ define(['fs',
                     // Increment ridership count for the route on which this
                     // leg occurred
                     var routeId = curLeg.routeId;
-                    for(var i = 0; i < transitRoutes.length; i++) {
-                        if(transitRoutes[i].id == routeId) {
-                            ++transitRoutes[i].ridership;
+                    for(var j = 0; j < transitRoutes.length; j++) {
+                        if(transitRoutes[j].id == routeId) {
+                            ++transitRoutes[j].ridership;
                             break;
                         }
                     }

@@ -103,12 +103,13 @@ define(['mysql'
               console.log("Hit for session " + sessionID);
               var fips = result[0].cityFips; 
               
-              var strRC = result[0].routeCollection;
-              var finRoute = strRC.substring(1, strRC.length-1);
+              var finRoute = result[0].routeCollection;
+              // var finRoute = strRC.substring(, strRC.length-1);
               var strGTFS = result[0].gtfs;
               var finGTFS = strGTFS.substring(1, strGTFS.length-1);
               var strCity = result[0].city;
               var finCity = strCity.substring(1, strCity.length-1);
+              console.log(finRoute);
               callback.call(context||that, {
                     routeCollection: JSON.parse(finRoute),
                     gtfs: JSON.parse(finGTFS),
@@ -130,17 +131,17 @@ define(['mysql'
             + sessionID + '", "' + connection.escape(jsonRoute) + '", "' + fips + '" ,"' + connection.escape(jsonGTFS) +'" ,"' + connection.escape(jsonCity) +'")', 
               function(err, result) {
                 if (err) {
-                  console.log("An error occurred!", err);
-                  process.exit(1);
+                  throw err;
                 }
             });
         } else {
           //Update route and gtfs...
-          var query = connection.query('UPDATE ' + TABLE3 + ' SET routeCollection = ' + jsonRoute + ', gtfs = ' + jsonGTFS + ' WHERE sessionName = ' +sessionID, 
+          var query = connection.query('UPDATE ' + TABLE3 + ' SET routeCollection = ' + connection.escape(jsonRoute) 
+                                        + ', gtfs = ' + connection.escape(jsonGTFS) 
+                                        + ' WHERE sessionName = "' + sessionID + '"', 
             function(err, result){
               if(err){
-                console.log("An error occurred!", err);
-                process.exit(1);
+                throw err;
               }
             });
         }
@@ -160,12 +161,12 @@ define(['mysql'
         console.log("No session found for this user..");
       }
       else{
-        var query = connection.query('UPDATE ' + TABLE3 + ' SET routeCollection = ' + jsonRoute + ' WHERE sessionName = ' + sessionID,
+        var query = connection.query('UPDATE ' + TABLE3 
+                    + ' SET routeCollection = ' + connection.escape(jsonRoute) 
+                    + ' WHERE sessionName = "' + sessionID + '"',
           function(err, result){
-            if(err){
-                console.log("An error occurred!", err);
-                process.exit(1);
-              }
+            if(err)
+              throw err;
           });
       }
     });

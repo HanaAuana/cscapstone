@@ -64,7 +64,7 @@ define(['http',
             console.log('HEADERS: ' + JSON.stringify(res.headers));
             res.setEncoding('utf8');
             res.on('data', function(data) {
-                console.log(data);
+      
             }).on('end', function() {
                 console.log('Graph registration complete, code ' + res.statusCode);
                 if(callback)
