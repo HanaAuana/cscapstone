@@ -327,9 +327,7 @@ define(['leaflet',
                     for(var f in lLayers){
                         if (lLayers[f].feature.properties.geoType === 'stops') {
 
-
                             var stopsFeature = lLayers[f].feature;
-
                             var point = [event.layer.getLatLng().lng,
                                             event.layer.getLatLng().lat];
 
@@ -337,23 +335,38 @@ define(['leaflet',
                             // stop on the route
                             var numStops = stopsFeature.geometry.coordinates.length;
                             if(numStops > 0) {
+                                
                                 var lastPoint = stopsFeature.geometry.coordinates[numStops-1];
+                                // Get the mode by acessing the transit routes
+                                // collection
+                                var routeId = stopsFeature.properties.routeId;                                
+                                var modeString = this.model.get('transitRoutes')
+                                                    .get(routeId)
+                                                    .get('mode')
+                                                    .get('typeString');
 
                                 // Compute driving time, and add to the geoJSON
                                 var url = '/new_stop'
                                         + '?from=' + lastPoint[0] + ',' + lastPoint[1]
-                                        + '&to=' + point[0] + ',' + point[1];
+                                        + '&to=' + point[0] + ',' + point[1]
+                                        + '&mode=' + modeString;
                                 $.ajax({
                                     url: url,
                                     type: 'GET',
                                     success: function (data, status, jqXHR) {
                                         data = JSON.parse(data);
                                         // Round to 2 decimal points at most
-                                        var inboundMins = Math.round(100 * data.inboundTime / 60) /100;
-                                        var outboundMins = Math.round(100 * data.outboundTime / 60) /100;
+                                        var inboundMins = (data.inboundTime / 60).toFixed(2);
+                                        var outboundMins = (data.outboundTime / 60).toFixed(2);
                                         // Add the driving times to the geoJSON
-                                        stopsFeature.properties.inboundDriveTimes.push(inboundMins);
-                                        stopsFeature.properties.outboundDriveTimes.push(outboundMins);
+                                        stopsFeature.properties
+                                            .inboundDriveTimes
+                                            .push(parseFloat(inboundMins));
+                                        stopsFeature.properties
+                                            .outboundDriveTimes
+                                            .push(parseFloat(outboundMins));
+
+                                        console.log(modeString + " " + data.inboundTime + " " + data.outboundTime);
 
                                         // Add the point this route's GeoJSON                      
                                         stopsFeature.geometry.coordinates.push(point);

@@ -38,14 +38,18 @@ define(['backbone',
 
         handleRoutesRestore: function(routeData) {
 
-            console.log(routeData);
+            var maxRouteID = 0;
 
             // Restore data for invidual routes
             var restoredRoutes = routeData.routes;
             for(var i = 0; i < restoredRoutes.length; i++) {
-                var mode = new TransitMode(restoredRoutes[i].mode);
-                restoredRoutes[i].mode = mode;
-                this.add(new TransitRoute(restoredRoutes[i]));
+                restoredRoutes[i].mode = new TransitMode(restoredRoutes[i].mode);
+                var route = new TransitRoute(restoredRoutes[i]);
+                this.add(route);
+
+                // Update max route id if appropriate
+                if(route.get('id') > maxRouteID)
+                    maxRouteID = route.get('id');
             }
 
             // Restore global ridership data
@@ -54,7 +58,11 @@ define(['backbone',
                 this.totalSatisfied = globalStats.totalSatisfied;
                 this.totalUnsatisfied = globalStats.totalUnsatisfied;
                 this.totalPctSatisfied = globalStats.totalPctSatisfied;
-            }          
+            }         
+
+            // Ensure new routes will have a unique ID, by setting the id
+            // counter to be greater than the id's of existing routes
+            this.routeId = ++maxRouteID; 
         },
 
         getGlobalRidership: function() {

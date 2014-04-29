@@ -56,7 +56,8 @@ define(['http',
         var key = globalvars.mapquestKey;
         var url = 'http://open.mapquestapi.com/directions/v2/route?key=' + key
                 + '&ambiguities=ignore&outFormat=json&generalize=0'
-                + '&outShapeFormat=raw';
+                + '&outShapeFormat=raw'
+                + '&drivingStyle=cautious';
 
         for (var i = 0; i < waypoints.length; i++) {
             var coordinate = waypoints[i];
@@ -67,7 +68,7 @@ define(['http',
             url += coordinate[1] + "," + coordinate[0]
         }
 
-        console.log(url);
+        // console.log(url);
         var body ='';
         http.get(url, function(res) {
             // concatenate data chunks

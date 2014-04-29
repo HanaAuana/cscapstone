@@ -268,7 +268,7 @@ define(['backbone',
                     break;
                 }
             }
-            console.log(routesTxt);
+            // console.log(routesTxt);
         },
 
         removeTripsEntry: function(routeId) {
@@ -286,7 +286,7 @@ define(['backbone',
                 }
             }
 
-            console.log(tripsTxt);
+            // console.log(tripsTxt);
             // Return the set of removed trip ids
             return tripIds;
         },
@@ -311,7 +311,7 @@ define(['backbone',
                     }
                 }
             }
-            console.log(stopTimesTxt);
+            // console.log(stopTimesTxt);
             return stopIds;
         },
 
@@ -328,7 +328,7 @@ define(['backbone',
                     }
                 }
             }
-            console.log(this.get('stopsTxt'));
+            // console.log(this.get('stopsTxt'));
         },
 
         // calculates trip id, which must be dataset unique. That is,
