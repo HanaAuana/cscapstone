@@ -15,6 +15,7 @@ define(['backbone',
          colors: ['red', 'green', 'blue', 'yellow', 'cyan', 'orange', 'purple'],
          totalSatisfied: 0,
          totalUnsatisfied: 0,
+         totalPctSatisfied: 0,
 
         /**
          * Adds the route to the collection. DON'T DIRECTLY CALL Collection.add;
@@ -52,13 +53,15 @@ define(['backbone',
             if(globalStats !== undefined) {
                 this.totalSatisfied = globalStats.totalSatisfied;
                 this.totalUnsatisfied = globalStats.totalUnsatisfied;
+                this.totalPctSatisfied = globalStats.totalPctSatisfied;
             }          
         },
 
         getGlobalRidership: function() {
             return {
                 totalSatisfied: this.totalSatisfied,
-                totalUnsatisfied: this.totalUnsatisfied
+                totalUnsatisfied: this.totalUnsatisfied,
+                totalPctSatisfied: this.totalPctSatisfied
             }
         }
     });

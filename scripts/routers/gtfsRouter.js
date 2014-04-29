@@ -178,18 +178,28 @@ define(['fs',
         routeAPIWrapper(query.session, trips[seqNum], 
             function(trip, result) 
         {
-
-            if(handleRouteResponse(trip, result, transitData.routes))
-                ++transitData.globalStats.totalSatisfied;
+            // Anaylze the OTP's routing response
+            var routeResponse = handleRouteResponse(trip, 
+                                                    result, 
+                                                    transitData.routes);
+            var globalStats = transitData.globalStats;
+            if(routeResponse.satisfied)
+                ++globalStats.totalSatisfied;
             else
-                ++transitData.globalStats.totalUnsatisfied;
+                 ++globalStats.totalUnsatisfied;
+
+            // Keep running total of satisfaction percents. We'll average these
+            // at the end
+            globalStats.totalPctSatisfied += routeResponse.pctSatisfied;
 
             // Evict the graph when finished to reduce memory
             // footprint, and write the updated route collection to
             // the db
             if(++tripsCompleted === trips.length) {
+                console.log("Ridership update complete");
                 multimodalRoute.evictRoute(query.session);
-
+                globalStats.totalPctSatisfied /= trips.length;
+                console.log(globalStats);
                 connect.makeRouteUpdate(query.session, transitData);
             } else if(tripsCompleted % 100 == 0)
                 console.log('On trip ' + tripsCompleted);
@@ -210,16 +220,20 @@ define(['fs',
 
         transitRoutes.globalStats = {
             totalSatisfied: 0,
-            totalUnsatisfied: 0
+            totalUnsatisfied: 0,
+            totalPctSatisfied: 0
         }
     }
 
     function handleRouteResponse(trip, result, transitRoutes) {
 
-        var satisfied = false;
+        var response = {
+            satisfied: false,
+            pctSatisfied: 0
+        }
 
         if(result.error != null) {
-            return satisfied;
+            return response;
         }
 
         var itineraries = result.plan.itineraries;
@@ -231,19 +245,21 @@ define(['fs',
                 bestRoute = itineraries[i];
         }
 
+
         // If there is no route, trip was not satisfed
-        if(bestRoute !== null) {          
+        if(bestRoute !== null) {         
+
+            var totalRouteDistance = 0;
+            var totalTransitDistance = 0; 
             // Loop through all trip legs, keeping track of which transit routes
             // were used
             var legs = bestRoute.legs;
             for(var i = 0; i < legs.length; i++) {
                 var curLeg = legs[i];
                 if(curLeg.transitLeg) {
-                    // If this leg used transit, we consider the trip "satisifed"
-                    // This satisfied/not satisfied boolean is a bit weak. It 
-                    // might be better for each trip get a satisfied rating, based
-                    // on how much of the route is walking and how much is transit
-                    satisfied = true;
+
+                    response.satisfied = true;
+                    totalTransitDistance += curLeg.distance;
 
                     // Increment ridership count for the route on which this
                     // leg occurred
@@ -255,9 +271,14 @@ define(['fs',
                         }
                     }
                 }
+                // Incerement total distance traveled
+                totalRouteDistance += curLeg.distance;  
             }
+
+            response.pctSatisfied = 100 * totalTransitDistance / totalRouteDistance;
         }
-        return satisfied;
+
+        return response;
     }
 
     /**

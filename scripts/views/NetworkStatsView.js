@@ -65,11 +65,8 @@ define(['backbone',
                 routes.push(routeObj);
             }
 	    
-	    var totalTrips = this.collection.totalSatisfied 
-				+ this.collection.totalUnsatisfied;
-	    var pctSatisfied = 100 * this.collection.totalSatisfied / totalTrips;
             var globalStats = {
-                pctDemandSatisfied: pctSatisfied.toFixed(2)
+                pctDemandSatisfied: this.collection.totalPctSatisfied.toFixed(2)
             }
 
             // Compile the template, and pass in the layer list

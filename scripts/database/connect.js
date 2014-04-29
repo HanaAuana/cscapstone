@@ -109,7 +109,7 @@ define(['mysql'
               var finGTFS = strGTFS.substring(1, strGTFS.length-1);
               var strCity = result[0].city;
               var finCity = strCity.substring(1, strCity.length-1);
-              console.log(finRoute);
+
               callback.call(context||that, {
                     routeCollection: JSON.parse(finRoute),
                     gtfs: JSON.parse(finGTFS),
