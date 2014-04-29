@@ -49,7 +49,13 @@ define(['leaflet',
             this.map.setView([39.809734, -98.555620],  4);
             
             // Add the OSM layer tiles
-            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
+            //L.tileLayer('http://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png').addTo(this.map);
+            //L.tileLayer('http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png'.addTo(this.map);
+            
+            L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpeg', {
+				attribution: 'Tiles: <a href="http://www.mapquest.com/">MapQuest</a> &mdash; Map data: <a href="http://openstreetmap.org">OpenStreetMap</a>',
+				subdomains: '1234'
+			}).addTo(this.map);
 
             this.routeFeatureGroup = L.featureGroup().addTo(this.map);
 			//Initialize layers to snap to
@@ -110,7 +116,8 @@ define(['leaflet',
             // Only pan if the centroid has changed
             if (this.centroid == null || this.centroid != newCentroid) {
                 console.log('panning to ' + newCentroid);
-                this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
+                this.map.setView(new L.LatLng(newCentroid[0], newCentroid[1]), 12);
+                //this.map.panTo(L.latLng(newCentroid[0], newCentroid[1]));
 				this.centroid = newCentroid;
 
 
@@ -137,10 +144,20 @@ define(['leaflet',
                             repeatMode: true }
                     }
                 };
+                
+                //Change toolbar messages
+                L.drawLocal.draw.toolbar.buttons.polyline = 'Draw a route';
+                L.drawLocal.draw.toolbar.buttons.marker = 'Add stops to your routes';
 
                 var drawControl = new L.Control.Draw(options);
                 drawControl.addTo(this.map);
+                
+                
 
+				//Change tooltips
+				L.drawLocal.draw.handlers.polyline.tooltip.start = 'Click to add points to your route. Try not to click in the water';
+                L.drawLocal.draw.handlers.marker.tooltip.start = 'Click on a drawn route to add a stop. Add stops in the order you eant them to function';
+                
                 // Draw the city boundary
                 var geoJson = L.geoJson(city.boundary, {
                     style: function () {
