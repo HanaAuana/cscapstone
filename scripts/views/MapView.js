@@ -261,7 +261,9 @@ define(['leaflet',
                 style: function (feature) {
                     return {
                         color: color,
-                        weight: 8
+                        weight: 8,
+                        opacity: 1,
+                        fillOpacity: 1
                     };
                 },
                 pointToLayer: function(feature, latlng) {
@@ -315,31 +317,27 @@ define(['leaflet',
 
             var layerID = this.lastSnap.layer._leaflet_id;
 
-            for(var l in this.routeFeatureGroup.getLayers()){
+            var groupLayers = this.routeFeatureGroup.getLayers();
+            for(var l in groupLayers){
                 //console.log("layer: "+l);
                 //console.log(this.routeFeatureGroup.getLayers()[l])
-                var groupLayer = this.routeFeatureGroup.getLayers()[l];
+                var groupLayer = groupLayers[l];
                 var lLayers = groupLayer._layers;
                 if(_.has(lLayers, layerID)){
                     for(var f in lLayers){
                         if (lLayers[f].feature.properties.geoType === 'stops') {
+
 
                             var stopsFeature = lLayers[f].feature;
 
                             var point = [event.layer.getLatLng().lng,
                                             event.layer.getLatLng().lat];
 
-                            stopsFeature.geometry.coordinates.push(point);
-                            //console.log(lLayers[f].feature.geometry.coordinates);
-
-                            groupLayer.removeLayer(lLayers[f]);
-                            groupLayer.addData(stopsFeature);
-
                             // Compute driving time if there is more than one
                             // stop on the route
                             var numStops = stopsFeature.geometry.coordinates.length;
-                            if(numStops > 1) {
-                                var lastPoint = stopsFeature.geometry.coordinates[numStops-2];
+                            if(numStops > 0) {
+                                var lastPoint = stopsFeature.geometry.coordinates[numStops-1];
 
                                 // Compute driving time, and add to the geoJSON
                                 var url = '/new_stop'
@@ -357,6 +355,12 @@ define(['leaflet',
                                         stopsFeature.properties.inboundDriveTimes.push(inboundMins);
                                         stopsFeature.properties.outboundDriveTimes.push(outboundMins);
 
+                                        // Add the point this route's GeoJSON                      
+                                        stopsFeature.geometry.coordinates.push(point);
+                                        // Add the point to the map       
+                                        groupLayer.removeLayer(lLayers[f]);
+                                        groupLayer.addData(stopsFeature);
+
                                         // Trigger an event so that the GTFS
                                         // feed can update appropriately
                                         Backbone.pubSub.trigger('new-transit-stop',
@@ -366,7 +370,15 @@ define(['leaflet',
                                         console.log("error: " + textStatus + '\r\n' + errorThrown);
                                     }
                                 });
-                            }
+                            } else {
+                                // Always add the point to the map if it's the
+                                // first point 
+                                // TODO this is buggy! We should geocode this
+                                // to ensure that the point is valid
+                                stopsFeature.geometry.coordinates.push(point);
+                                groupLayer.removeLayer(lLayers[f]);
+                                groupLayer.addData(stopsFeature);
+                            }                          
                         }
                     }
                 }

@@ -31,7 +31,6 @@ define(['backbone',
 
             var sessionName = this.model.get('sessionName');
             var city = this.model.get('city');
-            console.log(city);
             var stateID = city.get('stateID');
             var placeID = city.get('placeID');
             var url = '/update_ridership?session=' + sessionName

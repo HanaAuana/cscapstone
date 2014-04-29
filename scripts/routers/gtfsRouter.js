@@ -68,11 +68,6 @@ define(['fs',
         response.send();
     }
 
-    function writeRiderDB(request, callback) {
-        // TODO
-        callback.call(this, true);
-    }
-
     function updateOTPGraph(request, callback) {
 
         var dir = path.join(globalvars.sessionsDir, request.query.session);
@@ -84,7 +79,7 @@ define(['fs',
             writeAndZipGtfs(dir, request.body.gtfs);
 
             // Link the appropriate OSM map to this session's directory
-            linkOsmMap(request.query.state, request.query.session, dir,
+            linkOsmMap(request.query.state, request.query.place, request.query.session, dir,
                 function() {
                     // Rebuild the graph with the new GTFS feed
                     var child = childProcess.spawn('java', [
@@ -122,34 +117,63 @@ define(['fs',
         zip.writeZip(gtfsZip);
     }
 
-    function linkOsmMap(stateID, session, sessionDir, callback) {
-        // Find the osm file corresponding to the state to the session directory
-        fs.readdir(globalvars.osmDir, function(err, files) {
-            if(err)
-                throw err;
+    function linkOsmMap(stateID, placeID, session, sessionDir, callback) {
+  
+	findOSMMap(stateID, placeID, function(osmFile) {
+	
+	    if(!osmFile)
+		throw "No OSM data found for state " + stateID;
 
-            for(var i = 0; i < files.length; i++) {
-                if(RegExp('^' + stateID).test(files[i])) {
-
-                    // Create a link from the OSM file location to the session
-                    // folder. OTP needs the GTFS and OSM in the same folder
-                    var from = path.join(globalvars.osmDir, files[i]); // Linking from here
-                    var to = path.join(sessionDir, stateID + '.osm.pbf'); // To here
-                    console.log(from + "   " + to);
-
-                    childProcess.exec('ln ' + from + ' ' + to, {},
-                        function(err, stdout, stderr) {
-                            if(err)
-                                console.log(stderr);
-
-                            callback.call(this, to);
-                            return;
-                        }
-                    );
+    	    // Create a link from the OSM file location to the session
+            // folder. OTP needs the GTFS and OSM in the same 
+            var from = path.join(globalvars.osmDir, osmFile); // Linking from here
+            var to = path.join(sessionDir, stateID + '.osm.pbf'); // To here
+            console.log(from + "   " + to);
+            childProcess.exec('ln ' + from + ' ' + to, {},
+                function(err, stdout, stderr) {
+                   if(err)
+                       console.log(stderr);
+ 
+                   callback.call(this, to);
                 }
+            );
+ 	});
+    } 
+
+    function findOSMMap(stateID, placeID, callback) {
+	var geoID = stateID + '' + placeID;
+
+	// First check to see if there is an OSM map for the city
+	fs.readdir(globalvars.osmDir, function(err, placeFiles) {
+	    if(err)
+            throw err;
+	     
+	    for(var i = 0; i < placeFiles.length; i++) {
+
+    		if(RegExp('^' + geoID + '_').test(placeFiles[i])) {
+    		    console.log("Found OSM for place at: " + placeFiles[i]);
+    		    callback.call(this, placeFiles[i]);
+    		    return;
+    		}
+	    }
+
+        // If we couldn't find an OSM map for the city, find the OSM
+	    // file corresponding to the state 
+        fs.readdir(globalvars.osmDir, function(err, stateFiles) {
+         	if(err)
+               throw err;
+
+        	for(var i = 0; i < stateFiles.length; i++) {
+               if(RegExp('^' + stateID + '_').test(stateFiles[i])) {
+	       console.log("Found OSM for state at: " + stateFiles[i]);
+	       callback.call(this, stateFiles[i]);
+	       return;
+               }	
             }
-            console.log("Error: No OSM data for state " + stateID);
-        });
+            callback.call(this, false);
+                console.log("Error: No OSM data for state " + stateID);
+            });
+	   });
     }
 
     function doUpdateRidership(query, transitRoutes) {

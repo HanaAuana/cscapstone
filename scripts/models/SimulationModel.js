@@ -97,7 +97,6 @@ define(['backbone',
             // But tell the server what needs changing. In particular, set the
             // city!
             var that = this;
-            console.log(this.get('city'));
             var response = this.save(['city', 'sessionID'], {
                 success: function() {
                     console.log('model persisted, id and city info updated');
@@ -108,7 +107,8 @@ define(['backbone',
                 },
                 error: function (model, response, options) {
                     console.log('persist fails');
-                }});
+                }
+            });
             console.log(response);
         },
 
