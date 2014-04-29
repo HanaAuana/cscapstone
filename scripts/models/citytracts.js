@@ -137,14 +137,18 @@ define(['scripts/utils/censusAPI',
         var cityArea = getPolygonArea(cityBoundary.geometry, false);
 
         var length = stateTracts.length;
+        var printPct = true;
         for(var i = 0; i < length; i++) {
             var stateTract = stateTracts[i];
 
-            if(i % 50 === 0) {
-                var pct = Math.floor((i * 100) / stateTracts.length);
-                // process.stdout.clearLine();
-                // process.stdout.cursorTo(0);
-                console.log("Finding city tracts: " + pct + "%");
+            var pct = Math.floor((i * 100) / stateTracts.length);
+            if(pct % 10 === 0) {
+                if(printPct) {
+                    console.log("Finding city tracts: " + pct + "%");
+                    printPct = false;
+                }
+            } else {
+                printPct = true;
             }
 
             // Skip tracts that only encompass water
@@ -162,15 +166,12 @@ define(['scripts/utils/censusAPI',
                 var interArea = getPolygonIntersectionArea(stateTract.geometry,
                                                         cityBoundary.geometry);
                 var pctOfCity = (interArea / cityArea).toFixed(4);
-                console.log("Area of intersection: " + interArea
-                                    + ", city area: " + cityArea
-                                    + ", pct: " + pctOfCity + "%");
+                // console.log("Area of intersection: " + interArea
+                //                     + ", city area: " + cityArea
+                //                     + ", pct: " + pctOfCity + "%");
                 var tractArea = getPolygonArea(stateTract.geometry, false);
                 var pctOfTract = (interArea / tractArea).toFixed(4);
-                if(pctOfCity < minPctOfCity && pctOfTract < minPctOfTract ) {
-                    console.log("Skipping tract. Pct of city: " + pctOfCity
-                        + "%, pct of tract " + pctOfTract + "%");
-                } else {
+                if(!(pctOfCity < minPctOfCity && pctOfTract < minPctOfTract)) {
                     cityGeos.push(stateTract);
                 }
             }

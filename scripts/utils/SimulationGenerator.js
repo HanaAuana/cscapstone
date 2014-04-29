@@ -8,7 +8,7 @@ define(['scripts/database/connect',
 		'fs'
 ], function(connect, weighted, clipper, Trip, citytracts, geojsonUtils, drivingDirections, fs) {
 	var MIN_TRIP_TIME = 420; // 7 mins
-    var NUM_TRIPS = 1000;
+    var NUM_TRIPS = 20000;
 
 	//Check to see if there are trips already generated...
 	function checkTrips(cityTract, callback){
@@ -35,8 +35,8 @@ define(['scripts/database/connect',
 				for(var ii = 0; ii < features.length; ii++){
 					var feature = features[ii];
 					var tractID = feature.properties.COUNTYFP + feature.properties.TRACTCE;
-					popList[tractID] =  parseInt(feature.properties.population, 10);
-					empList[tractID] =  parseInt(feature.properties.employment, 10);
+					popList[tractID] = parseInt(feature.properties.population, 10);
+					empList[tractID] = parseInt(feature.properties.employment, 10);
 				}
 
                 var trips = [];
@@ -56,7 +56,7 @@ define(['scripts/database/connect',
 	                			// Evict graph to reduce memory usage
 	            				drivingDirections.requestGraphEviction(stateID);
 	                        } else if(numTripsCompleted % 100 === 0)
-	                        	console.log("Routing trip " + numTripsCompleted);
+	                        	console.log("Generating trip " + numTripsCompleted);
 	                    });
 	                }
                 });
