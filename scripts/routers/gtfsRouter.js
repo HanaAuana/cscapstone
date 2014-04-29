@@ -95,11 +95,11 @@ define(['fs',
                     dir]);
 
                     child.stdout.on('data', function (data) {
-                        console.log('child: ' + data);
+                        console.log('OTP: ' + data);
                     });
 
                     child.stderr.on('data', function (data) {
-                        console.log('child: ' + data);
+                        console.log('OTP: ' + data);
                     });
 
                     child.on('close', function(code) {
@@ -163,64 +163,65 @@ define(['fs',
                 console.log('NO TRIPS FOUND FOR GEOID ' + geoID);
             } else {
                 console.log("Updating ridership...");
-                var globalStats = resetRidership(transitRoutes);
+                resetRidership(transitRoutes);
 
-                updateRidershipSeq(query, transitRoutes, trips, 0, globalStats);
+                updateRidershipSeq(query, transitRoutes, trips, 0);
             }
         }, this);        
     }
 
     var tripsCompleted = 0;
-    function updateRidershipSeq(query, transitRoutes, trips, seqNum, globalStats) {
+    function updateRidershipSeq(query, transitData, trips, seqNum) {
 
         if(seqNum == 0) tripsCompleted = 0;
-        console.log("updateRidershipSeq: " + seqNum);
 
         routeAPIWrapper(query.session, trips[seqNum], 
             function(trip, result) 
         {
 
-            console.log("Got wrapper response for " + seqNum);
-
-            if(handleRouteResponse(trip, result, transitRoutes.routes))
-                ++globalStats.totalSatisfied;
+            if(handleRouteResponse(trip, result, transitData.routes))
+                ++transitData.globalStats.totalSatisfied;
             else
-                ++globalStats.totalUnsatisfied;
-
-            console.log("Through route response");
+                ++transitData.globalStats.totalUnsatisfied;
 
             // Evict the graph when finished to reduce memory
             // footprint, and write the updated route collection to
             // the db
             if(++tripsCompleted === trips.length) {
                 multimodalRoute.evictRoute(query.session);
-                
-                transitRoutes.globalStats = globalStats;
-                console.log(transitRoutes);
 
-                connect.makeRouteUpdate(query.session, transitRoutes);
+                connect.makeRouteUpdate(query.session, transitData);
             } else if(tripsCompleted % 100 == 0)
                 console.log('On trip ' + tripsCompleted);
 
             if(++seqNum !== trips.length)
-                updateRidershipSeq(query, transitRoutes, trips, seqNum, globalStats);                
+                updateRidershipSeq(query, transitData, trips, seqNum);                
         });
     }
 
     function resetRidership(transitRoutes) {
+
+        var routes = transitRoutes.routes;
+
         // Reset ridership numbers for each route
-        for(var i = 0; i < transitRoutes; i++) {
-            transitRoutes[i].ridership = 0;
+        for(var i = 0; i < routes.length; i++) {
+            routes[i].ridership = 0;
         }
 
-        // Return empty global statistics
-        return {
+        transitRoutes.globalStats = {
             totalSatisfied: 0,
             totalUnsatisfied: 0
-        };   
+        }
     }
 
     function handleRouteResponse(trip, result, transitRoutes) {
+
+        var satisfied = false;
+
+        if(result.error != null) {
+            return satisfied;
+        }
+
         var itineraries = result.plan.itineraries;
         var bestRoute = null;
         // Get the quickest route
@@ -230,7 +231,6 @@ define(['fs',
                 bestRoute = itineraries[i];
         }
 
-        var satisfied = false;
         // If there is no route, trip was not satisfed
         if(bestRoute !== null) {          
             // Loop through all trip legs, keeping track of which transit routes
@@ -266,18 +266,20 @@ define(['fs',
      * for loop of doUpdateRidership() )
      */
     function routeAPIWrapper(session, trip, callback) {
-        console.log("Routing trip " + trip.tripId);
         multimodalRoute.doRoute(session, 
                                 trip.origin.coordinates, 
                                 trip.dest.coordinates,
                                 function(result) 
         {
             if(result.error == null) {
-                console.log("RouteAPIWrapper: Calling back, response for trip " + trip.tripId);
                 callback.call(this, trip, result);
             } else {
-                console.log("Recursing on trip " + trip.tripId);
-                routeAPIWrapper(session, trip, callback);
+                if(result.error.msg.indexOf("Trip is not possible.") >= 0) {
+                    callback.call(this, trip, result);
+                } else {
+                    console.log('ERROR: %j', result.error);
+                    routeAPIWrapper(session, trip, callback);
+                }
             }
         }, this);
     }

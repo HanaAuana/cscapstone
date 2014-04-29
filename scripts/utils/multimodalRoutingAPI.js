@@ -20,7 +20,6 @@ define(['http',
                     + '&time=' + time;
         // console.log(url);    
         var body = '';
-        console.log("Doing route: " + origin + ',' + dest);
         var request = http.get(url, function(res) {
             // concatenate data chunks
             res.on('data', function(chunk) {

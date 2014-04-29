@@ -103,8 +103,8 @@ define(['mysql'
               console.log("Hit for session " + sessionID);
               var fips = result[0].cityFips; 
               
-              var finRoute = result[0].routeCollection;
-              // var finRoute = strRC.substring(, strRC.length-1);
+              var strRC = result[0].routeCollection;
+              var finRoute = strRC.substring(1, strRC.length-1);
               var strGTFS = result[0].gtfs;
               var finGTFS = strGTFS.substring(1, strGTFS.length-1);
               var strCity = result[0].city;
@@ -136,9 +136,9 @@ define(['mysql'
             });
         } else {
           //Update route and gtfs...
-          var query = connection.query('UPDATE ' + TABLE3 + ' SET routeCollection = ' + connection.escape(jsonRoute) 
-                                        + ', gtfs = ' + connection.escape(jsonGTFS) 
-                                        + ' WHERE sessionName = "' + sessionID + '"', 
+          var query = connection.query('UPDATE ' + TABLE3 + ' SET routeCollection = "' + connection.escape(jsonRoute) 
+                                        + '", gtfs = "' + connection.escape(jsonGTFS) 
+                                        + '" WHERE sessionName = "' + sessionID + '"', 
             function(err, result){
               if(err){
                 throw err;
@@ -159,11 +159,10 @@ define(['mysql'
     authSession(sessionID, function(result){
       if(result === false){
         console.log("No session found for this user..");
-      }
-      else{
+      } else {
         var query = connection.query('UPDATE ' + TABLE3 
-                    + ' SET routeCollection = ' + connection.escape(jsonRoute) 
-                    + ' WHERE sessionName = "' + sessionID + '"',
+                    + ' SET routeCollection = "' + connection.escape(jsonRoute) 
+                    + '" WHERE sessionName = "' + sessionID + '"',
           function(err, result){
             if(err)
               throw err;
