@@ -55,9 +55,10 @@ define(['backbone',
             var numRoutes = this.collection.length;
             for(var i = 0; i < numRoutes; i++) {
                 var route = this.collection.at(i);
+		var psh = (route.get('ridership') / route.getServiceHours()).toFixed(2);
                 var routeObj = {
                     name: route.get('name'),
-                    ridership: route.get('ridership'),
+                    ridership: psh,
                     color: route.get('geoJson').properties.color,
                     mode: route.get('mode').get('typeString'),
                     id: route.get('id')
