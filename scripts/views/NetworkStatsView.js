@@ -55,10 +55,10 @@ define(['backbone',
             var numRoutes = this.collection.length;
             for(var i = 0; i < numRoutes; i++) {
                 var route = this.collection.at(i);
-		var psh = (route.get('ridership') / route.getServiceHours()).toFixed(2);
+				var prh = (route.get('ridership') / route.getRevenueHours()).toFixed(2);
                 var routeObj = {
                     name: route.get('name'),
-                    ridership: psh,
+                    ridership: prh,
                     color: route.get('geoJson').properties.color,
                     mode: route.get('mode').get('typeString'),
                     id: route.get('id')
@@ -67,7 +67,8 @@ define(['backbone',
             }
 	    
             var globalStats = {
-                pctDemandSatisfied: this.collection.totalPctSatisfied.toFixed(2)
+                pctDemandSatisfied: this.collection.totalPctSatisfied.toFixed(2),
+				systemCost: this.collection.getSystemCost().toFixed(2)
             }
 
             // Compile the template, and pass in the layer list

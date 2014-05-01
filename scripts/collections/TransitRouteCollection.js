@@ -65,6 +65,15 @@ define(['backbone',
             this.routeId = ++maxRouteID; 
         },
 
+		getSystemCost: function() {
+			var totalCost = 0;
+			for(var i = 0; i < this.length; i++) {
+				totalCost += this.at(i).getRouteCost();
+			}
+			console.log("System cost: " + totalCost);
+			return totalCost;
+		},
+
         getGlobalRidership: function() {
             return {
                 totalSatisfied: this.totalSatisfied,

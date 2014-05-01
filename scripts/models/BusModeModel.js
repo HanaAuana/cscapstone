@@ -13,8 +13,8 @@ define(['backbone',
             // Bus type is 3, and we'll set the stop dwell time to 30 seconds
             TransitMode.prototype.set.call(this, {'type': 3,
                                                 'typeString': 'bus',
-                                                'dwellTime': 0.5});
-            console.log(TransitMode.prototype.get.call(this, 'type'));
+                                                'dwellTime': 0.5,
+												'costPerRH': 129.42});
         }
     });
 
