@@ -38,14 +38,28 @@ requirejs.config({
         	deps: ['leaflet'],
         	exports: 'L'
         },
+        'leafletGeometryUtil':{
+            deps: ['leafletDraw'],
+        	exports: 'leafletGeometryUtil'
+        },
+        'leafletSnap':{
+        	deps: ['leafletDraw', 'leafletGeometryUtil'],
+        	exports: 'leafletSnap'
+        }
     }
 });
 
 // Start the server, using the server and router modules as dependencies
 requirejs(['scripts/server',
-    'scripts/routers/router',
-    'scripts/utils/tractEmploymentParser'
-], function (server, router, tractEmp) {
-      server.start(router.route)
-//        tractEmp.parse('./tmp');
+    'scripts/utils/services'
+], function (server, services) {
+
+    // Only start services if specified
+    process.argv.forEach(function (val) {
+        if(val === "--services")
+            services.startServices();
+    });
+
+    // But always start the server
+    server.start();
 });

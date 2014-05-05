@@ -7,9 +7,9 @@ define(['scripts/utils/censusAPI',
     'fs',
     'path',
     'geojson-utils',
-    'clipper',
-    'scripts/database/connect'
-], function(censusAPI, globalvars, fs, path, geojsonUtils, clipper, connect) {
+    'scripts/database/connect',
+    'clipper'
+], function(censusAPI, globalvars, fs, path, geojsonUtils, connect, clipper) {
 
     /**
      * Gets the specified place's boundary, and every census tract within the
@@ -23,7 +23,6 @@ define(['scripts/utils/censusAPI',
      */
     function getCityTractsGeo(stateID, placeID, callback, context)
     {
-
         // We need geographies for all census tracts in a city. We use one level
         // of caching:
         //   1. Check if city tracts are cached locally in the database
@@ -45,10 +44,15 @@ define(['scripts/utils/censusAPI',
                                             JSON.parse(result),
                                             cityBoundary);
                     binDensities(result);
-                    // TODO get rid of this save
                     writeCityToDb(stateID, placeID, result);
                 }
             }
+            // else {
+            //     console.log(result);
+            //     console.log(result.features[0].properties);
+            //     result = JSON.parse(result);
+            // }
+
             callback.call(context||this, {
                 cityTracts: result,
                 cityBoundary: cityBoundary
@@ -60,29 +64,22 @@ define(['scripts/utils/censusAPI',
         // TODO write to db
         var geoID = stateID + placeID;
         try {
-            //fs.writeFile("./tmp/" + geoID + "_emp_pop.json",
-              //  JSON.stringify(cityGeoJson));
-            
-            var test = JSON.stringify(cityGeoJson);
-           // test = JSON.stringify(test);
-           // var str = test.replace('"','\"');
-            var str2 = test.replace("'","\'");
-            connect.makeWrite(geoID, str2);
+            connect.makeWrite(geoID, cityGeoJson);
         } catch (err) {
             console.error("Unable to write city geoID + " + geoID + " to db: "
                             + err);
         }
     }
 
-    function checkDbCity(stateID, placeID, callback) {
+   function checkDbCity(stateID, placeID, callback) {
         var that = this;
         var geoID = stateID + placeID;
         connect.makeQuery(geoID, function(result) {
             if(result === false){
-                console.log("Miss for "+ geoID);
+                console.log("Census tract miss for "+ geoID);
                 callback.call(that, false);
             } else{
-                console.log("Hit for "+ geoID);
+                console.log("Census tract hit for "+ geoID);
                 callback.call(that, result);
             }
         }, this);
@@ -113,7 +110,7 @@ define(['scripts/utils/censusAPI',
                 var places = JSON.parse(file).features;
                 for(var j = 0; j < places.length; j++) {
                     if(places[j].properties.PLACEFP === placeID) {
-                        console.log("Found the matching place for "
+                        console.log("Found the matching place boundary for "
                             + stateID + placeID);
                         return places[j];
                     }
@@ -140,14 +137,18 @@ define(['scripts/utils/censusAPI',
         var cityArea = getPolygonArea(cityBoundary.geometry, false);
 
         var length = stateTracts.length;
+        var printPct = true;
         for(var i = 0; i < length; i++) {
             var stateTract = stateTracts[i];
 
-            if(i % 50 === 0) {
-                var pct = Math.floor((i * 100) / stateTracts.length);
-                // process.stdout.clearLine();
-                // process.stdout.cursorTo(0);
-                console.log("Finding city tracts: " + pct + "%");
+            var pct = Math.floor((i * 100) / stateTracts.length);
+            if(pct % 10 === 0) {
+                if(printPct) {
+                    console.log("Finding city tracts: " + pct + "%");
+                    printPct = false;
+                }
+            } else {
+                printPct = true;
             }
 
             // Skip tracts that only encompass water
@@ -165,15 +166,12 @@ define(['scripts/utils/censusAPI',
                 var interArea = getPolygonIntersectionArea(stateTract.geometry,
                                                         cityBoundary.geometry);
                 var pctOfCity = (interArea / cityArea).toFixed(4);
-                console.log("Area of intersection: " + interArea
-                                    + ", city area: " + cityArea
-                                    + ", pct: " + pctOfCity + "%");
+                // console.log("Area of intersection: " + interArea
+                //                     + ", city area: " + cityArea
+                //                     + ", pct: " + pctOfCity + "%");
                 var tractArea = getPolygonArea(stateTract.geometry, false);
                 var pctOfTract = (interArea / tractArea).toFixed(4);
-                if(pctOfCity < minPctOfCity && pctOfTract < minPctOfTract ) {
-                    console.log("Skipping tract. Pct of city: " + pctOfCity
-                        + "%, pct of tract " + pctOfTract + "%");
-                } else {
+                if(!(pctOfCity < minPctOfCity && pctOfTract < minPctOfTract)) {
                     cityGeos.push(stateTract);
                 }
             }
@@ -381,6 +379,8 @@ define(['scripts/utils/censusAPI',
     }
 
     return {
-        getCityTractsGeo: getCityTractsGeo
+        getCityTractsGeo: getCityTractsGeo,
+        json2clipper: geoJsonFeature2Paths,
+        
     }
 });

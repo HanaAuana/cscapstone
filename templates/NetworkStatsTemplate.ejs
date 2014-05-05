@@ -1,5 +1,5 @@
 <div id="network-stats-div">
-    <h5 style="margin-left:auto;margin-right:auto">Total Demand Satisfied: <%= globalStats.pctDemandSatisfied%>%</h5>
+    <h5 style="margin-left:auto;margin-right:auto"><strong>Total Demand Satisfied: <%= globalStats.pctDemandSatisfied%>%</strong></h5>
     <table class="table" id="ctrl-network-stats">
         <tr>
             <th>Route</th>
@@ -15,7 +15,7 @@
             <td style="color:<%= color%>"><%= route.ridership %>
                 <span>
                     <button class="btn btn-default btn-xs delete-route-btn" id=<%= route.id%>>
-                        <i class="glyphicon glyphicon-trash"></i>
+                        <i class="glyphicon glyphicon-trash" id=<%= route.id%>></i>
                     </button>
                 </span>
             </td>

@@ -13,7 +13,7 @@ define(['backbone',
             // Subway type is 1, and we'll set the stop dwell time to 45 seconds
             TransitMode.prototype.set.call(this, {'type': 1,
                                                 'typeString': 'subway',
-                                                'dwellTime': 0.75});
+                                                'dwellTime': 1.0});
         }
     });
 

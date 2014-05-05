@@ -2,10 +2,17 @@
  * Created by Nathan P on 4/9/2014.
  */
 
-define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
+define(['http',
+        'xml2js',
+        'scripts/utils/globalvars',
+        'scripts/utils/multimodalRoutingAPI'
+], function(http, xml2js, globalvars, multimodalRoute) {
+
+    
+    var loadedGraphs = {};
 
     function routeGraphhopper(waypoints, callback, context) {
-        var url = "http://transit.pugetsound.edu:8989/route?"
+        var url = "http://transit.pugetsound.edu:8080/route?"
             + "instructions=false&type=json&points_encoded=true";
         for (var i = 1; i < waypoints.length; i++) {
             var coordinate = waypoints[i];
@@ -19,8 +26,6 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
                 body += chunk;
                 // do callback when transmission has finished
             }).on('end', function() {
-
-                console.log(body);
 
                 var responseJson = JSON.parse(body);
                 var parsedJson = {
@@ -41,17 +46,18 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
                     console.log("No encoded polyline data");
 
                 callback.call(context||this, parsedJson);
-            })
+            });
         }).on('error', function() {
             callback.call(context||this, false);
-        })
+        });
     }
 
     function routeMapquest(waypoints, callback, context) {
         var key = globalvars.mapquestKey;
         var url = 'http://open.mapquestapi.com/directions/v2/route?key=' + key
                 + '&ambiguities=ignore&outFormat=json&generalize=0'
-                + '&outShapeFormat=raw';
+                + '&outShapeFormat=raw'
+                + '&drivingStyle=cautious';
 
         for (var i = 0; i < waypoints.length; i++) {
             var coordinate = waypoints[i];
@@ -62,7 +68,7 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
             url += coordinate[1] + "," + coordinate[0]
         }
 
-        console.log(url);
+        // console.log(url);
         var body ='';
         http.get(url, function(res) {
             // concatenate data chunks
@@ -80,8 +86,8 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
                                     + ". " + responseJson.info.messages);
                 } else {
                     parsedJson = {
-                        time: responseJson.time,
-                        distance: responseJson.distance,
+                        time: responseJson.route.time,
+                        distance: responseJson.route.distance,
                         routeShape: {
                             type: "LineString",
                             coordinates: []
@@ -99,7 +105,76 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
         }).on('error', function(err) {
             console.log(err);
             callback.call(context||this, false);
-        })
+        });
+    }
+
+    function routeOTPCar(stateFIPS, waypoints, callback, context) {
+
+        if(waypoints.length > 2 )
+            throw "OTP routing doesn't support waypoints";
+
+        var url = 'http://transit.pugetsound.edu:8080/otp-rest-servlet/ws/plan'
+                + '?routerId=' + stateFIPS
+                + '&fromPlace=' + waypoints[0][1] + ',' + waypoints[0][0]
+                + '&toPlace=' + waypoints[1][1] + ',' + waypoints[1][0]
+                + '&date=2050-02-21'
+                + '&time=9%3A20%20am'
+                + '&mode=CAR';
+
+        var body = '';
+        http.get(url, function(res) {
+            // concatenate data chunks
+            res.on('data', function(chunk) {
+                body += chunk;
+            // do callback when transmission has finished
+            }).on('end', function() {
+
+                body = JSON.parse(body);
+
+                // Ensure a valid route
+                if(body.error == null) {
+
+                    // Get the best (i.e. quickest) itinerary
+                    var bestRoute = null;
+
+                    var itineraries = body.plan.itineraries;
+                    for(var i = 0; i < itineraries.length; i++) {
+                        if(bestRoute === null 
+                            || itineraries[i].duration < bestRoute.duration)
+                            bestRoute = itineraries[i];
+                    }
+
+                    // Sum distance of all the route's legs to get the total
+                    var distance = 0;
+                    for(var i = 0; i < bestRoute.legs.length; i++) 
+                        distance += bestRoute.legs[i].distance;
+
+                    // Make callback with distance and time of route
+                    callback.call(context||this, {
+                        time: bestRoute.duration,
+                        distance: distance
+                    });
+                } else {
+                    callback.call(context||this, false);
+                }
+            });
+        }).on('error', function(err) {
+            console.log(err);
+            callback.call(context||this, false);   
+        });    
+    }
+
+    function ensureGraphLoad(routerID, callback, context) {
+        multimodalRoute.reloadRoute(routerID, function() {
+            callback.call(context||this);
+        });
+    }
+
+    function requestGraphEviction(routerID) {
+        if(loadedGraphs[routerID] !== undefined) {
+            delete loadedGraphs[routerID];
+            multimodalRoute.evictRoute(routerID);
+        }
     }
 
     /**
@@ -151,7 +226,10 @@ define(['http', 'scripts/utils/globalvars'], function(http, globalvars) {
 
     return {
 //        getRoute: routeGraphhopper
-        getRoute: routeMapquest
+        getRoute: routeMapquest,
+        getRouteLimited: routeOTPCar,
+        requestGraphLoad: ensureGraphLoad,
+        requestGraphEviction: requestGraphEviction
     };
 
 });

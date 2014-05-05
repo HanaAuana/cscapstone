@@ -6,11 +6,12 @@ define(['http',
     'url',
     'fs',
     'express',
-    'scripts/routers/router'
-], function (http, url, fs, express, router) {
+    'scripts/routers/router',
+    'scripts/routers/gtfsRouter'
+], function (http, url, fs, express, router, gtfsRouter) {
 
-    // Starts the server with a router instance
-    function start(route) {
+    // Starts the server
+    function start() {
         console.log("server : server has started");
 
         var app = express();
@@ -41,19 +42,6 @@ define(['http',
                 });
         });
 
-        app.get('/map', function (req, res) {
-            // Serve the homepage asynchronously
-            res.writeHead(200, {'Content-Type': 'text/html'});
-            fs.readFile("./map/index.html",
-                'utf-8',
-                function (error, html) {
-                    if (error)
-                    // uh oh, where's the index file?
-                        throw error;
-                    res.end(html);
-                });
-        });
-
         // All saves/fetches for the simulation model
         app.all('/sim_session/*', function(req, response) {
             router.simSession(req, response);
@@ -63,12 +51,25 @@ define(['http',
             router.routeSync(req, response);
         });
 
+        app.all(/^\/update_ridership/, function(req, response) {
+            gtfsRouter.updateRidershipRoute(req, response);
+            console.log("got update ridership request");
+        });
+
+        app.all(/^\/city_session_auth/, function(req, response){
+            router.routeAuth(req, response);
+        });
+
+        app.all(/^\/new_stop/, function(req, response){
+            router.newStop(req, response);
+        });
+
         app.listen(80);
-    };
+    }
 
 
-    // This is the requirejs "export". Anything returned via define()
-    // constitutes what other scripts can do with this module.
+    // This is the requirejs "export". Anything returned constitutes what other
+    // scripts can do with this module.
     return {
         start: start // the start function
     };

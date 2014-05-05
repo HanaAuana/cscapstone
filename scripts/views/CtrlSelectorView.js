@@ -2,11 +2,10 @@
  * Created by Nathan P on 3/23/14.
  */
 
-define(['jquery',
-    'underscore',
+define(['underscore',
     'backbone',
     'text!CtrlSelectorTemplate.ejs'
-], function ($, _, Backbone, ctrlSelectorTemplate) {
+], function (_, Backbone, ctrlSelectorTemplate) {
 
     var CtrlSelectorView = Backbone.View.extend({
 
@@ -20,9 +19,6 @@ define(['jquery',
         initialize: function() {
             this.template = _.template(ctrlSelectorTemplate, {});
             this.$el.html(this.template);
-
-
-            Backbone.pubSub = _.extend({}, Backbone.Events);
         },
 
         render: function() {

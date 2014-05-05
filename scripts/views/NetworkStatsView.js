@@ -3,9 +3,8 @@
  */
 define(['backbone',
     'underscore',
-    'jquery',
     'text!NetworkStatsTemplate.ejs'
-], function(backbone, _, $, networkStatsTemplate) {
+], function(backbone, _, networkStatsTemplate) {
 
     var NetworkStatsView = Backbone.View.extend({
 
@@ -65,9 +64,9 @@ define(['backbone',
                 }
                 routes.push(routeObj);
             }
-
+	    
             var globalStats = {
-                pctDemandSatisfied: 0 //TODO
+                pctDemandSatisfied: this.collection.totalPctSatisfied.toFixed(2)
             }
 
             // Compile the template, and pass in the layer list

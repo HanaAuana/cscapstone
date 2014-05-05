@@ -8,6 +8,11 @@ node_modules
 # Data #
 tmp
 geo
+temp
+sessions
 
-# Temp files #
+# Silly Mac Stuff #
+.DS_Store
+
 *~
+

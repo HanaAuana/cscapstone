@@ -6,12 +6,11 @@
 
 define(['backbone',
     'underscore',
-    'jquery',
     // load in the template as raw text
     'text!ChooseCityTemplate.ejs',
     // load the google maps api
     'gmaps'
-], function(backbone, _, $, chooseCityTemplate, gmaps) {
+], function(backbone, _, chooseCityTemplate, gmaps) {
 
     var ChooseCityView = Backbone.View.extend({
 
@@ -29,6 +28,15 @@ define(['backbone',
 
             // Append the el (defaults to an empty div) to the document
             $('#ctrl-container').append(this.el);
+
+            this.model.on('sync', function() {
+                this.remove();
+            }, this);
+
+            var that = this;
+            Backbone.pubSub.on('session-restore', function() {
+                that.remove();
+            });
         },
 
         render: function() {
@@ -65,11 +73,7 @@ define(['backbone',
                             if(that.model !== undefined) {
                                 console.log('setting loc');
                                 that.model.setLocation(loc);
-
-                                // TODO the model should probably control removal
-                                that.remove();
                             }
-
                         } else {
                             console.log('geocode fails');
                         }

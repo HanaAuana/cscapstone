@@ -13,38 +13,49 @@ define(['backbone',
         defaults: {
             'geoJson': null,
             'mode': null,
-            'routeName': null,
             'headway': 15,
             'serviceId': 1, // Specifies operation hours in GTFS. Don't change
             'startServiceMins': 360, // 6am
-            'endServiceMins': 480, // 1260 mins = 9pm = 21hrs
+            'endServiceMins': 1260, // = 9pm = 21hrs (480 for simplicity)
             'ridership': 0
         },
 
         initialize: function(attrs, options) {
 
-            this.id = this.cid;
-            this.urlRoot = '/route_sync';
-            switch (options.mode) {
-                // Based on GTFS constants TODO other modes
-                case 'subway':
-                    this.set({'mode': new SubwayMode()});
-                    break;
-                case 'bus':
-                    this.set({'mode': new BusMode()});
-                    break;
-            }
 
             // Persist route id change to the geoJson. The map will need this
             this.on('change:id', function() {
-                this.get('geoJson').properties.id = this.get('id');
+                var id = this.get('id');
+                var geoJson = this.get('geoJson');
+                // Add id to feature collection properties, and to properties
+                // of each feature
+                geoJson.properties.id = id;
+                for(var i = 0; i < geoJson.features.length; i++) {
+                    geoJson.features[i].properties.routeId = id;
+                }
             }, this);
 
-            var that = this;
-            this.initializeGeoJSON(options.rawRouteFeature, function(model) {
-                if(options.onRouteInitialized)
-                    options.onRouteInitialized.call(that, model);
-            });
+            if(options !== undefined) {
+                this.id = this.cid;
+                this.urlRoot = '/route_sync';
+                switch (options.mode) {
+                    // Based on GTFS constants TODO other modes
+                    case 'subway':
+                        this.set({'mode': new SubwayMode()});
+                        break;
+                    case 'bus':
+                        this.set({'mode': new BusMode()});
+                        break;
+                }
+
+
+
+                var that = this;
+                this.initializeGeoJSON(options.rawRouteFeature, function(model) {
+                    if(options.onRouteInitialized)
+                        options.onRouteInitialized.call(that, model);
+                });
+            }
         },
 
         // Gets the stops geometry object from the GeoJson
@@ -91,7 +102,7 @@ define(['backbone',
             // onto the features list
             rawRouteFeature.properties = {
                 geoType: "route"
-            }
+            };
             geoJSON.features.push(rawRouteFeature);
 
             // Build and push an outline for the stops feature
@@ -103,16 +114,15 @@ define(['backbone',
                     outboundDriveTimes: []
                 },
                 geometry: {
-                    type: "LineString",
+                    type: "MultiPoint",
                     coordinates: []
                 }
-            }
+            };
             geoJSON.features.push(stopsFeature);
 
             this.set({'geoJson': geoJSON});
             console.log('%j', this.get('geoJson'));
 
-            var that = this;
             // Some routes must be snapped to roads. Handle accordingly.
             var modeString = this.get('mode').get('typeString');
             switch(modeString) {

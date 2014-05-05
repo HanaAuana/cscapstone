@@ -4,10 +4,9 @@
 
 define(['backbone',
     'underscore',
-    'jquery',
     'utils/globalvars',
     'text!HeaderViewTemplate.ejs'
-], function(backbone, _, $, globalvars, headerViewTemplate) {
+], function(backbone, _, globalvars, headerViewTemplate) {
 
     var HeaderView = Backbone.View.extend({
 
@@ -17,16 +16,25 @@ define(['backbone',
             $('#title').append(this.el);
             var that = this;
             this.model.on('sync', function() {
-                var cityName = that.model.get('city').cityName;
-                that.render(cityName);
+		that.handleHeaderUpdate();
             }, this);
+	    Backbone.pubSub.on('session-restore', function() {
+		that.handleHeaderUpdate();
+	    }); 
         },
 
-        render: function(cityName) {
+ 	handleHeaderUpdate: function() {
+       	     var cityName = this.model.get('city').get('cityName');
+	     var session = this.model.get('sessionName');
+             this.render(cityName, session);
+	},	
+
+        render: function(cityName, session) {
             // Compile the template, and pass in the app name
             var template = _.template(headerViewTemplate, {
                 name: globalvars.appName,
-                cityName: cityName ? cityName : ""
+                cityName: cityName ? cityName : "",
+		session: session ? session : ""
             });
             // Load the compiled HTML into the Backbone "el"
             this.$el.html( template );

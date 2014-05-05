@@ -4,8 +4,7 @@
 
 define(['backbone',
     'underscore',
-    'jquery'
-], function(Backbone, _, $) {
+], function(Backbone, _) {
 
     var CityModel = Backbone.Model.extend({
 
@@ -23,23 +22,6 @@ define(['backbone',
             'censusTracts': null,
             'boundary': null
         },
-
-        initialize: function() {
-            this.on('change:centroid', this.setTimezone, this);
-        },
-
-        setTimezone: function() {
-            var centroid = this.get('centroid');
-            if(centroid === null) {
-                return;
-            }
-            // Can't do cross domain calls. Ask our server for the timezone,
-            // which will in turn ask google
-            $.get('/api/tz?loc=' + centroid[0] + ',' + centroid[1],
-                function(data) {
-                    this.set({'timezone': data});
-            });
-        }
     });
 
     return CityModel;

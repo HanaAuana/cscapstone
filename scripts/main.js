@@ -15,6 +15,8 @@ requirejs.config({
         leaflet: 'leaflet/leaflet',
         tinycolor: 'lib/tinycolor-min',
         leafletDraw: "leaflet/leaflet-draw",
+        leafletGeometryUtil: "leaflet/leaflet-geometryutil",
+        leafletSnap: "leaflet/leaflet-snap",
         bootstrap: "lib/bootstrap-min"
     },
 
@@ -33,6 +35,14 @@ requirejs.config({
         'leafletDraw':{
         	deps: ['leaflet'],
         	exports: 'leafletDraw'
+        },
+        'leafletGeometryUtil':{
+            deps:['leafletDraw'],
+        	exports: 'leafletGeometryUtil'
+        },
+        'leafletSnap':{
+        	deps: ['leafletGeometryUtil'],
+        	exports: 'leafletSnap'
         },
         'bootstrap': {
             deps: ['jquery']
