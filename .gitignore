@@ -1,18 +1,18 @@
-# IntelliJ files #
+# IDE stuff #
 *.iml
 *.idea
+*.project
 
 # NodeJs Modules #
 node_modules
 
-# Data #
+# Various Temp Folders and Files #
 tmp
 geo
 temp
 sessions
+*~
+*.swp
 
 # Silly Mac Stuff #
 .DS_Store
-
-*~
-*.swp

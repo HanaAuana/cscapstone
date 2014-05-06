@@ -1,0 +1,20 @@
+{
+    "name": "cs_capstone",
+    "description": "Project fulfilling CS 440 at University of Puget Sound",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "requirejs": "2.x",
+        "express": "3.x",
+        "jsftp": "1.x",
+        "forever": "0.x",
+        "seq": "*",
+        "morestreams": "*",
+        "memorystream": "*",
+        "mysql": "*",
+        "weighted": "0.2",
+        "byline": "*",
+        "adm-zip": "*",
+        "xml2js": "*"
+    }
+}

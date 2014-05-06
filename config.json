@@ -1,0 +1,45 @@
+{
+
+	"_comment": "*******************  Server/client config *******************",
+
+	"appName": "TransitBuilder",
+	
+	"_comment": "Agency name is included in the GTFS feed",
+	"gtfsAgencyName": "TransitBuilder",
+
+	"_comment": "The transit agency's url, also included in GTFS feeds",
+	"url": "transit.pugetsound.edu",
+
+	"stateTractsDir": "geo/state-tracts",
+	"placeBoundaryDir": "geo/place-boundaries",
+	"osmDir": "geo/osm",
+
+	"sessionsDir": "sessions",
+
+
+	"_comment": "************************* API Keys **************************",
+
+	"gApiKey": "AIzaSyBx2VkEiP4AF9RSvJZ1P9j1La-Y3HL2EOU",
+	"censusKey": "a0965f148ffbe78ef6a53f59a4842fdbec722ea7",
+	"mapquestKey": "Fmjtd%7Cluur2qu7l9%2C2x%3Do5-9a2w5a",
+
+
+	"_comment": "****************** OpenTripPlanner config *******************",
+
+	"otpUrl": "localhost",
+	"otpPort": 8080,
+
+	"_comment": "Path to the OpenTripPlanner executable, relative to /server or absolute",
+	"otpJarPath": "../../OpenTripPlanner/otp-core/target/otp.jar",
+
+	"_comment": "Path to folder where OTP will look for graphs. OTP defaults to '/var/otp/graphs'", 
+	"otpGraphPath": "/var/otp/graphs",    
+
+
+	"_comment": "*********************** mySQL config ************************",
+
+	"mysqlHost": "localhost",
+	"mysqlUser": "root",
+	"mysqlPassword": "trainbus",
+	"mysqlPort": 3306
+}
