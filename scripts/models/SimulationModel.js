@@ -65,7 +65,7 @@ define(['backbone',
                     empLevels: {name: "Employment Levels",
                                 toggled: false},
                     transitNet: {name: "Transit Network",
-                                toggled: false}}
+                                toggled: true}}
             });
 
             // add in the header

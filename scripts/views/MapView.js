@@ -147,8 +147,10 @@ define(['leaflet',
                 drawControl.addTo(this.map);
                 
 				//Change tooltips
-				L.drawLocal.draw.handlers.polyline.tooltip.start = 'Click to add points to your route. Try not to click in the water';
-                L.drawLocal.draw.handlers.marker.tooltip.start = 'Click on a drawn route to add a stop. Add stops in the order you want them to function';
+				L.drawLocal.draw.handlers.polyline.tooltip.start
+					= 'Click to add points to your route. Try not to click in the water';
+                L.drawLocal.draw.handlers.marker.tooltip.start 
+					= 'Click on a route to add a stop. Add stops in the order you want them to function';
                 
                 // Draw the city boundary
                 L.geoJson(city.get('boundary'), {
@@ -309,8 +311,6 @@ define(['leaflet',
                     }
                 }
             }
-            
-            
         },
 
         handleRouteDraw: function(event) {
@@ -353,7 +353,7 @@ define(['leaflet',
                                 var lastPoint = stopsFeature.geometry.coordinates[numStops-1];
                                 // Get the mode by acessing the transit routes
                                 // collection
-                                var routeId = stopsFeature.properties.routeId;                                
+                                var routeId = stopsFeature.properties.routeId; 
                                 var modeString = this.model.get('transitRoutes')
                                                     .get(routeId)
                                                     .get('mode')
@@ -370,7 +370,7 @@ define(['leaflet',
                                     success: function (data, status, jqXHR) {
                                         data = JSON.parse(data);
                                         // Convert time to minutes and round to 
-					// 2 decimal points at most
+										// 2 decimal points at most
                                         var inboundMins = (data.inboundTime / 60).toFixed(2);
                                         var outboundMins = (data.outboundTime / 60).toFixed(2);
                                         // Add the driving times to the geoJSON
@@ -381,9 +381,9 @@ define(['leaflet',
                                             .outboundDriveTimes
                                             .push(parseFloat(outboundMins));
 
-                                        console.log(modeString + " " + data.inboundTime + " " + data.outboundTime);
+                                        // console.log(modeString + " " + data.inboundTime + " " + data.outboundTime);
 
-                                        // Add the point this route's GeoJSON                      
+                                        // Add the point this route's GeoJSON   
                                         stopsFeature.geometry.coordinates.push(point);
                                         // Add the point to the map       
                                         groupLayer.removeLayer(lLayers[f]);

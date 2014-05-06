@@ -221,7 +221,7 @@ define(['fs',
             // the db
             if(++tripsCompleted === trips.length) {
                 console.log("Ridership update complete");
-                multimodalRoute.evictRoute(query.session);
+                // multimodalRoute.evictRoute(query.session);
                 globalStats.totalPctSatisfied /= trips.length;
                 console.log(globalStats);
                 connect.makeRouteUpdate(query.session, transitData);

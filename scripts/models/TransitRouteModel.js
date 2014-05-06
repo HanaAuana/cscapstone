@@ -113,12 +113,17 @@ define(['backbone',
 	    	totalInboundTime = totalInboundTime * numTrips / 60;
 	    	totalOutboundTime = totalOutboundTime * numTrips / 60;   
 
-		    console.log("Service hours: " + totalInboundTime + totalOutboundTime);
-		    return totalInboundTime + totalOutboundTime;	
+			var totalTime = totalInboundTime + totalOutboundTime;
+			console.log(this.get('geoJson'));
+		    return totalTime;	
 		},
 
 		getRouteCost: function() {
-			return this.getRevenueHours() * this.get('mode').get('costPerRH');
+			var revenueHrs = this.getRevenueHours(); 
+			var costPerRH = this.get('mode').get('costPerRH');
+			console.log('Route ' + this.get('name') + ': Revenue hrs: ' + revenueHrs
+				 + '. Cost per revenue hrs: ' + costPerRH);  
+			return revenueHrs * costPerRH;
 		},
 
         initializeGeoJSON: function(rawRouteFeature, callback) {

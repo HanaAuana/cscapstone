@@ -34,6 +34,12 @@ define(['backbone',
                 else if(id !== 'nav-tab-stats')
                     that.remove();
             });
+
+			// Listen for the addition of new stops so we can update
+			// the system cost
+			Backbone.pubSub.on('new-transit-stop', function() {
+				that.updateRoutes();
+			});
         },
 
         render: function() {
@@ -55,10 +61,12 @@ define(['backbone',
             var numRoutes = this.collection.length;
             for(var i = 0; i < numRoutes; i++) {
                 var route = this.collection.at(i);
-				var prh = (route.get('ridership') / route.getRevenueHours()).toFixed(2);
+				var revenueHrs = route.getRevenueHours();
+				if(revenueHrs > 0)
+					revenueHrs = (route.get('ridership') / revenueHrs).toFixed(2);
                 var routeObj = {
                     name: route.get('name'),
-                    ridership: prh,
+                    ridership: revenueHrs,
                     color: route.get('geoJson').properties.color,
                     mode: route.get('mode').get('typeString'),
                     id: route.get('id')
