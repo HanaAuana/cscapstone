@@ -1,10 +1,11 @@
 <div id="network-stats-div">
-    <h5 style="margin-left:auto;margin-right:auto"><strong>Total Demand Satisfied: <%= globalStats.pctDemandSatisfied%>%</strong></h5>
+    <h5 style="margin-left:auto;margin-right:auto"><strong>Total Demand Satisfied: <%= globalStats.pctDemandSatisfied %>%</strong></h5>
+    <h5 style="margin-left:auto;margin-right:auto"><strong>System Cost per Day: $<%= globalStats.systemCost %></strong></h5>
     <table class="table" id="ctrl-network-stats">
         <tr>
             <th>Route</th>
             <th>Mode</th>
-            <th>Ridership</th>
+            <th>Passengers per Revenue Hour</th>
         </tr>
         <% for(var i = 0; i < routes.length; i++) { %>
         <%      var route = routes[i]; %>

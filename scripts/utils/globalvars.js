@@ -8,8 +8,8 @@
 define([], function(){
 
     return {
-        'appName': 'TransitBuildr',
-        'gtfsAgencyName': 'TransitBuildr',
+        'appName': 'TransitBuilder',
+        'gtfsAgencyName': 'TransitBuilder',
         'url': 'transit.pugetsound.edu',
         'otpUrl': 'localhost',
         'gApiKey':'AIzaSyBx2VkEiP4AF9RSvJZ1P9j1La-Y3HL2EOU',

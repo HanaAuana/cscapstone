@@ -53,9 +53,8 @@ define(['backbone',
                 }),
                 success: function(data, status, jqXHR) {
                     var alertString = 'We are informing the residents of your '
-                                        + 'transit network upgrades. Please '
-                                        + 'check back in several hours for '
-                                        + 'updated ridership.';
+                                        + 'transit network upgrades. Please check'
+                                        + 'back soon for updated ridership.';
                     new AlertView().render(alertString);
                 },
                 error: function(jqXHR, textStatus, errorThrown) {

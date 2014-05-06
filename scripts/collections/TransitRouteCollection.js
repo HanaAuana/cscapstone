@@ -12,13 +12,14 @@ define(['backbone',
     var TransitRouteCollection = Backbone.Collection.extend({
 
          routeId: 1,
-         colors: ['red', 'green', 'blue', 'yellow', 'cyan', 'orange', 'purple'],
+         colors: ['red', 'green', 'blue', 'cyan', 'orange', 'purple', 
+				  'firebrick', 'olive', 'peru', 'royalblue', 'yellow'],
          totalSatisfied: 0,
          totalUnsatisfied: 0,
          totalPctSatisfied: 0,
 
         /**
-         * Adds the route to the collection. DON'T DIRECTLY CALL Collection.add;
+         * Adds the route to the collection. DON'T DIRECTLY CALL Collection.add
          * this function is necessary for setting route ids
          * @param route
          */
@@ -64,6 +65,15 @@ define(['backbone',
             // counter to be greater than the id's of existing routes
             this.routeId = ++maxRouteID; 
         },
+
+		getSystemCost: function() {
+			var totalCost = 0;
+			for(var i = 0; i < this.length; i++) {
+				totalCost += this.at(i).getRouteCost();
+			}
+			console.log("System cost: " + totalCost);
+			return totalCost;
+		},
 
         getGlobalRidership: function() {
             return {

@@ -90,6 +90,42 @@ define(['backbone',
             }
         },
 
+		getRevenueHours: function() {
+		    var inboundTimes = this.getDriveTimes('inbound');
+		    var outboundTimes = this.getDriveTimes('outbound');
+		    var dwellTime = this.get('mode').get('dwellTime');
+		    var numTrips = (this.get('endServiceMins') - this.get('startServiceMins')) 
+						/ this.get('headway');
+		    console.log(numTrips);
+
+		    // Initialize total route times to the total dwell time
+		    var totalInboundTime = dwellTime * inboundTimes.length;
+	   	    var totalOutboundTime = dwellTime * outboundTimes.length;
+
+		    // Sum up the total inbound and outbound route times
+		    for(var i = 0; i < inboundTimes.length; i++) 
+				totalInboundTime += inboundTimes[i];
+		    for(var i = 0; i < outboundTimes.length; i++)
+				totalOutboundTime += outboundTimes[i];
+	   		
+	    	// Scale time by the number of trips run each day, and
+	    	// convert to hours
+	    	totalInboundTime = totalInboundTime * numTrips / 60;
+	    	totalOutboundTime = totalOutboundTime * numTrips / 60;   
+
+			var totalTime = totalInboundTime + totalOutboundTime;
+			console.log(this.get('geoJson'));
+		    return totalTime;	
+		},
+
+		getRouteCost: function() {
+			var revenueHrs = this.getRevenueHours(); 
+			var costPerRH = this.get('mode').get('costPerRH');
+			console.log('Route ' + this.get('name') + ': Revenue hrs: ' + revenueHrs
+				 + '. Cost per revenue hrs: ' + costPerRH);  
+			return revenueHrs * costPerRH;
+		},
+
         initializeGeoJSON: function(rawRouteFeature, callback) {
             // Wrap the route feature in a GeoJSON feature collection
             var geoJSON = {
