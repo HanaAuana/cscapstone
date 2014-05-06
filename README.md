@@ -30,6 +30,12 @@ Setup
 
 **NOTE:** TransitBuilder executes several UNIX commands, so if you're running Windows you'll need to [add support for them](http://www.cygwin.com/).
 
+Project Structure and Contents
+---------
+This project contains the entire TransitBuilder stack (excluding OpenTripPlanner and MySql), and is split into two main components:
+- The ```client``` directory contains all the front-end logic and associated assets. The front-end primarily provides an interface for drawing transit routes on a map, and provides statistics on those routes including producivity, cost and total transit demand satisified. In addition, this component is responsible for building and modifying the GTFS feed. Included dependencies for the client include [Leaflet](http://leafletjs.com/) for mapping, [Backbone](http://backbonejs.org/) for enforcing an MVC pattern, [Requirejs](http://requirejs.org/) for modularizing scripts, and [Underscore](http://underscorejs.org/) for templating 
+- The ```server``` directory contains the back-end logic and associated geographic files. The server is built on [Nodejs](http://nodejs.org/), allowing us to use JavaScript across the stack. This component is responsible for interfacing with OpenTripPlanner, MySQL, and handling the geographic data.
+
 Contributors
 ---------
 Nathan Pastor <br/>
