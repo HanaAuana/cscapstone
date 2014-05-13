@@ -2,7 +2,7 @@
 	$db_hostname = "localhost";
 	$db_database = "capstone";
 	$db_username = "root";
-	$db_password = "trainbus";
+	$db_password = "root";
 
 	// Connect to server.
 	$db_server = mysql_connect($db_hostname, $db_username, $db_password)

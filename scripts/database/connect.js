@@ -10,9 +10,9 @@ define(['mysql'
   var connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
-    password : 'trainbus',
+    password : 'root',
     database : DATABASE,
-    port     : 3306
+    port     : 8889
   });
 
 
@@ -22,7 +22,6 @@ define(['mysql'
           if (err){
              throw err;
           } else {
-            // console.log(result[0].tractBlob);
             for (var i =0; i < result.length; i++) {
                var tract = result[i];
                var str = tract.tractBlob.toString();
@@ -107,10 +106,14 @@ define(['mysql'
                       callback.call(context||that, false);
                   } else {
                       console.log("Hit for "+ fips);
+                      var strRC = result[0].routeCollection.toString();
+                      var finRoute = strRC.substring(1, strRC.length-1);
+                      var strGTFS = result[0].result[0].gtfs.toString();
+                      var finGTFS = strGTFS.substring(1, strGTFS.length-1);
                       callback.call(context||that, {
                             tracts: tractResult,
-                            routeCollection: result[0].routeCollection,
-                            gtfs: result[0].gtfs
+                            routeCollection: JSON.parse(finRoute),
+                            gtfs: JSON.parse(finGTFS)
                       });
                     }
               }, this);
